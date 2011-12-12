@@ -1,0 +1,13 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/Fixtures.html
+
+one:
+  type: 
+  uid: MyString
+  parent_uid: MyString
+  geometry_text: MyText
+
+two:
+  type: 
+  uid: MyString
+  parent_uid: MyString
+  geometry_text: MyText

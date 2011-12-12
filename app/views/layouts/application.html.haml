@@ -1,0 +1,10 @@
+!!!
+%html
+  %head
+    %title Canadian Census
+    = stylesheet_link_tag('application')
+    = javascript_include_tag('application')
+    = javascript_include_tag('/svg.js')
+    = javascript_include_tag('https://maps.googleapis.com/maps/api/js?v=3.7&sensor=true&key=AIzaSyDWrbWJ46ET44B2Z0UFdqsT3DbsZXKXuqU')
+  %body
+    = yield

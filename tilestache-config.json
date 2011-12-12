@@ -1,0 +1,31 @@
+{
+  "cache": {
+    "name": "Disk",
+    "path": "tmp/cache/tilestache",
+    "umask": "0000"
+  },
+  "layers": {
+    "regions": {
+      "provider": {
+        "name": "vector",
+        "driver": "GeoJSON",
+        "parameters": { "file": "db/regions.geojson" }
+      },
+      "bounds": {
+        "low": 0,
+        "high": 18,
+        "north": 90,
+        "west": -141.00198,
+        "east": -52.63055555555555,
+        "south": 41.68055555555555
+      },
+      "preview": {
+        "lat": 45.5,
+        "lon": -73.5,
+        "zoom": 6,
+        "ext": "geojson"
+      },
+      "allowed origin": "*"
+    }
+  }
+}
