@@ -1,0 +1,24 @@
+GEM
+  remote: http://rubygems.org/
+  specs:
+    activesupport (3.1.2)
+      multi_json (~> 1.0)
+    dbf (1.6.7)
+      fastercsv (~> 1.5.4)
+    fastercsv (1.5.4)
+    httparty (0.8.1)
+      multi_json
+      multi_xml
+    multi_json (1.0.3)
+    multi_xml (0.4.1)
+    nokogiri (1.5.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  activesupport
+  dbf
+  fastercsv
+  httparty
+  nokogiri
