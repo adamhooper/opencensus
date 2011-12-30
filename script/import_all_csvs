@@ -1,0 +1,72 @@
+#!/usr/bin/env ruby
+
+APP_PATH = File.expand_path('../../config/application',  __FILE__)
+require File.expand_path('../../config/boot',  __FILE__)
+require APP_PATH
+Rails.application.require_environment!
+
+class CsvSpec
+  attr_reader(:year)
+  attr_reader(:region_type)
+  attr_reader(:region_subtype_column)
+
+  def initialize(year, region_type, region_subtype_column, csv_type)
+    @year = year
+    @region_type = region_type
+    @region_subtype_column = region_subtype_column
+    @csv_type = csv_type
+  end
+
+  def csv_filename
+    "#{File.dirname(__FILE__)}/../db/scraped/#{year}-#{region_type}-#{@csv_type}.csv"
+  end
+
+  def region_description_column
+    0
+  end
+
+  def columns
+    case year
+    when 2001
+      if @csv_type == 'population'
+        [
+          '2|Population|2001|3',
+          '4|Population|1996|5',
+          '6|Dwellings|2001|7'
+        ].join(';')
+      elsif @csv_type == 'density'
+        [
+          '2|Area|2001',
+          '3|Population density|2001|4'
+        ].join(';')
+      end
+    else
+      raise Exception.new("Don't know how to parse CSVs for year #{year}")
+    end
+  end
+end
+
+specs = [
+  [ 2001, 'Subdivision', 1, 'population' ],
+  [ 2001, 'Subdivision', 1, 'density' ],
+  [ 2001, 'Division', nil, 'population' ],
+  [ 2001, 'Division', nil, 'density' ],
+  [ 2001, 'Province', nil, 'population' ],
+  [ 2001, 'Province', nil, 'density' ]
+]
+
+specs.each do |spec|
+  csv_spec = CsvSpec.new(*spec)
+
+  csv_filename = csv_spec.csv_filename
+  region_type = csv_spec.region_type
+  region_subtype_column = csv_spec.region_subtype_column
+  region_description_column = csv_spec.region_description_column
+  columns_spec = csv_spec.columns
+
+  importer = CsvImporter.new(csv_filename, region_type, region_description_column, columns_spec, region_subtype_column: region_subtype_column)
+
+  puts "Importing #{csv_filename} with #{importer.inspect}..."
+  importer.import
+  puts "Done importing #{csv_filename}"
+end
