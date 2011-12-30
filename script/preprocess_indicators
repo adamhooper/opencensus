@@ -1,0 +1,16 @@
+#!/usr/bin/env ruby
+
+APP_PATH = File.expand_path('../../config/application',  __FILE__)
+require File.expand_path('../../config/boot',  __FILE__)
+require APP_PATH
+Rails.application.require_environment!
+
+indicator = Indicator.find_by_name('Dwelling density')
+calculator = IndicatorCalculator.new(indicator)
+calculator.destroy_values
+calculator.create_values
+
+indicator = Indicator.find_by_name('People per dwelling')
+calculator = IndicatorCalculator.new(indicator)
+calculator.destroy_values
+calculator.create_values
