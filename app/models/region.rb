@@ -1,4 +1,6 @@
 class Region < ActiveRecord::Base
+  has_many(:indicator_region_values)
+
   self.rgeo_factory_generator = RGeo::Geos.factory_generator
 
   SHP_SRID = 6269 # NAD83, which is what Statistics Canada uses (see .prj files...)
