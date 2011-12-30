@@ -13,5 +13,6 @@ Indicator.create([
   { name: 'Dwellings', unit: '', description: '', value_type: 'integer' },
   { name: 'Area', unit: 'km²', description: 'Land area', value_type: 'float' },
   { name: 'Population density', unit: 'people per km²', description: '', value_type: 'float' }#,
-  #{ name: 'Dwelling density', unit: 'dwellings per km²', description: '', value_type: 'float', sql: '#{Dwellings} / #{Area}' }
+  { name: 'Dwelling density', unit: 'dwellings per km²', description: '', value_type: 'float', sql: '{Dwellings} / {Area}' }
+  { name: 'People per dwelling', unit: 'people per dwelling', description: '', value_type: 'float', sql: '{Population} / {Dwellings}' }
 ])
