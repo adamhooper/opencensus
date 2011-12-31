@@ -5,12 +5,19 @@ require File.expand_path('../../config/boot',  __FILE__)
 require APP_PATH
 Rails.application.require_environment!
 
-indicator = Indicator.find_by_name('Dwelling density')
-calculator = IndicatorCalculator.new(indicator)
-calculator.destroy_values
-calculator.create_values
+indicators = Indicator.where("sql IS NOT NULL AND sql <> ''")
 
-indicator = Indicator.find_by_name('People per dwelling')
-calculator = IndicatorCalculator.new(indicator)
-calculator.destroy_values
-calculator.create_values
+indicators.each do |indicator|
+  Indicator.transaction do
+    puts "Processing indicator: #{indicator.name}"
+    puts "Deleting existing..."
+    indicator.indicator_region_values.delete_all
+    puts "Creating new values, using #{indicator.sql.inspect}..."
+    indicator.create_all_possible_indicator_region_values
+    puts "Calculating buckets..."
+    indicator.set_sensible_buckets!
+    puts indicator.buckets
+    puts "Saving..."
+    indicator.save!
+  end
+end
