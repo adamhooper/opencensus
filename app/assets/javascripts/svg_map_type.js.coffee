@@ -110,8 +110,7 @@ populateSvgWithData = (document, svgRoot, data, lonlatToPointOnTile) ->
     switch dataNode.type
       when 'FeatureCollection'
         features = dataNode.features
-        features.reverse()
-        workStack.push({ svgNode: svgNode, dataNode: subNode }) for subNode in features
+        workStack.unshift({ svgNode: svgNode, dataNode: subNode }) for subNode in features
       when 'Feature'
         g = document.createElementNS(svgns, 'g')
         g.className = "feature #{dataNode.properties.type}"
@@ -119,21 +118,19 @@ populateSvgWithData = (document, svgRoot, data, lonlatToPointOnTile) ->
         propertiesString = window.JSON.stringify(dataNode.properties)
         g.setAttribute('data-properties', propertiesString)
         g.style.stroke = style.stroke
-        g.style.strokeWidth = '2px'
+        g.style.strokeWidth = '1px'
         setGStyleForProperties(g, dataNode.properties, style)
         svgNode.appendChild(g)
 
-        workStack.push({ svgNode: g, dataNode: dataNode.geometry })
+        workStack.unshift({ svgNode: g, dataNode: dataNode.geometry })
       when 'GeometryCollection'
         geometries = dataNode.geometries
         if geometries.length
-          geometries.reverse()
-
           g = document.createElementNS(svgns, 'g')
           g.className = 'geometry-collection'
           svgNode.appendChild(g)
 
-          workStack.push({ svgNode: g, dataNode: subNode }) for subNode in geometries
+          workStack.unshift({ svgNode: g, dataNode: subNode }) for subNode in geometries
       when 'MultiPolygon'
         addMultiPolygonToSvgNode(document, svgNode, dataNode, lonlatToPointOnTile)
       when 'Polygon'
