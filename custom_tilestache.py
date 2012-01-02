@@ -125,12 +125,18 @@ class MyProvider(Provider):
 
         rows = db.fetchall()
 
-        features = {}
+        features = []
+        uid_to_properties = {}
+
         for row in rows:
             uid = row['uid']
             properties = { 'type': row['type'] }
             geometry_json = row['geometry_json']
-            features[uid] = [ properties, geometry_json ]
+
+            feature = [ uid, properties, geometry_json ]
+
+            uid_to_properties[uid] = properties
+            features.append(feature)
 
         if len(features) > 0:
             query2 = """
@@ -141,7 +147,7 @@ class MyProvider(Provider):
                 INNER JOIN indicators i ON v.indicator_id = i.id
                 INNER JOIN regions r ON v.region_id = r.id
                 WHERE r.uid IN (%s)
-                """ % (','.join([ "'%s'" % uid for uid in features.keys()]))
+                """ % (','.join([ "'%s'" % feature[0] for feature in features ]))
 
             f = open('out.txt', 'a')
             f.write(query2 + "\n")
@@ -152,8 +158,7 @@ class MyProvider(Provider):
 
             for row in rows2:
                 uid = row['uid']
-                feature = features[uid]
-                properties = feature[0]
+                properties = uid_to_properties[uid]
 
                 indicator_name = row['name']
                 value_year = int(row['year'])
@@ -173,11 +178,8 @@ class MyProvider(Provider):
                     properties[value_year]["%s-note" % indicator_name] = note
 
         feature_jsons = []
-        for uid, feature in features.iteritems():
-            properties = feature[0]
-            geometry_json = feature[1]
-
-            feature_json = '{"type":"Feature","id":%s,"properties":%s,"geometry":%s}' % (json.dumps(uid), json.dumps(properties), geometry_json)
+        for uid, properties, geometry_json in features:
+            feature_json = '{"type":"Feature","id":%s,"properties":%s,"geometry":%s}' % (json.dumps("%s-%s" % (properties['type'], uid)), json.dumps(properties), geometry_json)
             feature_jsons.append(feature_json)
 
         content = '{"type":"FeatureCollection","features":[%s]}' % (','.join(feature_jsons))
