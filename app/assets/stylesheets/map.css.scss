@@ -1,4 +1,38 @@
+$search_height: 3em;
+$info_width: 15em;
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+#opencensus-wrapper {
+  position: relative;
+  height: 100%;
+}
+
+#search {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: $search_height;
+}
+
 #map {
-  width: 800px;
-  height: 600px;
+  position: absolute;
+  top: $search_height;
+  left: 0;
+  right: $info_width;
+  bottom: 0;
+}
+
+#info {
+  position: absolute;
+  right: 0;
+  top: $search_height;
+  width: $info_width;
+  bottom: 0;
 }
