@@ -93,32 +93,28 @@ class MyProvider(Provider):
             r.uid,
             r.type,
             r.name,
-            ST_AsGeoJSON(ST_Intersection(%s, rp.geometry), %d) AS geometry_json
+            ST_AsGeoJSON(ST_Collect(rp.geometry), %d) AS geometry_json
           FROM regions r
           INNER JOIN (
                       SELECT
                         region_id,
-                        ST_Collect(polygon_zoom%d) AS geometry
+                        ST_Intersection(%s, polygon_zoom%d) AS geometry
                       FROM region_polygons
-                      WHERE id IN (
-                        SELECT id
-                        FROM region_polygons
-                        WHERE %f <= max_longitude
-                          AND %f >= min_longitude
-                          AND %f <= max_latitude
-                          AND %f >= min_latitude
-                          AND area_in_m > %d
-                      )
-                      GROUP BY region_id
+                      WHERE %f <= max_longitude
+                        AND %f >= min_longitude
+                        AND %f <= max_latitude
+                        AND %f >= min_latitude
+                        AND area_in_m > %d
                      ) rp
                   ON r.id = rp.region_id
+                  AND GeometryType(rp.geometry) IN ('POLYGON', 'MULTIPOLYGON')
+          GROUP BY r.uid, r.type, r.name, r.position
           ORDER BY r.position
           """ % (
-              bbox_padded,
               self._getFloatDecimalsForZoom(width, height, coord.zoom),
-              coord.zoom,
+              bbox_padded, coord.zoom,
               nw.lon, se.lon, se.lat, nw.lat,
-              self._getMinAreaForZoom(width, height, coord.zoom)
+              self._getMinAreaForZoom(width, height, coord.zoom),
               )
 
         f = open('out.txt', 'a')
@@ -139,12 +135,17 @@ class MyProvider(Provider):
         if len(features) > 0:
             query2 = """
                 SELECT
-                    r.uid, ri.indicator_name, ri.value_year, ri.value_type, ri.value_integer, ri.value_float, ri.note
+                    r.uid, i.name, v.year, i.value_type, v.value_integer, v.value_float, v.note
                 FROM
-                    region_indicators ri
-                INNER JOIN regions r ON ri.region_id = r.id
+                    indicator_region_values v
+                INNER JOIN indicators i ON v.indicator_id = i.id
+                INNER JOIN regions r ON v.region_id = r.id
                 WHERE r.uid IN (%s)
                 """ % (','.join([ "'%s'" % uid for uid in features.keys()]))
+
+            f = open('out.txt', 'a')
+            f.write(query2 + "\n")
+            f.close()
 
             db.execute(query2)
             rows2 = db.fetchall()
@@ -154,8 +155,8 @@ class MyProvider(Provider):
                 feature = features[uid]
                 properties = feature[0]
 
-                indicator_name = row['indicator_name']
-                value_year = int(row['value_year'])
+                indicator_name = row['name']
+                value_year = int(row['year'])
                 value_type = row['value_type']
                 value = None
                 if value_type == 'integer':
