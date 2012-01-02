@@ -6,7 +6,7 @@ First, imported tables into "regions". Used ogr2ogr to import individual census 
 
 The "regions" table is our canonical data source. It's slow to create tiles from it, though. So we do speedups.
 
-=== Speedups: the "region_polygons" table
+==== Speedups: the "region_polygons" table
 
 When fetching a tile, we need to quickly find a pre-rendered list of polygons at the given extent.
 
@@ -22,12 +22,24 @@ Finally, add indices: on polygon (USING GIST) and on area_in_m. These are what w
 
 The end result? We can select the appropriate row and return the geometry with ST_AsGeoJSON(), and we won't need to post-process any geometry.
 
-=== Validity
+==== Validity
 
 Sometimes ST_SimplifyPreserveGeometry() introduces errors. These will give "side location conflict" errors when using ST_Intersection(). Fix the the errors with ST_Buffer(geometry, 0.0). For instance: `UPDATE region_polygons SET polygon_zoom18 = ST_Buffer(polygon_zoom18, 0) WHERE ST_IsValid(polygon_zoom18) IS FALSE`
 
-=== More speedups...
+==== More speedups...
 
 The GIST index is great, but "region_polygons" is so large that the index doesn't speed things up as much as we'd like. That's because when we use a WHERE clause to check if the polygon intersects with a certain bounding box, PostgreSQL only decides which *pages* of database records to read, not which *records*. Then PostgreSQL will read those pages, parse the geometry of every record in every page the index says contains an important record, and filter out those that are out of bounds. That's a fair amount of processing we don't need.
 
 The solution? Check against something smaller. Create a "bounding_box" GEOMETRY column, set it to ST_Envelope(polygon), and create an index USING GIST on it.
+
+=== Data
+
+* Download data into CSV format (for 2001, where the only public format is HTML) via script/scrape/
+* Import CSVs using script/import_all_csvs
+* Download 2006 data from the URL shown in script/import-2006-popdwellings, and use that same script to import the .txt file
+* Run script/sanitize_indicators to fix un-sane values
+* Run script/preprocess_indicators to calculate custom indicators: population/area, dwellings/area, etc.
+
+=== Tiles
+
+See custom_tilestache.py. Requires TileStache.

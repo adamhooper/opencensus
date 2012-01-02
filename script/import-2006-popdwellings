@@ -1,0 +1,198 @@
+#!/usr/bin/env ruby
+#
+# Parses the "Geographic Attribute File" from StatsCan 2006.
+# http://geodepot.statcan.gc.ca/2006/040120011618150421032019/02152114040118250609120519/021521140401182519011205_05-eng.jsp?catno=92-151-XBB
+#
+# (File format is described in a PDF in that zipfile.)
+
+APP_PATH = File.expand_path('../../config/application',  __FILE__)
+require File.expand_path('../../config/boot',  __FILE__)
+require APP_PATH
+Rails.application.require_environment!
+
+YEAR = 2006
+
+class ValueSet
+  include Enumerable
+  attr_reader(:population, :dwellings, :occupied_dwellings, :area)
+
+  def initialize(population, dwellings, occupied_dwellings, area)
+    @population = population
+    @dwellings = dwellings
+    @occupied_dwellings = occupied_dwellings
+    @area = area
+  end
+
+  def plus(values2)
+    return dup if values2.nil?
+
+    ValueSet.new(
+      population + values2.population,
+      dwellings + values2.dwellings,
+      occupied_dwellings + values2.occupied_dwellings,
+      area + values2.area
+    )
+  end
+
+  def each
+    yield :population, population
+    yield :dwellings, dwellings
+    yield :occupied_dwellings, occupied_dwellings
+    yield :area, area
+  end
+end
+
+class RecordDb
+  include Enumerable
+
+  RegionTypeCodeToUidRangeInTextLine = {
+    db: 0..9, # 1, 10
+    da: 48..55, # 49, 8
+    pr: 114..115, # 115, 2
+    fed: 237..241, # 238, 5
+    er: 325..328, # 326, 4
+    cd: 416..419, # 417, 4
+    csd: 454..460, # 455, 7
+    ccs: 519..525, # 520, 7
+    cma: 666..670, # 667, 5
+    ct: 755..764 # 756, 10.2
+  }
+
+  def initialize
+    @records = {
+      db: {},
+      da: {},
+      pr: {},
+      fed: {},
+      er: {},
+      cd: {},
+      csd: {},
+      ccs: {},
+      cma: {},
+      ct: {}
+    }
+  end
+
+  def feed!(line)
+    population = line[10..17].to_i # 11, 8
+    dwellings = line[18..25].to_i # 19, 8
+    occupied_dwellings = line[26..33].to_i # 27, 8
+    area = line[34..46].to_f # 35, 13.4
+
+    value_set = ValueSet.new(population, dwellings, occupied_dwellings, area)
+
+    RegionTypeCodeToUidRangeInTextLine.each do |region_type_code, range_in_text_line|
+      uid = line[range_in_text_line]
+      regions_of_this_type = @records[region_type_code]
+      regions_of_this_type[uid] = value_set.plus(regions_of_this_type[uid])
+    end
+  end
+
+  def each
+    @records.each do |type_code, uid_to_value_set|
+      uid_to_value_set.each do |uid, value_set|
+        yield(type_code, uid, value_set)
+      end
+    end
+  end
+end
+
+class GAFLine
+  attr_reader(:dbuid)
+  attr_reader(:indicators)
+
+  def initialize(dbuid, indicators)
+    @dbuid = dbuid
+    @indicators = indicators
+  end
+end
+
+class RegionIdDb
+  attr_reader(:db)
+
+  def initialize
+    populate_db!
+  end
+
+  def lookup(type, uid)
+    db[type][uid]
+  end
+
+  private
+
+  def populate_db!
+    @db = {}
+    rows = Region.connection.select_rows("SELECT id, type, uid FROM regions")
+    rows.each do |row|
+      id, type, uid = row
+      uid_hash = (db[type] ||= {})
+      uid_hash[uid] = id
+    end
+  end
+end
+
+STDERR.puts("Reading 2006 StatsCan records from #{ARGV[0].inspect}...")
+
+records = RecordDb.new
+File.open(ARGV[0], 'r') do |f|
+  f.lines do |line|
+    records.feed!(line)
+  end
+end
+
+STDERR.puts('Looking up Region IDs...')
+
+region_id_db = RegionIdDb.new
+
+STDERR.puts('Loading Indicators...')
+
+indicators = {
+  population: Indicator.find_by_name('Population'),
+  dwellings: Indicator.find_by_name('Dwellings'),
+  occupied_dwellings: Indicator.find_by_name('Occupied dwellings'),
+  area: Indicator.find_by_name('Area')
+}
+
+TypeCodeToType = {
+  db: 'DisseminationBlock',
+  da: 'DisseminationArea',
+  pr: 'Province',
+  fed: 'ElectoralDistrict',
+  er: 'EconomicRegion',
+  cd: 'Division',
+  csd: 'Subdivision',
+  ccs: 'ConsolidatedSubdivision',
+  cma: 'MetropolitanArea',
+  ct: 'Tract'
+}
+
+STDERR.puts('Starting insertions. Each . is a record inserted; each ! is a Region our database is missing...')
+
+failures = []
+
+IndicatorRegionValue.connection.transaction do
+  records.each do |type_code, uid, value_set|
+    type = TypeCodeToType[type_code]
+    region_id = region_id_db.lookup(type, uid)
+
+    if region_id.nil?
+      failures << [ type_code, uid ]
+      STDERR.write('!'); STDERR.flush()
+    else
+      value_set.each do |key, value|
+        indicator = indicators[key]
+        value_column = indicator.value_column
+        value_for_db = indicator.cast_value(value)
+        IndicatorRegionValue.connection.execute("INSERT INTO indicator_region_values (indicator_id, region_id, year, #{value_column}) VALUES (#{indicator.id}, #{region_id}, #{YEAR}, #{value_for_db})")
+      end
+      STDERR.write('.'); STDERR.flush()
+    end
+  end
+end
+
+STDERR.puts('Done.')
+
+if failures.length
+  STDERR.puts("#{failures.length} failures:")
+  STDERR.puts(failures.inspect)
+end
