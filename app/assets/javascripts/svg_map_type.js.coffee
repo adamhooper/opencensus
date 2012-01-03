@@ -1,28 +1,11 @@
 #= require jquery
 #= require json2
 
-BASE_URL = 'http://localhost:8000'
+#= require globals
+#= require state
 
-STATE = {
-  indicator: {
-    name: 'Population density',
-    units: 'people per km2',
-    buckets: [
-      { min: 0, max: 0.400024243893569 },
-      { min: 0.401275002320999, max: 3.16639865227046 },
-      { min: 3.16668030439408, max: 10.9016112444292 },
-      { min: 10.9090909090909, max: 38.3047210300429 },
-      { min: 38.3783783783784, max: 96.7391304347826 },
-      { min: 96.7741935483871, max: 175.257731958763 },
-      { min: 175.586854460094, max: 2768.40916424653 }
-    ]
-    bucketForValue: (value) ->
-      for bucket, i in this.buckets
-        return i if value <= bucket.max
-      return 0
-  },
-  year: 2006
-}
+globals = window.OpenCensus.globals
+state = window.OpenCensus.state
 
 class Projection
   constructor: (@tileSize, @coord, @zoom) ->
@@ -84,16 +67,20 @@ requestSvgData = (url, coord, zoom, callback) ->
   })
 
 setGStyleForProperties = (g, properties, style) ->
-  value = properties['' + STATE.year] && properties['' + STATE.year][STATE.indicator.name]
+  yearProperties = properties[state.year.toString()]
+  value = yearProperties && yearProperties[state.indicator.name]
 
-  if !value && value != 0
+  if !value && value isnt 0
     g.style.display = 'none'
     return
 
-  value = properties[STATE.year][STATE.indicator.name]
-  bucket = STATE.indicator.bucketForValue(value)
-  fill = style.buckets[bucket]
+  bucket = state.indicator.bucketForValue(value)
+  if bucket is undefined
+    g.style.display = 'none'
+    return
 
+  fill = style.buckets[bucket]
+  g.style.display = 'svg-g'
   g.style.fill = fill
 
 populateSvgWithData = (document, svgRoot, data, lonlatToPointOnTile) ->
@@ -141,7 +128,7 @@ populateSvgWithData = (document, svgRoot, data, lonlatToPointOnTile) ->
 window.SvgMapType = (@tileSize) ->
 
 window.SvgMapType.prototype.getTileUrl = (coord, zoom) ->
-  "#{BASE_URL}/regions/#{zoom}/#{coord.x}/#{coord.y}.geojson"
+  "#{globals.json_tile_url}/regions/#{zoom}/#{coord.x}/#{coord.y}.geojson"
 
 window.SvgMapType.prototype.getTile = (coord, zoom, ownerDocument) ->
   div = ownerDocument.createElement('div')

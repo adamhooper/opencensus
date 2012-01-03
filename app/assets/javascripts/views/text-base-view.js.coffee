@@ -1,6 +1,6 @@
 #= require views/base-view
 
-class TextBaseView extends window.oc.views.BaseView
+class TextBaseView extends window.OpenCensus.views.BaseView
   escape: (s) ->
     $x = $('<div></div>')
     $x.text(s)
@@ -23,4 +23,4 @@ class TextBaseView extends window.oc.views.BaseView
       </div>
     '''
 
-window.oc.views.TextBaseView = TextBaseView
+window.OpenCensus.views.TextBaseView = TextBaseView

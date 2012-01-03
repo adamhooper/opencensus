@@ -1,7 +1,7 @@
 #= require views/text-base-view
 
-class TextRegionIndicatorView extends window.oc.views.TextBaseView
+class TextRegionIndicatorView extends window.OpenCensus.views.TextBaseView
   render: ->
     html = this.simpleRender()
 
-window.oc.views.TextRegionIndicatorView = TextRegionIndicatorView
+window.OpenCensus.views.TextRegionIndicatorView = TextRegionIndicatorView

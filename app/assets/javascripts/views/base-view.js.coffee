@@ -3,4 +3,4 @@
 class BaseView
   constructor: (@model) ->
 
-window.oc.views.BaseView = BaseView
+window.OpenCensus.views.BaseView = BaseView
