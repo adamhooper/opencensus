@@ -90,6 +90,7 @@ class MyProvider(Provider):
 
         query = """
           SELECT
+            r.id,
             r.uid,
             r.type,
             r.name,
@@ -108,7 +109,7 @@ class MyProvider(Provider):
                      ) rp
                   ON r.id = rp.region_id
                   AND GeometryType(rp.geometry) IN ('POLYGON', 'MULTIPOLYGON')
-          GROUP BY r.uid, r.type, r.name, r.position
+          GROUP BY r.id, r.uid, r.type, r.name, r.position
           ORDER BY r.position
           """ % (
               self._getFloatDecimalsForZoom(width, height, coord.zoom),
@@ -117,48 +118,40 @@ class MyProvider(Provider):
               self._getMinAreaForZoom(width, height, coord.zoom),
               )
 
-        f = open('out.txt', 'a')
-        f.write("%s\n" % query)
-        f.close()
-
         db.execute(query)
 
         rows = db.fetchall()
 
         features = []
-        uid_to_properties = {}
+        region_id_to_properties = {}
 
         for row in rows:
-            uid = row['uid']
-            properties = { 'type': row['type'] }
+            region_id = row['id']
+
+            properties = { 'type': row['type'], 'uid': row['uid'], 'name': row['name'] }
             geometry_json = row['geometry_json']
 
-            feature = [ uid, properties, geometry_json ]
+            feature = [ properties, geometry_json ]
 
-            uid_to_properties[uid] = properties
+            region_id_to_properties[region_id] = properties
             features.append(feature)
 
         if len(features) > 0:
             query2 = """
                 SELECT
-                    r.uid, i.name, v.year, i.value_type, v.value_integer, v.value_float, v.note
+                    v.region_id, i.name, v.year, i.value_type, v.value_integer, v.value_float, v.note
                 FROM
                     indicator_region_values v
                 INNER JOIN indicators i ON v.indicator_id = i.id
-                INNER JOIN regions r ON v.region_id = r.id
-                WHERE r.uid IN (%s)
-                """ % (','.join([ "'%s'" % feature[0] for feature in features ]))
-
-            f = open('out.txt', 'a')
-            f.write(query2 + "\n")
-            f.close()
+                WHERE v.region_id IN (%s)
+                """ % (','.join([ "'%s'" % region_id for region_id in region_id_to_properties.keys() ]))
 
             db.execute(query2)
             rows2 = db.fetchall()
 
             for row in rows2:
-                uid = row['uid']
-                properties = uid_to_properties[uid]
+                region_id = row['region_id']
+                properties = region_id_to_properties[region_id]
 
                 indicator_name = row['name']
                 value_year = int(row['year'])
@@ -178,8 +171,9 @@ class MyProvider(Provider):
                     properties[value_year]["%s-note" % indicator_name] = note
 
         feature_jsons = []
-        for uid, properties, geometry_json in features:
-            feature_json = '{"type":"Feature","id":%s,"properties":%s,"geometry":%s}' % (json.dumps("%s-%s" % (properties['type'], uid)), json.dumps(properties), geometry_json)
+        for properties, geometry_json in features:
+            element_id = '%s-%s' % (properties['type'], properties['uid'])
+            feature_json = '{"type":"Feature","id":%s,"properties":%s,"geometry":%s}' % (json.dumps(element_id), json.dumps(properties), geometry_json)
             feature_jsons.append(feature_json)
 
         content = '{"type":"FeatureCollection","features":[%s]}' % (','.join(feature_jsons))
