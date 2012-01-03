@@ -58,8 +58,8 @@ class MyProvider(Provider):
         # http://wiki.openstreetmap.org/wiki/Zoom_levels
         metersPerPixel = 78206.0 / zoomFactor
 
-        # Everything we show must be at least 40 pixels large
-        minArea = metersPerPixel * metersPerPixel * 40
+        # Everything we show must be at least 60 pixels large
+        minArea = metersPerPixel * metersPerPixel * 60
         return int(minArea)
 
     def _getFloatDecimalsForZoom(self, width, height, zoom):
