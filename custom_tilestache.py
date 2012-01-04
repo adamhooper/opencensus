@@ -10,13 +10,115 @@ import pkg_resources
 
 import math
 import json
+import re
+import struct
 
-from psycopg2 import connect as _connect
+import cairo
+
+import psycopg2
+import psycopg2.extensions
+psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
+psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
 from psycopg2.extras import RealDictCursor
 
 import TileStache, TileStache.Config, TileStache.Geography
 from TileStache.Core import KnownUnknown
 from TileStache.Goodies.Providers.PostGeoJSON import Provider
+
+def json_encode(s):
+    return json.dumps(s, ensure_ascii = False)
+
+# https://github.com/mapbox/mbtiles-spec/blob/master/1.1/utfgrid.md
+class UTFGridCreator:
+    def __init__(self, width, height, coord):
+        self.keys = []
+        self.width = width
+        self.height = height
+
+        self.meters_per_half_map = 20037508.34
+        self.meters_per_pixel = 2 * self.meters_per_half_map / self.width / 2 ** coord.zoom
+        self.pixels_per_meter = 1 / self.meters_per_pixel
+
+        self.left = coord.column * self.width # in absolute pixels from top-left
+        self.top = coord.row * self.height # in absolute pixels from top-left
+
+        # We'll draw on a regular, non-antialiased image: color 0, color 1, etc.
+        # Each color in the image is a UTFGrid-encoded id (endianness: argb)
+        self.image = cairo.ImageSurface(cairo.FORMAT_RGB24, width, height)
+        self.image_context = cairo.Context(self.image)
+        self.image_context.set_antialias(cairo.ANTIALIAS_NONE)
+
+        self._set_new_key('')
+        self.image_context.rectangle(0, 0, width, height)
+        self.image_context.fill()
+
+    def _set_new_key(self, key):
+        next_id = len(self.keys)
+
+        encoded_id = self._encode_id(next_id)
+
+        hex_code = hex(encoded_id)[2:].zfill(6)
+
+        r = int(hex_code[0:2], 16) / 255.0
+        g = int(hex_code[2:4], 16) / 255.0
+        b = int(hex_code[4:6], 16) / 255.0
+
+        self.image_context.set_source_rgb(r, g, b)
+
+        self.keys.append(key)
+
+    def add(self, svg_path, key):
+        self._set_new_key(key)
+
+        x_coord = None
+        func = None
+
+        # e.g. M 0 0 L 0 -1 1 -1 1 0 Z
+        for rule in re.split('[ ,;]', svg_path):
+            if rule == 'M':
+                func = self.image_context.move_to
+            elif rule == 'L':
+                func = self.image_context.line_to
+            elif rule == 'Z':
+                self.image_context.close_path()
+            elif x_coord is None:
+                x_coord = (float(rule) + self.meters_per_half_map) * self.pixels_per_meter - self.left
+            else:
+                y_coord = (float(rule) + self.meters_per_half_map) * self.pixels_per_meter - self.top
+                func(x_coord, y_coord)
+                x_coord = None # but leave "func" alone
+
+        self.image_context.fill()
+
+    def _encode_id(self, id):
+        encoded_id = id + 32
+        if encoded_id >= 32: encoded_id += 1
+        if encoded_id >= 92: encoded_id += 1
+        return encoded_id
+
+    def _get_utfgrid_grid(self):
+        rows = []
+
+        stride = self.image.get_stride()
+        data = self.image.get_data()
+
+        start = 0
+        row_format = '%dI' % self.width
+        row_size = self.width * 4
+        for y in xrange(0, self.height):
+            ints = struct.unpack(row_format, data[start:start + row_size])
+            # Will be 0xff000000, 0xff000001, etc: 0xffRRGGBB
+            unichars = [ unichr(x & 0xffffff) for x in ints ]
+            rows.append(u''.join(unichars))
+            start += stride
+
+        return rows
+
+    def get_utfgrid_data(self):
+        return {
+            'grid': self._get_utfgrid_grid(),
+            'keys': self.keys
+        }
 
 class SaveableResponse:
     """Wrapper class against a String (JSON) response that makes it behave like a PIL.Image
@@ -28,7 +130,7 @@ class SaveableResponse:
         if format != 'JSON':
             raise KnownUnknown('PostGeoJSON only saves .json tiles, not "%s"' % format)
 
-        out.write(self.content)
+        out.write(unicode(self.content).encode('utf-8'))
 
 class MyProvider(Provider):
     def __init__(self, layer, dsn):
@@ -74,7 +176,7 @@ class MyProvider(Provider):
         return int(math.ceil(-math.log10(degreesPerPixel / 2)))
 
     def renderTile(self, width, height, srs, coord):
-        db = _connect(self.dbdsn).cursor(cursor_factory=RealDictCursor)
+        db = psycopg2.connect(self.dbdsn).cursor(cursor_factory=RealDictCursor)
         db.execute("SET work_mem TO '1024MB'")
 
         nw = self.layer.projection.coordinateLocation(coord)
@@ -94,22 +196,28 @@ class MyProvider(Provider):
             r.uid,
             r.type,
             r.name,
-            ST_AsGeoJSON(ST_Collect(rp.geometry), %d) AS geometry_json
+            ST_AsGeoJSON(rp.geometry, %d) AS geometry_json,
+            ST_AsSVG(ST_Transform(ST_SetSRID(rp.geometry, 4326), 900913)) AS geometry_mercator_svg
           FROM regions r
           INNER JOIN (
                       SELECT
                         region_id,
-                        ST_Intersection(%s, polygon_zoom%d) AS geometry
-                      FROM region_polygons
-                      WHERE %f <= max_longitude
-                        AND %f >= min_longitude
-                        AND %f <= max_latitude
-                        AND %f >= min_latitude
-                        AND area_in_m > %d
+                        ST_Collect(geometry) AS geometry
+                      FROM (
+                            SELECT
+                              region_id,
+                              ST_Intersection(%s, polygon_zoom%d) AS geometry
+                            FROM region_polygons
+                            WHERE %f <= max_longitude
+                              AND %f >= min_longitude
+                              AND %f <= max_latitude
+                              AND %f >= min_latitude
+                              AND area_in_m > %d
+                           ) x
+                      WHERE GeometryType(geometry) IN ('POLYGON', 'MULTIPOLYGON')
+                      GROUP BY region_id
                      ) rp
                   ON r.id = rp.region_id
-                  AND GeometryType(rp.geometry) IN ('POLYGON', 'MULTIPOLYGON')
-          GROUP BY r.id, r.uid, r.type, r.name, r.position
           ORDER BY r.position
           """ % (
               self._getFloatDecimalsForZoom(width, height, coord.zoom),
@@ -122,13 +230,16 @@ class MyProvider(Provider):
 
         rows = db.fetchall()
 
+        utfgrid_creator = UTFGridCreator(width, height, coord)
         features = []
         region_id_to_properties = {}
 
         for row in rows:
             region_id = row['id']
+            json_id = '%s-%s' % (row['type'], row['uid'])
+            utfgrid_creator.add(row['geometry_mercator_svg'], json_id)
 
-            properties = { 'type': row['type'], 'uid': row['uid'], 'name': row['name'] }
+            properties = { 'type': row['type'], 'uid': row['uid'], 'name': row['name'], 'json_id': json_id }
             geometry_json = row['geometry_json']
 
             feature = [ properties, geometry_json ]
@@ -172,11 +283,13 @@ class MyProvider(Provider):
 
         feature_jsons = []
         for properties, geometry_json in features:
-            element_id = '%s-%s' % (properties['type'], properties['uid'])
-            feature_json = '{"type":"Feature","id":%s,"properties":%s,"geometry":%s}' % (json.dumps(element_id), json.dumps(properties), geometry_json)
+            json_id = properties.pop('json_id')
+            feature_json = u'{"type":"Feature","id":%s,"properties":%s,"geometry":%s}' % (json_encode(json_id), json_encode(properties), geometry_json)
             feature_jsons.append(feature_json)
 
-        content = '{"type":"FeatureCollection","features":[%s]}' % (','.join(feature_jsons))
+        utfgrid = utfgrid_creator.get_utfgrid_data()
+
+        content = u'{"type":"FeatureCollection","features":[%s],"utfgrid":%s}' % (','.join(feature_jsons), json_encode(utfgrid))
 
         db.close()
 
