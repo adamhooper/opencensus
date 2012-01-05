@@ -7,6 +7,12 @@ window.OpenCensus.globals = {
     year: 2006,
     indicator_name: 'Population density',
   },
+  style: {
+    stroke: '#ffffff',
+    'stroke-width': '1px',
+    opacity: 0.5,
+    buckets: [ '#fef0d9', '#fdd49e', '#fdbb84', '#fc8d59', '#ef6548', '#d7301f', '#990000' ]
+  }
   json_tile_url: 'http://localhost:8000',
   region_types: new OpenCensus.models.RegionTypeDb(<%= RegionType.order(:position).map{|rt| { name: rt.name, description: rt.name } }.to_json %>),
   indicators: new OpenCensus.models.IndicatorDb(<%= Indicator.order(:name).map{|i| { name: i.name, unit: i.unit, description: i.description, buckets: i.buckets } }.to_json %>)
