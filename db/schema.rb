@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120102213411) do
+ActiveRecord::Schema.define(:version => 20120104193042) do
 
   create_table "gccs000b06a_e", :id => false, :force => true do |t|
     t.integer "gid",                                                                         :null => false
@@ -119,6 +119,21 @@ ActiveRecord::Schema.define(:version => 20120102213411) do
     t.integer "value_integer"
     t.float   "value_float"
     t.string  "note"
+  end
+
+  create_table "region_parents", :force => true do |t|
+    t.integer "region_id"
+    t.integer "parent_region_id"
+  end
+
+  add_index "region_parents", ["parent_region_id"], :name => "index_region_parents_on_parent_region_id"
+  add_index "region_parents", ["region_id", "parent_region_id"], :name => "index_region_parents_on_region_id_and_parent_region_id", :unique => true
+  add_index "region_parents", ["region_id"], :name => "index_region_parents_on_region_id"
+
+  create_table "region_polygon_siblings", :force => true do |t|
+    t.integer "region_polygon_id"
+    t.integer "sibling_region_polygon_id"
+    t.float   "distance_in_m"
   end
 
   create_table "region_polygons", :id => false, :force => true do |t|

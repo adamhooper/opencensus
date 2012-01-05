@@ -197,6 +197,7 @@ class MyProvider(Provider):
             r.uid,
             r.type,
             r.name,
+            p.parents,
             ST_AsGeoJSON(rp.geometry, %d) AS geometry_json,
             ST_AsSVG(ST_Transform(ST_SetSRID(rp.geometry, 4326), 900913)) AS geometry_mercator_svg
           FROM regions r
@@ -219,6 +220,15 @@ class MyProvider(Provider):
                       GROUP BY region_id
                      ) rp
                   ON r.id = rp.region_id
+          INNER JOIN (
+                      SELECT
+                        r.id AS child_region_id, STRING_AGG(CONCAT(pr.type, '-', pr.uid), '|' ORDER BY pr.position) AS parents
+                      FROM regions r
+                      INNER JOIN region_parents ON r.id = region_parents.region_id
+                      INNER JOIN regions pr ON region_parents.parent_region_id = pr.id
+                      GROUP BY r.id
+                     ) p
+                  ON p.child_region_id = r.id
           ORDER BY r.position
           """ % (
               self._getFloatDecimalsForZoom(width, height, coord.zoom),
@@ -240,7 +250,7 @@ class MyProvider(Provider):
             json_id = '%s-%s' % (row['type'], row['uid'])
             utfgrid_creator.add(row['geometry_mercator_svg'], json_id)
 
-            properties = { 'type': row['type'], 'uid': row['uid'], 'name': row['name'], 'json_id': json_id }
+            properties = { 'type': row['type'], 'uid': row['uid'], 'name': row['name'], 'json_id': json_id, 'parents': row['parents'].split('|') }
             geometry_json = row['geometry_json']
 
             feature = [ properties, geometry_json ]
