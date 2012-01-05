@@ -1,5 +1,6 @@
 #= require jquery
 #= require json2
+#= require raphael
 
 #= require globals
 #= require state
@@ -7,11 +8,114 @@
 globals = window.OpenCensus.globals
 state = window.OpenCensus.state
 
-class Projection
-  constructor: (@tileSize, @coord, @zoom) ->
+class MapTile
+  constructor: (@tileSize, @coord, @zoom, div) ->
     @zoomFactor = Math.pow(2, @zoom)
     @multiplier = @zoomFactor / 360
     @topLeftGlobalPoint = [ @coord.x * @tileSize.width, @coord.y * @tileSize.height ]
+    @paper = Raphael(div, @tileSize.width, @tileSize.height)
+    @paper.canvas.style.opacity = "#{globals.style.opacity * 100}%"
+    @utfgrid = {}
+    @regionData = {}
+    div.id = this.id()
+
+    event_class = this.id()
+    $(document).on("opencensus:mousemove.#{event_class}", (e, params) => this.onMouseMove(params))
+    $(document).on("opencensus:click.#{event_class}", (e, params) => this.onClick(params))
+    $(document).on("opencensus:mouseout.#{event_class}", (e, params) => this.onMouseOut(params))
+    $(document).on("opencensus:regionhoverin.#{event_class}", (e, params) => this.onRegionHoverIn(params))
+    $(document).on("opencensus:regionhoverout.#{event_class}", (e, params) => this.onRegionHoverOut(params))
+
+    this.requestData()
+
+  requestData: () ->
+    jQuery.ajax({
+      url: this.url(),
+      dataType: 'json',
+      success: (data) => this.handleData(data)
+    })
+
+  drawPolygon: (coordinates) ->
+    ring_strings = []
+
+    for ring_coordinates in coordinates
+      strings = []
+
+      for lonlat in ring_coordinates
+        xy = this.lonlatToPointOnTile(lonlat)
+        strings.push(xy[0].toFixed(2) + ' ' + xy[1].toFixed(2))
+
+      ring_strings.push("M#{strings[0]}L#{strings[1..-1].join(' ')}Z")
+
+    @paper.path(ring_strings.join(''))
+
+  drawGeometry: (geometry) ->
+    switch geometry.type
+      when  'GeometryCollection'
+        this.drawGeometry(subgeometry) for subgeometry in geometry.geometries
+      when 'MultiPolygon'
+        this.drawPolygon(subcoordinates) for subcoordinates in geometry.coordinates
+      when 'Polygon'
+        this.drawPolygon(geometry.coordinates)
+    
+  handleData: (data) ->
+    @utfgrid = data.utfgrid
+    @regionData = {}
+
+    @paper.canvas.style.display = 'none'
+
+    for feature in data.features
+      id = feature.id
+      properties = feature.properties
+      @paper.setStart()
+      this.drawGeometry(feature.geometry)
+      geometry = @paper.setFinish()
+
+      fill = this.getFillForProperties(properties)
+
+      if fill == 'none'
+        geometry.attr({ stroke: globals.style.stroke, 'stroke-width': globals.style['stroke-width'] })
+        geometry.hide()
+      else
+        geometry.attr({ stroke: globals.style.stroke, 'stroke-width': globals.style['stroke-width'], fill: fill })
+
+      @regionData[id] = { id: id, properties: properties, geometry: geometry }
+
+    @paper.canvas.style.display = ''
+
+  getFillForProperties: (properties) ->
+    yearProperties = properties[state.year.toString()]
+    value = yearProperties && yearProperties[state.indicator.name]
+
+    if !value && value isnt 0
+      'none'
+    else
+      bucket = state.indicator.bucketForValue(value)
+
+      if bucket is undefined
+        'none'
+      else
+        globals.style.buckets[bucket]
+
+  styleGeometryWithProperties: (geometry, properties) ->
+
+  restyle: () ->
+    for id, region of @regionData
+      properties = region.properties
+      geometry = region.geometry
+
+      fill = this.getFillForProperties(properties)
+      if fill == 'none'
+        geometry.hide()
+      else
+        geometry.attr({ fill: fill })
+        geometry.show()
+
+  id: () ->
+    "MapTile-#{@zoom}-#{@coord.x}-#{@coord.y}"
+
+  url: () ->
+    "#{globals.json_tile_url}/regions/#{@zoom}/#{@coord.x}/#{@coord.y}.geojson"
 
   lat2y: (lat) ->
     # http://wiki.openstreetmap.org/wiki/Mercator#ActionScript_and_JavaScript
@@ -31,125 +135,82 @@ class Projection
       @tileSize.height * c[1] - @topLeftGlobalPoint[1]
     ]
 
-addMultiPolygonToSvgNode = (mapType, svgNode, multiPolygon, lonlatToPointOnTile) ->
-  g = document.createElementNS(svgns, 'g')
-  g.className = 'multi-polygon'
-  svgNode.appendChild(g)
-
-  for polygon in multiPolygon.coordinates
-    linearRingStrings = []
-    for linearRing in polygon
-      pointStrings = []
-      for lonlat in linearRing
-        point = lonlatToPointOnTile(lonlat)
-        pointStrings.push("#{point[0]},#{point[1]}")
-      linearRingStrings.push(pointStrings)
-
-    if linearRingStrings.length == 1
-      p = document.createElementNS(svgns, 'polygon')
-      p.setAttribute('points', linearRingStrings[0].join(' '))
-      g.appendChild(p)
+  globalPointToTilePoint: (globalPoint) ->
+    ret = [ globalPoint[0] - @topLeftGlobalPoint[0], globalPoint[1] - @topLeftGlobalPoint[1] ]
+    if ret[0] < 0 || ret[1] < 0 || ret[0] >= @tileSize.width || ret[1] >= @tileSize.height
+      undefined
     else
-      pathStrings = []
-      pathStrings.push("M#{linearRing[0]}L#{linearRing[1..-1].join(' ')}Z") for linearRing in linearRingStrings
+      ret
 
-      path = document.createElementNS(svgns, 'path')
-      path.className = 'polygon'
-      path.setAttribute('fill-rule', 'evenodd')
-      path.setAttribute('d', pathStrings.join(''))
-      g.appendChild(path)
+  tilePointToRegion: (tilePoint) ->
+    [ column, row ] = tilePoint
 
-requestSvgData = (url, coord, zoom, callback) ->
-  jQuery.ajax({
-    url: url,
-    dataType: 'json',
-    success: callback
-  })
+    grid = @utfgrid.grid
+    keys = @utfgrid.keys
 
-setGStyleForProperties = (g, properties, style) ->
-  yearProperties = properties[state.year.toString()]
-  value = yearProperties && yearProperties[state.indicator.name]
+    encoded_id = grid[row].charCodeAt(column)
+    id = encoded_id
+    id -= 1 if id >= 93
+    id -= 1 if id >= 35
+    id -= 32
 
-  if !value && value isnt 0
-    g.style.display = 'none'
-    return
+    key = keys[id]
+    @regionData[key]
 
-  bucket = state.indicator.bucketForValue(value)
-  if bucket is undefined
-    g.style.display = 'none'
-    return
+  onMouseMove: (globalPoint) ->
+    tilePoint = this.globalPointToTilePoint(globalPoint)
+    if tilePoint is undefined
+      $(document).trigger('opencensus:regionhoverout', [@hover_region]) if @hover_region
+      @hover_region = undefined
+      return
+    region = this.tilePointToRegion(tilePoint)
 
-  fill = style.buckets[bucket]
-  g.style.display = 'svg-g'
-  g.style.fill = fill
+    if region != @hover_region
+      $(document).trigger('opencensus:regionhoverout', [@hover_region]) if @hover_region
+      @hover_region = region
+      $(document).trigger('opencensus:regionhoverin', [region]) if @hover_region
 
-populateSvgWithData = (document, svgRoot, data, lonlatToPointOnTile) ->
-  style = $(document.getElementById('map')).data('opencensus-style')
-  svgRoot.style.opacity = style.opacity
+  onMouseOut: () ->
+    $(document).trigger('opencensus:regionhoverout', [@hover_region]) if @hover_region
+    @hover_region = undefined
 
-  workStack = [ { svgNode: svgRoot, dataNode: data } ]
+  onRegionHoverIn: (region) ->
+    geometry = region.geometry
+    geometry.attr({ stroke: 'green' })
 
-  while workStack.length > 0
-    work = workStack.pop()
-    svgNode = work.svgNode
-    dataNode = work.dataNode
+  onRegionHoverOut: (region) ->
+    geometry = region.geometry
+    geometry.attr({ stroke: 'white' })
 
-    switch dataNode.type
-      when 'FeatureCollection'
-        features = dataNode.features
-        workStack.unshift({ svgNode: svgNode, dataNode: subNode }) for subNode in features
-      when 'Feature'
-        g = document.createElementNS(svgns, 'g')
-        g.className = "feature #{dataNode.properties.type}"
-        g.id = "#{dataNode.id}"
-        propertiesString = window.JSON.stringify(dataNode.properties)
-        g.setAttribute('data-properties', propertiesString)
-        g.style.stroke = style.stroke
-        g.style.strokeWidth = '1px'
-        setGStyleForProperties(g, dataNode.properties, style)
-        svgNode.appendChild(g)
+  onClick: (world_xy) ->
+    tilePoint = this.globalPointToTilePoint(globalPoint)
+    return if tilePoint is undefined
+    region = this.tilePointToRegion(tilePoint)
+    $(document).trigger('opencensus:regionclick', [region])
 
-        workStack.unshift({ svgNode: g, dataNode: dataNode.geometry })
-      when 'GeometryCollection'
-        geometries = dataNode.geometries
-        if geometries.length
-          g = document.createElementNS(svgns, 'g')
-          g.className = 'geometry-collection'
-          svgNode.appendChild(g)
-
-          workStack.unshift({ svgNode: g, dataNode: subNode }) for subNode in geometries
-      when 'MultiPolygon'
-        addMultiPolygonToSvgNode(document, svgNode, dataNode, lonlatToPointOnTile)
-      when 'Polygon'
-        addMultiPolygonToSvgNode(document, svgNode, { coordinates: [ dataNode.coordinates ] }, lonlatToPointOnTile)
-      else
-        # ignore
+  destroy: () ->
+    event_class = this.id()
+    $(document).off(".#{event_class}")
 
 window.SvgMapType = (@tileSize) ->
 
-window.SvgMapType.prototype.getTileUrl = (coord, zoom) ->
-  "#{globals.json_tile_url}/regions/#{zoom}/#{coord.x}/#{coord.y}.geojson"
+window.SvgMapType.Instances = {}
 
 window.SvgMapType.prototype.getTile = (coord, zoom, ownerDocument) ->
   div = ownerDocument.createElement('div')
   div.style.width = "#{@tileSize.width}px"
   div.style.height = "#{@tileSize.height}px"
+  $(div).attr('opacity', globals.style.opacity)
 
-  svg = ownerDocument.createElementNS(svgns, 'svg')
-  svg.setAttribute('width', "#{@tileSize.width}")
-  svg.setAttribute('height', "#{@tileSize.height}")
-
-  url = this.getTileUrl(coord, zoom)
-  projection = new Projection(@tileSize, coord, zoom)
-
-  svg.addEventListener 'SVGLoad', (e) ->
-    root = div.childNodes[0]
-    requestSvgData url, coord, zoom, (data) ->
-      populateSvgWithData(document, root, data, (lonlat) -> projection.lonlatToPointOnTile(lonlat))
-
-  window.svgweb.appendChild(svg, div)
+  tile = new MapTile(@tileSize, coord, zoom, div)
+  window.SvgMapType.Instances[tile.id()] = tile
 
   div
 
 window.SvgMapType.prototype.releaseTile = (div) ->
-  window.svgweb.removeChild(div.childNodes[0], div)
+  tile_id = div.childNodes[0].id
+  tile = window.SvgMapType.Instances[tile_id]
+  tile.destroy() if tile
+  window.SvgMapType.Instances[tile_id] = undefined
+
+  div.removeChild(div.childNodes[0])

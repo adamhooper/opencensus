@@ -7,11 +7,6 @@ $ ->
 
   map_tag = document.getElementById('map')
 
-  # Generated using http://colorbrewer2.org/
-  color_buckets = [ '#fef0d9', '#fdd49e', '#fdbb84', '#fc8d59', '#ef6548', '#d7301f', '#990000' ]
-
-  $(map_tag).data('opencensus-style', { 'stroke': '#ffffff', 'stroke-width': '2px', 'opacity': 0.5, 'buckets': color_buckets });
-
   mapTypeStyle = [
     {
       elementType: "geometry",
@@ -42,8 +37,23 @@ $ ->
 
   map = new google.maps.Map(map_tag, options)
 
-  addOverlay = ->
-    svgMapType = new SvgMapType(new google.maps.Size(256, 256))
-    map.overlayMapTypes.insertAt(0, svgMapType)
+  register_event = (event_type) ->
+    google.maps.event.addListener map, event_type, (e) ->
+      projection = map.getProjection()
+      zoomLevel = map.getZoom()
+      latLng = e.latLng
+      world_xy = projection.fromLatLngToPoint(latLng)
+      multiplier = 1 << zoomLevel
+      pixel_xy = [
+        Math.round(world_xy.x * multiplier),
+        Math.round(world_xy.y * multiplier)
+      ]
+      $(document).trigger('opencensus:' + event_type, [pixel_xy])
 
-  window.addEventListener('SVGLoad', addOverlay, false)
+  register_event(event_type) for event_type in [ 'mousemove', 'click' ]
+
+  google.maps.event.addListener map, 'mouseout', (e) ->
+    $(document).trigger('opencensus:mouseout')
+
+  svgMapType = new SvgMapType(new google.maps.Size(256, 256))
+  map.overlayMapTypes.insertAt(0, svgMapType)
