@@ -194,17 +194,16 @@ class MapTile
     region = @regionData[region_id]
     if region # if this tile contains at least part of the region
       @paper.setStart()
-      @glow = region.geometry.clone()
-      @glow.attr({
-        stroke: '#000000',
-        fill: 'none',
-        'stroke-width': '2px',
-        opacity: 1
-      })
-      @glow.toFront()
+      # We can't use region.geometry.clone() because it produces warnings in Google Chrome 17.0.963.12 dev, Raphael 2.0.1
+      region.geometry.forEach (geometry) =>
+        path = geometry.attr('path')
+        @paper.path(path).attr({
+          stroke: '#000000',
+          'stroke-width': '2px'
+        })
+      @glow = @paper.setFinish()
 
   onRegionHoverOut: () ->
-    console.log("hoverOut:", @hover_region_id)
     delete @hover_region_id
     if @glow
       @glow.remove()
