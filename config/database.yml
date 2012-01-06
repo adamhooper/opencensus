@@ -20,13 +20,24 @@ test:
   script_dir: /usr/share/postgresql/9.1/contrib/postgis-1.5/
   schema_search_path: public,postgis
 
-production:
+production: 
   adapter: postgis
   encoding: unicode
   host: localhost
-  username: opencensus_prod
-  password: opencensus_prod
-  database: opencensus_prod
+  username: opencensus_dev
+  password: opencensus_dev
+  database: opencensus_dev
   su_username: adam
   script_dir: /usr/share/postgresql/9.1/contrib/postgis-1.5/
   schema_search_path: public,postgis
+
+#production:
+#  adapter: postgis
+#  encoding: unicode
+#  host: localhost
+#  username: opencensus_prod
+#  password: opencensus_prod
+#  database: opencensus_prod
+#  su_username: adam
+#  script_dir: /usr/share/postgresql/9.1/contrib/postgis-1.5/
+#  schema_search_path: public,postgis
