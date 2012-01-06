@@ -31,8 +31,31 @@ html, body {
 
 #info {
   position: absolute;
+  overflow: hidden;
   right: 0;
   top: $search_height;
   width: $info_width;
   bottom: 0;
+
+  h2 {
+    font: 1.2em Helvetica, sans-serif;
+    font-weight: bold;
+  }
+  h3 {
+    font: 1em Helvetica, sans-serif;
+    font-weight: normal;
+  }
+  h4 {
+    font: .9em Helvetica, sans-serif;
+    font-weight: bold;
+  }
+  ul {
+    list-style: none;
+    font-size: .75em;
+  }
+
+  h2, h3, h4, ul, p {
+    padding: 0;
+    margin: .25em;
+  }
 }
