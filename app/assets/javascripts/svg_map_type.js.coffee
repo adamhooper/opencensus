@@ -8,6 +8,10 @@
 globals = window.OpenCensus.globals
 state = window.OpenCensus.state
 
+# Save some object creation
+polygon_style_without_fill = { stroke: globals.style.stroke, 'stroke-width': globals.style['stroke-width'] }
+polygon_style_with_fill = { stroke: globals.style.stroke, 'stroke-width': globals.style['stroke-width'], fill: undefined }
+
 class MapTile
   constructor: (@tileSize, @coord, @zoom, div) ->
     @zoomFactor = Math.pow(2, @zoom)
@@ -19,6 +23,8 @@ class MapTile
     @regionData = {}
     div.id = this.id()
 
+    this.requestData()
+
     event_class = this.id()
     $(document).on("opencensus:mousemove.#{event_class}", (e, params) => this.onMouseMove(params))
     $(document).on("opencensus:click.#{event_class}", (e, params) => this.onClick(params))
@@ -26,10 +32,8 @@ class MapTile
     $(document).on("opencensus:regionhoverin.#{event_class}", (e, params) => this.onRegionHoverIn(params))
     $(document).on("opencensus:regionhoverout.#{event_class}", (e, params) => this.onRegionHoverOut(params))
 
-    this.requestData()
-
   requestData: () ->
-    jQuery.ajax({
+    this.dataRequest = jQuery.ajax({
       url: this.url(),
       dataType: 'json',
       success: (data) => this.handleData(data)
@@ -41,11 +45,21 @@ class MapTile
     for ring_coordinates in coordinates
       strings = []
 
+      lonlat = ring_coordinates.shift()
+      xy = this.lonlatToPointOnTile(lonlat)
+      strings.push('M')
+      strings.push(xy[0].toFixed(2))
+      strings.push(xy[1].toFixed(2))
+      strings.push('L')
+
       for lonlat in ring_coordinates
         xy = this.lonlatToPointOnTile(lonlat)
-        strings.push(xy[0].toFixed(2) + ' ' + xy[1].toFixed(2))
+        strings.push(xy[0].toFixed(2))
+        strings.push(xy[1].toFixed(2))
 
-      ring_strings.push("M#{strings[0]}L#{strings[1..-1].join(' ')}Z")
+      strings.push('Z ')
+
+      ring_strings.push(strings.join(' '))
 
     @paper.path(ring_strings.join(''))
 
@@ -59,6 +73,8 @@ class MapTile
         this.drawPolygon(geometry.coordinates)
     
   handleData: (data) ->
+    delete this.dataRequest
+
     @utfgrid = data.utfgrid
     @regionData = {}
 
@@ -71,40 +87,39 @@ class MapTile
       this.drawGeometry(feature.geometry)
       geometry = @paper.setFinish()
 
-      fill = this.getFillForProperties(properties)
+      fill = this.getFillForStatistics(properties.statistics)
 
       if fill == 'none'
-        geometry.attr({ stroke: globals.style.stroke, 'stroke-width': globals.style['stroke-width'] })
+        geometry.attr(polygon_style_without_fill)
         geometry.hide()
       else
-        geometry.attr({ stroke: globals.style.stroke, 'stroke-width': globals.style['stroke-width'], fill: fill })
+        polygon_style_with_fill.fill = fill
+        geometry.attr(polygon_style_with_fill)
 
       @regionData[id] = { id: id, properties: properties, geometry: geometry }
 
     @paper.canvas.style.display = ''
 
-  getFillForProperties: (properties) ->
-    yearProperties = properties[state.year.toString()]
-    value = yearProperties && yearProperties[state.indicator.name]
+  getFillForStatistics: (statistics) ->
+    return 'none' if !statistics
 
-    if !value && value isnt 0
-      'none'
-    else
-      bucket = state.indicator.bucketForValue(value)
+    yearStatistics = statistics[state.year.toString()]
+    return 'none' if !yearStatistics
 
-      if bucket is undefined
-        'none'
-      else
-        globals.style.buckets[bucket]
+    value = yearStatistics && yearStatistics[state.indicator.name]
+    return 'none' if !value
 
-  styleGeometryWithProperties: (geometry, properties) ->
+    bucket = state.indicator.bucketForValue(value.value)
+    return 'none' if bucket is undefined
+
+    globals.style.buckets[bucket]
 
   restyle: () ->
     for id, region of @regionData
       properties = region.properties
       geometry = region.geometry
 
-      fill = this.getFillForProperties(properties)
+      fill = this.getFillForStatistics(statistics)
       if fill == 'none'
         geometry.hide()
       else
@@ -129,7 +144,6 @@ class MapTile
 
   lonlatToPointOnTile: (lonlat) ->
     c = this.lonlatToGlobalPoint(lonlat)
-    #console.log(lonlat, c, @zoomFactor, [ @tileSize.width * c[0], @tileSize.height * c[1] ], @coord, @topLeftGlobalPoint)
     [
       @tileSize.width * c[0] - @topLeftGlobalPoint[0],
       @tileSize.height * c[1] - @topLeftGlobalPoint[1]
@@ -148,6 +162,8 @@ class MapTile
     grid = @utfgrid.grid
     keys = @utfgrid.keys
 
+    return undefined unless @utfgrid
+
     encoded_id = grid[row].charCodeAt(column)
     id = encoded_id
     id -= 1 if id >= 93
@@ -159,28 +175,41 @@ class MapTile
 
   onMouseMove: (globalPoint) ->
     tilePoint = this.globalPointToTilePoint(globalPoint)
-    if tilePoint is undefined
-      $(document).trigger('opencensus:regionhoverout', [@hover_region]) if @hover_region
-      @hover_region = undefined
-      return
+    return if tilePoint is undefined
+
     region = this.tilePointToRegion(tilePoint)
 
-    if region != @hover_region
-      $(document).trigger('opencensus:regionhoverout', [@hover_region]) if @hover_region
-      @hover_region = region
-      $(document).trigger('opencensus:regionhoverin', [region]) if @hover_region
+    if !region && @hover_region_id
+      $(document).trigger('opencensus:regionhoverout')
+
+    if region && (!@hover_region_id || region.id != @hover_region_id)
+      $(document).trigger('opencensus:regionhoverout') if @hover_region_id
+      $(document).trigger('opencensus:regionhoverin', [region.id, region.properties])
 
   onMouseOut: () ->
-    $(document).trigger('opencensus:regionhoverout', [@hover_region]) if @hover_region
-    @hover_region = undefined
+    $(document).trigger('opencensus:regionhoverout', [@hover_region_id]) if @hover_region_id && @glow
 
-  onRegionHoverIn: (region) ->
-    geometry = region.geometry
-    geometry.attr({ stroke: 'green' })
+  onRegionHoverIn: (region_id, properties) ->
+    @hover_region_id = region_id
 
-  onRegionHoverOut: (region) ->
-    geometry = region.geometry
-    geometry.attr({ stroke: 'white' })
+    region = @regionData[region_id]
+    if region # if this tile contains at least part of the region
+      @paper.setStart()
+      @glow = region.geometry.clone()
+      @glow.attr({
+        stroke: '#000000',
+        fill: 'none',
+        'stroke-width': '2px',
+        opacity: 1
+      })
+      @glow.toFront()
+
+  onRegionHoverOut: () ->
+    console.log("hoverOut:", @hover_region_id)
+    delete @hover_region_id
+    if @glow
+      @glow.remove()
+      delete @glow
 
   onClick: (world_xy) ->
     tilePoint = this.globalPointToTilePoint(globalPoint)
@@ -189,6 +218,8 @@ class MapTile
     $(document).trigger('opencensus:regionclick', [region])
 
   destroy: () ->
+    this.dataRequest.abort() if this.dataRequest
+
     event_class = this.id()
     $(document).off(".#{event_class}")
 

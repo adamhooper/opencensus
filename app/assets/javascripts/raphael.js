@@ -1968,6 +1968,8 @@
 
     // removed drag, dragMove(), dragUp()
     
+    elproto = R.el = {};
+
     elproto.data = function (key, value) {
         var data = eldata[this.id] = eldata[this.id] || {};
         if (arguments.length == 1) {
@@ -2001,42 +2003,8 @@
     elproto.unhover = function (f_in, f_out) {
         return this.unmouseover(f_in).unmouseout(f_out);
     };
-    var draggable = [];
-    
-    elproto.drag = function (onmove, onstart, onend, move_scope, start_scope, end_scope) {
-        function start(e) {
-            (e.originalEvent || e).preventDefault();
-            var scrollY = g.doc.documentElement.scrollTop || g.doc.body.scrollTop,
-                scrollX = g.doc.documentElement.scrollLeft || g.doc.body.scrollLeft;
-            this._drag.x = e.clientX + scrollX;
-            this._drag.y = e.clientY + scrollY;
-            this._drag.id = e.identifier;
-            !drag.length && R.mousemove(dragMove).mouseup(dragUp);
-            drag.push({el: this, move_scope: move_scope, start_scope: start_scope, end_scope: end_scope});
-            onstart && eve.on("drag.start." + this.id, onstart);
-            onmove && eve.on("drag.move." + this.id, onmove);
-            onend && eve.on("drag.end." + this.id, onend);
-            eve("drag.start." + this.id, start_scope || move_scope || this, e.clientX + scrollX, e.clientY + scrollY, e);
-        }
-        this._drag = {};
-        draggable.push({el: this, start: start});
-        this.mousedown(start);
-        return this;
-    };
-    
-    elproto.onDragOver = function (f) {
-        f ? eve.on("drag.over." + this.id, f) : eve.unbind("drag.over." + this.id);
-    };
-    
-    elproto.undrag = function () {
-        var i = draggable.length;
-        while (i--) if (draggable[i].el == this) {
-            this.unmousedown(draggable[i].start);
-            draggable.splice(i, 1);
-            eve.unbind("drag.*." + this.id);
-        }
-        !draggable.length && R.unmousemove(dragMove).unmouseup(dragUp);
-    };
+
+    // removed draggable, elproto.drag(), elproto.onDragOver(), elproto.undrag()
     
     paperproto.circle = function (x, y, r) {
         var out = R._engine.circle(this, x || 0, y || 0, r || 0);
@@ -3860,9 +3828,6 @@ window.Raphael.svg && function (R) {
         } else if (name != null && R.is(name, "object")) {
             params = name;
         }
-        for (var key in params) {
-            eve("attr." + key + "." + this.id, this, params[key]);
-        }
         for (key in this.paper.customAttributes) if (this.paper.customAttributes[has](key) && params[has](key) && R.is(this.paper.customAttributes[key], "function")) {
             var par = this.paper.customAttributes[key].apply(this, [].concat(params[key]));
             this.attrs[key] = params[key];
@@ -4782,9 +4747,6 @@ window.Raphael.vml && function (R) {
             params[name] = value;
         }
         value == null && R.is(name, "object") && (params = name);
-        for (var key in params) {
-            eve("attr." + key + "." + this.id, this, params[key]);
-        }
         if (params) {
             for (key in this.paper.customAttributes) if (this.paper.customAttributes[has](key) && params[has](key) && R.is(this.paper.customAttributes[key], "function")) {
                 var par = this.paper.customAttributes[key].apply(this, [].concat(params[key]));

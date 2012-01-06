@@ -9,7 +9,7 @@ defaults = globals.defaults
 class State
   constructor: ->
     @year = defaults.year
-    @indicator = globals.indicators.find_by_name(defaults.indicator_name)
+    @indicator = globals.indicators.findByName(defaults.indicator_name)
     @region = undefined
 
   setYear: (@year) ->

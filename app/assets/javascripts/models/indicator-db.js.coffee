@@ -9,7 +9,7 @@ class IndicatorDb
     @indicators_by_name = {}
     (@indicators_by_name[indicator.name] = indicator) for indicator in @indicators
 
-  find_by_name: (name) ->
+  findByName: (name) ->
     @indicators_by_name[name]
 
 window.OpenCensus.models.IndicatorDb = IndicatorDb

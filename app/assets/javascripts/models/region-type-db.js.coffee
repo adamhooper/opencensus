@@ -9,7 +9,7 @@ class RegionTypeDb
     @region_types_by_name = {}
     (@region_types_by_name[name] = region_type) for region_type in @region_types
 
-  find_by_name: (name) ->
+  findByName: (name) ->
     @region_types_by_name[name]
 
 window.OpenCensus.models.RegionTypeDb = RegionTypeDb
