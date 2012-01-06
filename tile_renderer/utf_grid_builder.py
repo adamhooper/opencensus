@@ -5,28 +5,30 @@ import struct
 
 import cairo
 
+from tile import Tile
+
 # https://github.com/mapbox/mbtiles-spec/blob/master/1.1/utfgrid.md
 class UTFGridBuilder:
-    def __init__(self, width, height, coord):
+    def __init__(self, tile):
         self.keys = []
-        self.width = width
-        self.height = height
+        self.width = tile.width
+        self.height = tile.height
 
         self.meters_per_half_map = 20037508.34
-        self.meters_per_pixel = 2 * self.meters_per_half_map / self.width / 2 ** coord.zoom
+        self.meters_per_pixel = 2 * self.meters_per_half_map / self.width / 2 ** tile.coord.zoom
         self.pixels_per_meter = 1 / self.meters_per_pixel
 
-        self.left = coord.column * self.width # in absolute pixels from top-left
-        self.top = coord.row * self.height # in absolute pixels from top-left
+        self.left = tile.coord.column * self.width # in absolute pixels from top-left
+        self.top = tile.coord.row * self.height # in absolute pixels from top-left
 
         # We'll draw on a regular, non-antialiased image: color 0, color 1, etc.
         # Each color in the image is a UTFGrid-encoded id (endianness: argb)
-        self.image = cairo.ImageSurface(cairo.FORMAT_RGB24, width, height)
+        self.image = cairo.ImageSurface(cairo.FORMAT_RGB24, self.width, self.height)
         self.image_context = cairo.Context(self.image)
         self.image_context.set_antialias(cairo.ANTIALIAS_NONE)
 
         self._set_new_key('')
-        self.image_context.rectangle(0, 0, width, height)
+        self.image_context.rectangle(0, 0, self.width, self.height)
         self.image_context.fill()
 
     def _set_new_key(self, key):

@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120104193042) do
+ActiveRecord::Schema.define(:version => 20120106072212) do
 
   create_table "gccs000b06a_e", :id => false, :force => true do |t|
     t.integer "gid",                                                                         :null => false
@@ -126,20 +126,20 @@ ActiveRecord::Schema.define(:version => 20120104193042) do
     t.integer "parent_region_id"
   end
 
+  add_index "region_parents", ["parent_region_id", "region_id"], :name => "index_region_parents_on_parent_region_id_region_id"
   add_index "region_parents", ["parent_region_id"], :name => "index_region_parents_on_parent_region_id"
   add_index "region_parents", ["region_id", "parent_region_id"], :name => "index_region_parents_on_region_id_and_parent_region_id", :unique => true
   add_index "region_parents", ["region_id"], :name => "index_region_parents_on_region_id"
 
-  create_table "region_polygon_siblings", :force => true do |t|
-    t.integer "region_polygon_id"
-    t.integer "sibling_region_polygon_id"
-    t.float   "distance_in_m"
+  create_table "region_parents_strings", :id => false, :force => true do |t|
+    t.integer "region_id",                :null => false
+    t.string  "parents",   :limit => nil
   end
 
   create_table "region_polygons", :id => false, :force => true do |t|
-    t.integer "id",                                                      :null => false
-    t.integer "region_id",                                               :null => false
-    t.spatial "polygon",        :limit => {:srid=>0, :type=>"geometry"}, :null => false
+    t.integer "id",                                                                         :null => false
+    t.integer "region_id",                                                                  :null => false
+    t.spatial "polygon",        :limit => {:srid=>0, :type=>"geometry"},                    :null => false
     t.integer "area_in_m",      :limit => 8
     t.spatial "polygon_zoom1",  :limit => {:srid=>0, :type=>"geometry"}
     t.spatial "polygon_zoom2",  :limit => {:srid=>0, :type=>"geometry"}
@@ -164,9 +164,287 @@ ActiveRecord::Schema.define(:version => 20120104193042) do
     t.float   "min_longitude"
     t.float   "max_latitude"
     t.float   "max_longitude"
+    t.boolean "is_island",                                               :default => false, :null => false
   end
 
   add_index "region_polygons", ["max_longitude", "min_longitude", "max_latitude", "min_latitude", "area_in_m"], :name => "region_polygons_max_longitude_min_longitude_max_latitude_mi_idx"
+  add_index "region_polygons", ["region_id", "id"], :name => "region_polygons_region_id_id_idx"
+  add_index "region_polygons", ["region_id"], :name => "region_polygons_region_id_idx"
+
+  create_table "region_polygons_zoom1", :id => false, :force => true do |t|
+    t.integer "id",                                                     :null => false
+    t.integer "region_id"
+    t.float   "min_longitude"
+    t.float   "max_longitude"
+    t.float   "min_latitude"
+    t.float   "max_latitude"
+    t.integer "area_in_m",     :limit => 8
+    t.boolean "is_island"
+    t.spatial "polygon",       :limit => {:srid=>0, :type=>"geometry"}
+  end
+
+  add_index "region_polygons_zoom1", ["min_longitude", "max_longitude", "min_latitude", "max_latitude", "area_in_m", "is_island"], :name => "region_polygons_zoom1_tile_matching_query"
+  add_index "region_polygons_zoom1", ["region_id"], :name => "index_region_polygons_zoom1_on_region_id"
+
+  create_table "region_polygons_zoom10", :id => false, :force => true do |t|
+    t.integer "id",                                                     :null => false
+    t.integer "region_id"
+    t.float   "min_longitude"
+    t.float   "max_longitude"
+    t.float   "min_latitude"
+    t.float   "max_latitude"
+    t.integer "area_in_m",     :limit => 8
+    t.boolean "is_island"
+    t.spatial "polygon",       :limit => {:srid=>0, :type=>"geometry"}
+  end
+
+  add_index "region_polygons_zoom10", ["min_longitude", "max_longitude", "min_latitude", "max_latitude", "area_in_m", "is_island"], :name => "region_polygons_zoom10_tile_matching_query"
+  add_index "region_polygons_zoom10", ["region_id"], :name => "index_region_polygons_zoom10_on_region_id"
+
+  create_table "region_polygons_zoom11", :id => false, :force => true do |t|
+    t.integer "id",                                                     :null => false
+    t.integer "region_id"
+    t.float   "min_longitude"
+    t.float   "max_longitude"
+    t.float   "min_latitude"
+    t.float   "max_latitude"
+    t.integer "area_in_m",     :limit => 8
+    t.boolean "is_island"
+    t.spatial "polygon",       :limit => {:srid=>0, :type=>"geometry"}
+  end
+
+  add_index "region_polygons_zoom11", ["min_longitude", "max_longitude", "min_latitude", "max_latitude", "area_in_m", "is_island"], :name => "region_polygons_zoom11_tile_matching_query"
+  add_index "region_polygons_zoom11", ["region_id"], :name => "index_region_polygons_zoom11_on_region_id"
+
+  create_table "region_polygons_zoom12", :id => false, :force => true do |t|
+    t.integer "id",                                                     :null => false
+    t.integer "region_id"
+    t.float   "min_longitude"
+    t.float   "max_longitude"
+    t.float   "min_latitude"
+    t.float   "max_latitude"
+    t.integer "area_in_m",     :limit => 8
+    t.boolean "is_island"
+    t.spatial "polygon",       :limit => {:srid=>0, :type=>"geometry"}
+  end
+
+  add_index "region_polygons_zoom12", ["min_longitude", "max_longitude", "min_latitude", "max_latitude", "area_in_m", "is_island"], :name => "region_polygons_zoom12_tile_matching_query"
+  add_index "region_polygons_zoom12", ["region_id"], :name => "index_region_polygons_zoom12_on_region_id"
+
+  create_table "region_polygons_zoom13", :id => false, :force => true do |t|
+    t.integer "id",                                                     :null => false
+    t.integer "region_id"
+    t.float   "min_longitude"
+    t.float   "max_longitude"
+    t.float   "min_latitude"
+    t.float   "max_latitude"
+    t.integer "area_in_m",     :limit => 8
+    t.boolean "is_island"
+    t.spatial "polygon",       :limit => {:srid=>0, :type=>"geometry"}
+  end
+
+  add_index "region_polygons_zoom13", ["min_longitude", "max_longitude", "min_latitude", "max_latitude", "area_in_m", "is_island"], :name => "region_polygons_zoom13_tile_matching_query"
+  add_index "region_polygons_zoom13", ["region_id"], :name => "index_region_polygons_zoom13_on_region_id"
+
+  create_table "region_polygons_zoom14", :id => false, :force => true do |t|
+    t.integer "id",                                                     :null => false
+    t.integer "region_id"
+    t.float   "min_longitude"
+    t.float   "max_longitude"
+    t.float   "min_latitude"
+    t.float   "max_latitude"
+    t.integer "area_in_m",     :limit => 8
+    t.boolean "is_island"
+    t.spatial "polygon",       :limit => {:srid=>0, :type=>"geometry"}
+  end
+
+  add_index "region_polygons_zoom14", ["min_longitude", "max_longitude", "min_latitude", "max_latitude", "area_in_m", "is_island"], :name => "region_polygons_zoom14_tile_matching_query"
+  add_index "region_polygons_zoom14", ["region_id"], :name => "index_region_polygons_zoom14_on_region_id"
+
+  create_table "region_polygons_zoom15", :id => false, :force => true do |t|
+    t.integer "id",                                                     :null => false
+    t.integer "region_id"
+    t.float   "min_longitude"
+    t.float   "max_longitude"
+    t.float   "min_latitude"
+    t.float   "max_latitude"
+    t.integer "area_in_m",     :limit => 8
+    t.boolean "is_island"
+    t.spatial "polygon",       :limit => {:srid=>0, :type=>"geometry"}
+  end
+
+  add_index "region_polygons_zoom15", ["min_longitude", "max_longitude", "min_latitude", "max_latitude", "area_in_m", "is_island"], :name => "region_polygons_zoom15_tile_matching_query"
+  add_index "region_polygons_zoom15", ["region_id"], :name => "index_region_polygons_zoom15_on_region_id"
+
+  create_table "region_polygons_zoom16", :id => false, :force => true do |t|
+    t.integer "id",                                                     :null => false
+    t.integer "region_id"
+    t.float   "min_longitude"
+    t.float   "max_longitude"
+    t.float   "min_latitude"
+    t.float   "max_latitude"
+    t.integer "area_in_m",     :limit => 8
+    t.boolean "is_island"
+    t.spatial "polygon",       :limit => {:srid=>0, :type=>"geometry"}
+  end
+
+  add_index "region_polygons_zoom16", ["min_longitude", "max_longitude", "min_latitude", "max_latitude", "area_in_m", "is_island"], :name => "region_polygons_zoom16_tile_matching_query"
+  add_index "region_polygons_zoom16", ["region_id"], :name => "index_region_polygons_zoom16_on_region_id"
+
+  create_table "region_polygons_zoom17", :id => false, :force => true do |t|
+    t.integer "id",                                                     :null => false
+    t.integer "region_id"
+    t.float   "min_longitude"
+    t.float   "max_longitude"
+    t.float   "min_latitude"
+    t.float   "max_latitude"
+    t.integer "area_in_m",     :limit => 8
+    t.boolean "is_island"
+    t.spatial "polygon",       :limit => {:srid=>0, :type=>"geometry"}
+  end
+
+  add_index "region_polygons_zoom17", ["min_longitude", "max_longitude", "min_latitude", "max_latitude", "area_in_m", "is_island"], :name => "region_polygons_zoom17_tile_matching_query"
+  add_index "region_polygons_zoom17", ["region_id"], :name => "index_region_polygons_zoom17_on_region_id"
+
+  create_table "region_polygons_zoom18", :id => false, :force => true do |t|
+    t.integer "id",                                                     :null => false
+    t.integer "region_id"
+    t.float   "min_longitude"
+    t.float   "max_longitude"
+    t.float   "min_latitude"
+    t.float   "max_latitude"
+    t.integer "area_in_m",     :limit => 8
+    t.boolean "is_island"
+    t.spatial "polygon",       :limit => {:srid=>0, :type=>"geometry"}
+  end
+
+  add_index "region_polygons_zoom18", ["min_longitude", "max_longitude", "min_latitude", "max_latitude", "area_in_m", "is_island"], :name => "region_polygons_zoom18_tile_matching_query"
+  add_index "region_polygons_zoom18", ["region_id"], :name => "index_region_polygons_zoom18_on_region_id"
+
+  create_table "region_polygons_zoom2", :id => false, :force => true do |t|
+    t.integer "id",                                                     :null => false
+    t.integer "region_id"
+    t.float   "min_longitude"
+    t.float   "max_longitude"
+    t.float   "min_latitude"
+    t.float   "max_latitude"
+    t.integer "area_in_m",     :limit => 8
+    t.boolean "is_island"
+    t.spatial "polygon",       :limit => {:srid=>0, :type=>"geometry"}
+  end
+
+  add_index "region_polygons_zoom2", ["min_longitude", "max_longitude", "min_latitude", "max_latitude", "area_in_m", "is_island"], :name => "region_polygons_zoom2_tile_matching_query"
+  add_index "region_polygons_zoom2", ["region_id"], :name => "index_region_polygons_zoom2_on_region_id"
+
+  create_table "region_polygons_zoom3", :id => false, :force => true do |t|
+    t.integer "id",                                                     :null => false
+    t.integer "region_id"
+    t.float   "min_longitude"
+    t.float   "max_longitude"
+    t.float   "min_latitude"
+    t.float   "max_latitude"
+    t.integer "area_in_m",     :limit => 8
+    t.boolean "is_island"
+    t.spatial "polygon",       :limit => {:srid=>0, :type=>"geometry"}
+  end
+
+  add_index "region_polygons_zoom3", ["min_longitude", "max_longitude", "min_latitude", "max_latitude", "area_in_m", "is_island"], :name => "region_polygons_zoom3_tile_matching_query"
+  add_index "region_polygons_zoom3", ["region_id"], :name => "index_region_polygons_zoom3_on_region_id"
+
+  create_table "region_polygons_zoom4", :id => false, :force => true do |t|
+    t.integer "id",                                                     :null => false
+    t.integer "region_id"
+    t.float   "min_longitude"
+    t.float   "max_longitude"
+    t.float   "min_latitude"
+    t.float   "max_latitude"
+    t.integer "area_in_m",     :limit => 8
+    t.boolean "is_island"
+    t.spatial "polygon",       :limit => {:srid=>0, :type=>"geometry"}
+  end
+
+  add_index "region_polygons_zoom4", ["min_longitude", "max_longitude", "min_latitude", "max_latitude", "area_in_m", "is_island"], :name => "region_polygons_zoom4_tile_matching_query"
+  add_index "region_polygons_zoom4", ["region_id"], :name => "index_region_polygons_zoom4_on_region_id"
+
+  create_table "region_polygons_zoom5", :id => false, :force => true do |t|
+    t.integer "id",                                                     :null => false
+    t.integer "region_id"
+    t.float   "min_longitude"
+    t.float   "max_longitude"
+    t.float   "min_latitude"
+    t.float   "max_latitude"
+    t.integer "area_in_m",     :limit => 8
+    t.boolean "is_island"
+    t.spatial "polygon",       :limit => {:srid=>0, :type=>"geometry"}
+  end
+
+  add_index "region_polygons_zoom5", ["min_longitude", "max_longitude", "min_latitude", "max_latitude", "area_in_m", "is_island"], :name => "region_polygons_zoom5_tile_matching_query"
+  add_index "region_polygons_zoom5", ["region_id"], :name => "index_region_polygons_zoom5_on_region_id"
+
+  create_table "region_polygons_zoom6", :id => false, :force => true do |t|
+    t.integer "id",                                                     :null => false
+    t.integer "region_id"
+    t.float   "min_longitude"
+    t.float   "max_longitude"
+    t.float   "min_latitude"
+    t.float   "max_latitude"
+    t.integer "area_in_m",     :limit => 8
+    t.boolean "is_island"
+    t.spatial "polygon",       :limit => {:srid=>0, :type=>"geometry"}
+  end
+
+  add_index "region_polygons_zoom6", ["min_longitude", "max_longitude", "min_latitude", "max_latitude", "area_in_m", "is_island"], :name => "region_polygons_zoom6_tile_matching_query"
+  add_index "region_polygons_zoom6", ["region_id"], :name => "index_region_polygons_zoom6_on_region_id"
+
+  create_table "region_polygons_zoom7", :id => false, :force => true do |t|
+    t.integer "id",                                                     :null => false
+    t.integer "region_id"
+    t.float   "min_longitude"
+    t.float   "max_longitude"
+    t.float   "min_latitude"
+    t.float   "max_latitude"
+    t.integer "area_in_m",     :limit => 8
+    t.boolean "is_island"
+    t.spatial "polygon",       :limit => {:srid=>0, :type=>"geometry"}
+  end
+
+  add_index "region_polygons_zoom7", ["min_longitude", "max_longitude", "min_latitude", "max_latitude", "area_in_m", "is_island"], :name => "region_polygons_zoom7_tile_matching_query"
+  add_index "region_polygons_zoom7", ["region_id"], :name => "index_region_polygons_zoom7_on_region_id"
+
+  create_table "region_polygons_zoom8", :id => false, :force => true do |t|
+    t.integer "id",                                                     :null => false
+    t.integer "region_id"
+    t.float   "min_longitude"
+    t.float   "max_longitude"
+    t.float   "min_latitude"
+    t.float   "max_latitude"
+    t.integer "area_in_m",     :limit => 8
+    t.boolean "is_island"
+    t.spatial "polygon",       :limit => {:srid=>0, :type=>"geometry"}
+  end
+
+  add_index "region_polygons_zoom8", ["min_longitude", "max_longitude", "min_latitude", "max_latitude", "area_in_m", "is_island"], :name => "region_polygons_zoom8_tile_matching_query"
+  add_index "region_polygons_zoom8", ["region_id"], :name => "index_region_polygons_zoom8_on_region_id"
+
+  create_table "region_polygons_zoom9", :id => false, :force => true do |t|
+    t.integer "id",                                                     :null => false
+    t.integer "region_id"
+    t.float   "min_longitude"
+    t.float   "max_longitude"
+    t.float   "min_latitude"
+    t.float   "max_latitude"
+    t.integer "area_in_m",     :limit => 8
+    t.boolean "is_island"
+    t.spatial "polygon",       :limit => {:srid=>0, :type=>"geometry"}
+  end
+
+  add_index "region_polygons_zoom9", ["min_longitude", "max_longitude", "min_latitude", "max_latitude", "area_in_m", "is_island"], :name => "region_polygons_zoom9_tile_matching_query"
+  add_index "region_polygons_zoom9", ["region_id"], :name => "index_region_polygons_zoom9_on_region_id"
+
+  create_table "region_siblings", :id => false, :force => true do |t|
+    t.integer "region_id",         :null => false
+    t.integer "sibling_region_id", :null => false
+  end
 
   create_table "region_types", :id => false, :force => true do |t|
     t.integer "id",                      :null => false

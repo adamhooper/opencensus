@@ -23,7 +23,9 @@ if __name__ == '__main__':
         'cache': {
             'name': 'Disk',
             'path': os.path.dirname(__file__) + '/cache',
-            'umask': '0000'
+            'umask': '0000',
+            'dirs': 'portable',
+            'gzip': []
         },
         'layers': {
             'regions': {
