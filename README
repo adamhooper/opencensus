@@ -16,21 +16,17 @@ Next, we can cache massively.
 
 First, the area: `UPDATE region_polygons SET area_in_m = ST_Area(ST_SetSRID(polygon, 4326));`
 
-Then, the simplifications: `UPDATE region_polygons SET polygon_zoom1 = ST_SimplifyPreserveTopology(polygon, 0.46875000000000000000000);` (Repeat until zoom18, dividing the tolerance float by two each time).
+Add columns: min_longitude, max_longitude, min_latitude, max_latitude, is_island. is_island is helfpul for making the map look right. See db/migrations/ for info on how is_island is derived.
 
-Finally, add indices: on polygon (USING GIST) and on area_in_m. These are what we'll use in our query conditions.
+Then simplify, adding to separate tables so that neighbouring tiles use rows from the same general spot: `SELECT id, region_id, min_longitude, max_longitude, min_latitude, max_latitude, area_in_m, is_island, ST_SimplifyPreserveTopology(polygon, 0.46875000000000000000000) INTO region_polygons_zoom18';
 
-The end result? We can select the appropriate row and return the geometry with ST_AsGeoJSON(), and we won't need to post-process any geometry.
+Finally, add indices: on boundaries, area_in_m and is_island. These are what we'll use in our query conditions.
+
+The end result? We can select the appropriate row and return the geometry with ST_AsGeoJSON(). Most of the calculations are already done.
 
 ==== Validity
 
-Sometimes ST_SimplifyPreserveGeometry() introduces errors. These will give "side location conflict" errors when using ST_Intersection(). Fix the the errors with ST_Buffer(geometry, 0.0). For instance: `UPDATE region_polygons SET polygon_zoom18 = ST_Buffer(polygon_zoom18, 0) WHERE ST_IsValid(polygon_zoom18) IS FALSE`
-
-==== More speedups...
-
-The GIST index is great, but "region_polygons" is so large that the index doesn't speed things up as much as we'd like. That's because when we use a WHERE clause to check if the polygon intersects with a certain bounding box, PostgreSQL only decides which *pages* of database records to read, not which *records*. Then PostgreSQL will read those pages, parse the geometry of every record in every page the index says contains an important record, and filter out those that are out of bounds. That's a fair amount of processing we don't need.
-
-The solution? Check against something smaller. Create a "bounding_box" GEOMETRY column, set it to ST_Envelope(polygon), and create an index USING GIST on it.
+Sometimes ST_SimplifyPreserveGeometry() introduces errors. These will give "side location conflict" errors when using ST_Intersection(). Fix the the errors with ST_Buffer(geometry, 0.0). For instance: `UPDATE region_polygons_zoom18 SET polygon = ST_Buffer(polygon, 0) WHERE ST_IsValid(polygon) IS FALSE`
 
 === Data
 
