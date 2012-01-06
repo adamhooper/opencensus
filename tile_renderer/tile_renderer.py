@@ -40,8 +40,8 @@ class TileRenderer(object):
             r.type,
             r.name,
             parents.parents,
-            ST_AsGeoJSON(rp.geometry, %d) AS geometry_geojson,
-            ST_AsSVG(ST_Transform(ST_SetSRID(rp.geometry, 4326), 900913)) AS geometry_mercator_svg
+            ST_AsGeoJSON(polygons.geometry, %d) AS geometry_geojson,
+            ST_AsSVG(ST_Transform(ST_SetSRID(polygons.geometry, 4326), 900913)) AS geometry_mercator_svg
           FROM regions r
           INNER JOIN (
                       SELECT
@@ -60,8 +60,8 @@ class TileRenderer(object):
                            ) x
                       WHERE GeometryType(geometry) IN ('POLYGON', 'MULTIPOLYGON')
                       GROUP BY region_id
-                     ) rp
-                  ON r.id = rp.region_id
+                     ) polygons
+                  ON r.id = polygons.region_id
           INNER JOIN region_parents_strings parents
                   ON r.id = parents.region_id
           ORDER BY r.position
