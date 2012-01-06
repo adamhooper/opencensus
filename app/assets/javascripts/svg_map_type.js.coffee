@@ -18,7 +18,6 @@ class MapTile
     @multiplier = @zoomFactor / 360
     @topLeftGlobalPoint = [ @coord.x * @tileSize.width, @coord.y * @tileSize.height ]
     @paper = Raphael(div, @tileSize.width, @tileSize.height)
-    @paper.canvas.style.opacity = "#{globals.style.opacity * 100}%"
     @utfgrid = {}
     @regionData = {}
     div.id = this.id()
@@ -159,10 +158,10 @@ class MapTile
   tilePointToRegion: (tilePoint) ->
     [ column, row ] = tilePoint
 
+    return undefined unless @utfgrid.grid
+
     grid = @utfgrid.grid
     keys = @utfgrid.keys
-
-    return undefined unless @utfgrid
 
     encoded_id = grid[row].charCodeAt(column)
     id = encoded_id
@@ -231,7 +230,7 @@ window.SvgMapType.prototype.getTile = (coord, zoom, ownerDocument) ->
   div = ownerDocument.createElement('div')
   div.style.width = "#{@tileSize.width}px"
   div.style.height = "#{@tileSize.height}px"
-  $(div).attr('opacity', globals.style.opacity)
+  $(div).css('opacity', globals.style.opacity)
 
   tile = new MapTile(@tileSize, coord, zoom, div)
   window.SvgMapType.Instances[tile.id()] = tile
