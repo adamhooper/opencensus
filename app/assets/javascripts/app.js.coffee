@@ -1,4 +1,5 @@
 window.OpenCensus = {
+  helpers: {},
   views: {},
   models: {},
   controllers: {}
