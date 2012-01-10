@@ -8,4 +8,4 @@ Rails.application.require_environment!
 indicator = Indicator.find_by_name('Area');
 
 STDERR.puts("Setting Area to our own calculated values wherever StatsCan gave us 0")
-Indicator.connection.execute("UPDATE indicator_region_values SET note = 'The area of this region is an estimate, because Statistics Canada suggested its area is 0', value_float = (SELECT postgis.ST_Area(geography(geometry)) / 1000000 FROM regions WHERE id = indicator_region_values.region_id) WHERE indicator_id = #{indicator.id} AND value_float = 0")
+Indicator.connection.execute("UPDATE indicator_region_values SET note = 'The area of this region is an estimate, because Statistics Canada suggested its area is 0', value_float = (SELECT ST_Area(geography(geometry)) / 1000000 FROM regions WHERE id = indicator_region_values.region_id) WHERE indicator_id = #{indicator.id} AND value_float = 0")
