@@ -60,10 +60,10 @@ class MapView
 
     for e in [ 'center_changed', 'zoom_changed' ]
       google.maps.event.addListener map, e, () ->
-        latlng = map.getCenter();
+        latlng = map.getCenter()
         position = {
           latitude: latlng.lat(),
-          longitude: latlng.lon(),
+          longitude: latlng.lng(),
           zoom: map.getZoom()
         }
         state.setPosition(position)
