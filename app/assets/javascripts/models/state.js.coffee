@@ -11,7 +11,7 @@ class State
     @year = defaults.year
     @indicator = globals.indicators.findByName(defaults.indicator_name)
     @region = undefined
-    @position = {}.extend(defaults.position)
+    @position = $.extend({}, defaults.position)
 
   setYear: (@year) ->
     $(document).trigger('opencensus:state:year-changed', @year)
@@ -23,7 +23,7 @@ class State
     $(document).trigger('opencensus:state:region-changed', @region)
 
   setPosition: (position) ->
-    @position = {}.extend(position)
+    @position = $.extend({}, position)
     $(document).trigger('opencensus:state:position-changed', @position)
 
   onYearChanged: (callerNamespace, func) ->
