@@ -3,10 +3,11 @@
 from tile_data import TileData
 
 class TileRenderer(object):
-    def __init__(self, tile, db_cursor, projection):
+    def __init__(self, tile, db_cursor, projection, include_statistics=True):
         self.tile = tile
         self.db_cursor = db_cursor
         self.projection = projection
+        self.include_statistics = include_statistics
 
     def _getBoundingBox(self, padding = 0.0):
         topLeftCoord = self.tile.getTopLeftCoord()
@@ -87,26 +88,14 @@ class TileRenderer(object):
 
         return query
 
-    def getTileData(self):
-        tile_data = TileData(self.tile)
+    def _populateStatistics(self, tile_data):
+        region_ids = tile_data.regionIds()
+        if len(region_ids) == 0: return
 
-        sql = self._getPolygonsSQL()
-        self.db_cursor.execute(sql)
-
-        region_ids = []
-
-        for row in self.db_cursor:
-            region_id = row['id']
-            properties = {
-                'name': row['name'],
-                'type': row['type'],
-                'uid': row['uid'],
-                'parents': (row['parents'] or '').split('|')
-            }
-            region_ids.append(region_id)
-            tile_data.addRegion(region_id, properties, row['geometry_geojson'], row['geometry_mercator_svg'])
-
-        if len(region_ids) > 0:
+        if not self.include_statistics:
+            for region_id in region_ids:
+                tile_data.addRegionStatistic(region_id, 0, 'TO-FILL', region_id)
+        else:
             sql = self._getStatisticsSQL(region_ids)
             self.db_cursor.execute(sql)
 
@@ -126,5 +115,23 @@ class TileRenderer(object):
                 note = row['note']
 
                 tile_data.addRegionStatistic(region_id, year, name, value, note)
+
+    def getTileData(self):
+        tile_data = TileData(self.tile)
+
+        sql = self._getPolygonsSQL()
+        self.db_cursor.execute(sql)
+
+        for row in self.db_cursor:
+            region_id = row['id']
+            properties = {
+                'name': row['name'],
+                'type': row['type'],
+                'uid': row['uid'],
+                'parents': (row['parents'] or '').split('|')
+            }
+            tile_data.addRegion(region_id, properties, row['geometry_geojson'], row['geometry_mercator_svg'])
+
+        self._populateStatistics(tile_data)
 
         return tile_data.toJson()

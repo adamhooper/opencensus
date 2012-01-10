@@ -61,7 +61,7 @@ class MBTilesRenderer(object):
                 yield Tile(self.tile_width, self.tile_height, coord)
 
     def _calculateTileData(self, tile):
-        renderer = TileRenderer(tile, self.source_db_cursor, self.projection)
+        renderer = TileRenderer(tile, self.source_db_cursor, self.projection, include_statistics=False)
         return renderer.getTileData()
 
     def _saveTileData(self, tile, data):

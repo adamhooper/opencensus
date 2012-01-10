@@ -35,6 +35,9 @@ class TileData(object):
         if note is not None and len(note) > 0:
             year_statistics[name]['note'] = note
 
+    def regionIds(self):
+        return self.region_id_to_properties.keys()
+
     def toJson(self):
         feature_jsons = []
         for feature in self.geojson_features:
