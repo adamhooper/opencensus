@@ -38,4 +38,4 @@ Sometimes ST_SimplifyPreserveGeometry() introduces errors. These will give "side
 
 === Tiles
 
-See custom_tilestache.py. Requires TileStache.
+See tile_renderer/. Requires TileStache.
