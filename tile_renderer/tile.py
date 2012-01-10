@@ -8,6 +8,10 @@ class Tile(object):
         self.height = height
         self.coord = coord
 
+        self.column = int(coord.column)
+        self.row = int(coord.row)
+        self.zoom = int(coord.zoom)
+
     # Returns the number of WGS84 degrees in each pixel.
     #
     # This will return the smaller dimension. For instance, in a
