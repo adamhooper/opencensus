@@ -1,9 +1,13 @@
 #= require app
 #= require globals
 #= require state
+#= require helpers/format-numbers
+#= require views/indicator-view
 
+h = window.OpenCensus.helpers
 globals = window.OpenCensus.globals
 state = window.OpenCensus.state
+IndicatorView = window.OpenCensus.views.IndicatorView
 
 class TextView
   constructor: (@div) ->
@@ -60,7 +64,14 @@ class TextView
 
       continue unless value && mapValue
 
-      $h4 = $('<h4></h4>').text("#{indicator.name}: #{value.value}")
+      value_string = undefined
+      console.log
+      if indicator.value_type == 'float'
+        value_string = h.format_float(value.value)
+      else if indicator.value_type == 'integer'
+        value_string = h.format_integer(value.value)
+
+      $h4 = $('<h4></h4>').text("#{indicator.name}: #{value_string}")
       $div.append($h4)
 
       if value.note
@@ -68,24 +79,13 @@ class TextView
         $div.append($note)
 
       if indicator.name == state.indicator.name || mapIndicator.name == state.indicator.name
-        $div.append('<p>This is shown on the map. Here is the legend:</p>')
+        $div.append('<p>This is shown on the map.</p>')
         this.setLegend(mapIndicator)
 
   setLegend: (indicator) ->
-    $div = this.$div()
-
-    $ul = $('<ul class="legend"></ul>')
-    for bucket, i in indicator.buckets()
-      $li = $('<li></li>')
-      $span = $('<span>&nbsp;</span>').css({
-        background: globals.style.buckets[i],
-        border: '1px solid black',
-      })
-      $li.append($span)
-      $li.append("#{bucket.min} to #{bucket.max} #{indicator.unit}")
-      $ul.append($li)
-
-    $div.append($ul)
+    indicatorView = new IndicatorView(indicator)
+    $fragment = indicatorView.getLegendFragment()
+    this.$div().append($fragment)
 
   clear: () ->
     this.$div().text('Hover over a region to see info...')

@@ -49,13 +49,22 @@ html, body {
     font: .9em Helvetica, sans-serif;
     font-weight: bold;
   }
+  h5 {
+    font: .8em Helvetica, sans-serif;
+    font-weight: bold;
+  }
   ul {
     list-style: none;
     font-size: .75em;
   }
 
-  h2, h3, h4, ul, p {
+  h2, h3, h4, h5, ul, p {
     padding: 0;
     margin: .25em;
+  }
+
+  div.legend {
+    border: 1px solid gray;
+    padding: .25em;
   }
 }

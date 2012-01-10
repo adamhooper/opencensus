@@ -209,7 +209,7 @@ class MapTile
       @glow.remove()
       delete @glow
 
-  onClick: (world_xy) ->
+  onClick: (globalPoint) ->
     tilePoint = this.globalPointToTilePoint(globalPoint)
     return if tilePoint is undefined
     region = this.tilePointToRegion(tilePoint)
