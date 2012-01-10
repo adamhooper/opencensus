@@ -5,7 +5,7 @@
 globals = window.OpenCensus.globals
 state = window.OpenCensus.state
 
-class InfoDiv
+class TextView
   constructor: (@div) ->
     $(document).on 'opencensus:regionhoverin', (e, region_id, properties) =>
       this.onRegionHoverIn(region_id, properties)
@@ -13,7 +13,7 @@ class InfoDiv
       this.onRegionHoverOut()
 
   $div: () ->
-    $('#info')
+    $(@div)
 
   onRegionHoverIn: (region_id, properties) ->
     this.setProperties(properties)
@@ -91,4 +91,5 @@ class InfoDiv
     this.$div().text('Hover over a region to see info...')
 
 $ ->
-  new InfoDiv()
+  div = document.getElementById('info')
+  new TextView(div)
