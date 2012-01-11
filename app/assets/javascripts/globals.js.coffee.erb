@@ -5,6 +5,10 @@
 
 models = window.OpenCensus.models
 
+region_types = new models.RegionTypeDb(<%= RegionType.order(:position).map{|rt| { name: rt.name, description: rt.name } }.to_json %>)
+indicators = new models.IndicatorDb(<%= Indicator.order(:name).map{|i| i.attributes }.to_json %>)
+region_store = new models.RegionStore(region_types)
+
 window.OpenCensus.globals = {
   defaults: {
     year: 2006,
@@ -21,8 +25,8 @@ window.OpenCensus.globals = {
     opacity: 0.75,
     buckets: [ '#fef0d9', '#fdd49e', '#fdbb84', '#fc8d59', '#ef6548', '#d7301f', '#990000' ]
   }
-  json_tile_url: 'http://localhost:8000',
-  region_types: new models.RegionTypeDb(<%= RegionType.order(:position).map{|rt| { name: rt.name, description: rt.name } }.to_json %>),
-  indicators: new models.IndicatorDb(<%= Indicator.order(:name).map{|i| i.attributes }.to_json %>),
-  region_store: new models.RegionStore()
+  json_tile_url: 'http://localhost:8000'
+  region_types: region_types,
+  indicators: indicators,
+  region_store: region_store
 }

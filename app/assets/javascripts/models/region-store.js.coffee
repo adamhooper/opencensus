@@ -1,10 +1,7 @@
 #= require app
-#= require globals
-
-region_types = window.OpenCensus.globals.region_types
 
 class RegionStore
-  constructor: () ->
+  constructor: (@region_types) ->
     @regions = {}
 
   add: (region) ->
@@ -23,9 +20,10 @@ class RegionStore
     regionData && regionData.region || undefined
 
   getNearestRegionWithDatum: (region_id, year, indicator) ->
-    region = get(region_id)
+    region = this.get(region_id)
     return undefined if region is undefined
     return region if region.getDatum(year, indicator)
+    return undefined if region.parents is undefined
 
     best_candidate = undefined
     best_index = -1
@@ -34,7 +32,7 @@ class RegionStore
       parent_region = this.getNearestRegionWithDatum(parent_region_id, year, indicator)
       if parent_region
         type = parent_region.type
-        index = region_types.indexOfName(type)
+        index = @region_types.indexOfName(type)
 
         if index > best_index
           best_candidate = parent_region

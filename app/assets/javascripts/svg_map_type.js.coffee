@@ -176,7 +176,7 @@ class MapTile
 
     region_id = keys[id]
 
-    region_store.getNearestRegionWithDatum(state.year, @mapIndicator)
+    region_store.getNearestRegionWithDatum(region_id, state.year, @mapIndicator)
 
   onMouseMove: (globalPoint) ->
     tilePoint = this.globalPointToTilePoint(globalPoint)
