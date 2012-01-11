@@ -51,3 +51,5 @@ one can substitute proper values in with a regular expression.
 We generate UTFGrid data by actually rendering the tiles onto in-memory SVGs
 during creation. The benefit: the browser can quickly look up a GeoJSON
 feature based on a pixel location.
+
+All this happens in ./render_mbtiles.py
