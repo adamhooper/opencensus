@@ -8,9 +8,51 @@
 #= require models/region
 
 globals = window.OpenCensus.globals
+region_types = globals.region_types
 state = window.OpenCensus.state
 Region = window.OpenCensus.models.Region
 region_store = globals.region_store
+
+class InteractionGrid
+  constructor: (utfgrid) ->
+    @grid = utfgrid.grid
+    @keys = utfgrid.keys
+
+  encodedIdToRegionId: (id) ->
+    id -= 1 if id >= 93
+    id -= 1 if id >= 35
+    id -= 32
+
+    @keys[id]
+
+  pointToRegionId: (column, row) ->
+    encoded_id = @grid[row].charCodeAt(column)
+    this.encodedIdToRegionId(encoded_id)
+
+class InteractionGridArray
+  constructor: (utfgrids) ->
+    @interaction_grids = (new InteractionGrid(utfgrid) for utfgrid in utfgrids)
+
+  pointToRegionIds: (column, row) ->
+    region_ids = (grid.pointToRegionId(column, row) for grid in @interaction_grids)
+    $.unique(region_ids)
+
+  # Returns the "best" Region--using region_types ordering
+  pointToRegionWithDatum: (column, row, year, indicator) ->
+    region_ids = this.pointToRegionIds(column, row)
+
+    best_region = undefined
+    best_index = -1
+
+    for region_id in region_ids
+      region = region_store.getNearestRegionWithDatum(region_id, year, indicator)
+      if region
+        index = region_types.indexOfName(region.type)
+        if index > best_index
+          best_region = region
+          best_index = index
+
+    best_region
 
 # Save some object creation
 polygon_style_without_fill = { stroke: globals.style.stroke, 'stroke-width': globals.style['stroke-width'] }
@@ -22,7 +64,7 @@ class MapTile
     @multiplier = @zoomFactor / 360
     @topLeftGlobalPoint = [ @coord.x * @tileSize.width, @coord.y * @tileSize.height ]
     @paper = Raphael(div, @tileSize.width, @tileSize.height)
-    @utfgrid = {}
+    @interaction_grids = undefined
     @regionIdToGeometry = {}
     @mapIndicator = globals.indicators.findMapIndicatorForTextIndicator(state.indicator)
     div.id = this.id()
@@ -80,8 +122,6 @@ class MapTile
   handleData: (data) ->
     delete this.dataRequest
 
-    @utfgrid = data.utfgrid
-
     @paper.canvas.style.display = 'none'
 
     for feature in data.features
@@ -105,6 +145,8 @@ class MapTile
       @regionIdToGeometry[id] = geometry
 
     @paper.canvas.style.display = ''
+
+    @interaction_grids = new InteractionGridArray(data.utfgrids)
 
   getFillForStatistics: (statistics) ->
     return 'none' if !statistics
@@ -163,20 +205,8 @@ class MapTile
   tilePointToRegion: (tilePoint) ->
     [ column, row ] = tilePoint
 
-    return undefined unless @utfgrid.grid
-
-    grid = @utfgrid.grid
-    keys = @utfgrid.keys
-
-    encoded_id = grid[row].charCodeAt(column)
-    id = encoded_id
-    id -= 1 if id >= 93
-    id -= 1 if id >= 35
-    id -= 32
-
-    region_id = keys[id]
-
-    region_store.getNearestRegionWithDatum(region_id, state.year, @mapIndicator)
+    return undefined unless @interaction_grids
+    @interaction_grids.pointToRegionWithDatum(column, row, state.year, @mapIndicator)
 
   onMouseMove: (globalPoint) ->
     tilePoint = this.globalPointToTilePoint(globalPoint)

@@ -18,7 +18,6 @@ if __name__ == '__main__':
     from optparse import OptionParser, OptionValueError
     import os, sys, os.path
 
-    dsn = 'dbname=opencensus_dev user=opencensus_dev password=opencensus_dev host=localhost'
     config = TileStache.Config.buildConfiguration({
         'cache': {
             'name': 'Disk',
@@ -30,8 +29,7 @@ if __name__ == '__main__':
         'layers': {
             'regions': {
                 'provider': {
-                    'class': 'tile_data_provider:OpenCensusProvider',
-                    'kwargs': { 'dsn': dsn }
+                    'class': 'tile_data_provider:OpenCensusProvider'
                 },
                 'bounds': {
                     'low': 0,

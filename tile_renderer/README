@@ -35,10 +35,12 @@ A tile looks like this:
     },
     ...more features...
   ],
-  "utfgrid": { /* Not banned by the GeoJSON spec */
-    "grid": ["...", "...", ... ], /* UTFGrid */
-    "keys": [ "", "Province-11", "ElectoralDistrict-132", ... ] /* UTFGrid */
-  }
+  "utfgrids": [ /* Not banned by the GeoJSON spec */
+    {
+      "grid": ["...", "...", ... ], /* UTFGrid */
+      "keys": [ "", "Province-11", "ElectoralDistrict-132", ... ] /* UTFGrid */
+    }
+  ]
 }
 
 The GeoJSON contains all data necessary. UTFGrid data is entirely redundant.
@@ -51,5 +53,12 @@ one can substitute proper values in with a regular expression.
 We generate UTFGrid data by actually rendering the tiles onto in-memory SVGs
 during creation. The benefit: the browser can quickly look up a GeoJSON
 feature based on a pixel location.
+
+Why is it a *list* of UTFGrids? Because there's no other way to transmit
+partial hierarchies. For instance, if a Tract and Subdivision are in the
+same spot, they're shown Tract-on-top-of-Subdivision on the map. But the
+Subdivision isn't a parent of the Tract. The only way for the client to
+see both (aside from actual hit-detection on vector data) is to transmit
+two distinct hierarchies.
 
 All this happens in ./render_mbtiles.py
