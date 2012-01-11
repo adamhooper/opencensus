@@ -6,7 +6,7 @@
 # * The DB's data is EPSG4326, not EPSG900913
 # * There's a UTFGrid for interaction. This isn't part of the GeoJSON spec, but it doesn't conflict with it either.
 
-__requires__ = ['TileStache==1.19.4', 'psycopg2==2.4.3']
+__requires__ = ['TileStache==1.23.1', 'psycopg2==2.4.4']
 import pkg_resources
 
 import TileStache, TileStache.Config

@@ -41,7 +41,7 @@ class TileRenderer(object):
             r.type,
             r.name,
             parents.parents,
-            ST_AsGeoJSON(polygons.geometry, %d) AS geometry_geojson,
+            ST_AsGeoJson(polygons.geometry, %d) AS geometry_geojson,
             ST_AsSVG(ST_Transform(ST_SetSRID(polygons.geometry, 4326), 900913)) AS geometry_mercator_svg
           FROM regions r
           INNER JOIN (
