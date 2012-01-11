@@ -1,7 +1,7 @@
 #= require app
 
 class Region
-  constructor: (@type, @uid, @name, @statistics) ->
+  constructor: (@type, @uid, @name, @parent_ids, @statistics) ->
 
   id: () ->
     "#{@type}-#{@uid}"

@@ -100,7 +100,7 @@ class MapTile
         polygon_style_with_fill.fill = fill
         geometry.attr(polygon_style_with_fill)
 
-      region = new Region(properties.type, properties.uid, properties.name, properties.statistics)
+      region = new Region(properties.type, properties.uid, properties.name, properties.parents, properties.statistics)
       @regionIdToRegion[id] = region
       @regionIdToGeometry[id] = geometry
 
@@ -160,6 +160,20 @@ class MapTile
     else
       ret
 
+  visibleRegionInHierarchy: (region) ->
+    stack = [region.id()]
+
+    while stack.length
+      region_id = stack.pop()
+      region = @regionIdToRegion[region_id]
+      geometry = @regionIdToGeometry[region_id]
+      if geometry.attr('fill') != 'none'
+        return region
+      else
+        stack.push(parent_region_id) for parent_region_id in region.parent_ids
+
+    undefined
+
   tilePointToRegion: (tilePoint) ->
     [ column, row ] = tilePoint
 
@@ -175,7 +189,9 @@ class MapTile
     id -= 32
 
     key = keys[id]
-    @regionIdToRegion[key]
+    region = @regionIdToRegion[key]
+
+    this.visibleRegionInHierarchy(region)
 
   onMouseMove: (globalPoint) ->
     tilePoint = this.globalPointToTilePoint(globalPoint)
@@ -248,6 +264,7 @@ class MapTile
     tilePoint = this.globalPointToTilePoint(globalPoint)
     return if tilePoint is undefined
     region = this.tilePointToRegion(tilePoint)
+
     state.setRegion(region)
 
   destroy: () ->
