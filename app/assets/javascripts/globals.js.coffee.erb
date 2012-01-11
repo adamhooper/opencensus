@@ -8,7 +8,7 @@ models = window.OpenCensus.models
 window.OpenCensus.globals = {
   defaults: {
     year: 2006,
-    indicator_name: 'Population density',
+    indicator_name: 'Population',
     position: {
       latitude: 45.5,
       longitude: -73.5,
@@ -23,6 +23,6 @@ window.OpenCensus.globals = {
   }
   json_tile_url: 'http://localhost:8000',
   region_types: new models.RegionTypeDb(<%= RegionType.order(:position).map{|rt| { name: rt.name, description: rt.name } }.to_json %>),
-  indicators: new models.IndicatorDb(<%= Indicator.order(:name).map{|i| { name: i.name, unit: i.unit, description: i.description, buckets: i.buckets } }.to_json %>),
+  indicators: new models.IndicatorDb(<%= Indicator.order(:name).map{|i| i.attributes }.to_json %>),
   region_store: new models.RegionStore()
 }

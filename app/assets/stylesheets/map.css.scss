@@ -36,17 +36,23 @@ html, body {
   top: $search_height;
   width: $info_width;
   bottom: 0;
+  font-size: .9em;
 
   h2 {
     font: 1.2em Helvetica, sans-serif;
     font-weight: bold;
   }
   h3 {
-    font: 1em Helvetica, sans-serif;
+    font: 1.1em Helvetica, sans-serif;
     font-weight: normal;
   }
   h4 {
-    font: .9em Helvetica, sans-serif;
+    font: 1em Helvetica, sans-serif;
+    font-weight: bold;
+    display: inline;
+  }
+  h5 {
+    font: .8em Helvetica, sans-serif;
     font-weight: bold;
   }
   ul {
@@ -54,8 +60,13 @@ html, body {
     font-size: .75em;
   }
 
-  h2, h3, h4, ul, p {
+  h2, h3, h4, h5, ul, p {
     padding: 0;
     margin: .25em;
+  }
+
+  div.legend {
+    border: 1px solid gray;
+    padding: .25em;
   }
 }

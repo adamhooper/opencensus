@@ -4,11 +4,11 @@ class HtmlTemplate
   constructor: (@html) ->
 
   $htmlFragment: () ->
-    @htmlFragment_cache = @html_fragment_cache || $(@html)
+    @htmlFragment_cache ||= $(@html)
 
   generateHtmlFragment: (params = {}) ->
-    $ret = this->$htmlFragment().clone()
-    for key, attrs of params:
+    $ret = this.$htmlFragment().clone()
+    for key, attrs of params
       $elems = $ret.find(".#{key}")
 
       text = attrs.delete('text')
@@ -19,4 +19,4 @@ class HtmlTemplate
 
       $elems.attr(attrs)
 
-window.OpenCensus.helpers.HtmlTemplater = HtmlTemplater
+window.OpenCensus.helpers.HtmlTemplate = HtmlTemplate

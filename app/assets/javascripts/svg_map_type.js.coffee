@@ -2,11 +2,14 @@
 #= require json2
 #= require raphael
 
+#= require app
 #= require globals
 #= require state
+#= require models/region
 
 globals = window.OpenCensus.globals
 state = window.OpenCensus.state
+Region = window.OpenCensus.models.Region
 
 # Save some object creation
 polygon_style_without_fill = { stroke: globals.style.stroke, 'stroke-width': globals.style['stroke-width'] }
@@ -19,17 +22,20 @@ class MapTile
     @topLeftGlobalPoint = [ @coord.x * @tileSize.width, @coord.y * @tileSize.height ]
     @paper = Raphael(div, @tileSize.width, @tileSize.height)
     @utfgrid = {}
-    @regionData = {}
+    @regionIdToRegion = {}
+    @regionIdToGeometry = {}
+    @mapIndicator = globals.indicators.findMapIndicatorForTextIndicator(state.indicator)
     div.id = this.id()
 
     this.requestData()
 
     event_class = this.id()
-    $(document).on("opencensus:mousemove.#{event_class}", (e, params) => this.onMouseMove(params))
     $(document).on("opencensus:click.#{event_class}", (e, params) => this.onClick(params))
+    $(document).on("opencensus:mousemove.#{event_class}", (e, params) => this.onMouseMove(params))
     $(document).on("opencensus:mouseout.#{event_class}", (e, params) => this.onMouseOut(params))
-    $(document).on("opencensus:regionhoverin.#{event_class}", (e, params) => this.onRegionHoverIn(params))
-    $(document).on("opencensus:regionhoverout.#{event_class}", (e, params) => this.onRegionHoverOut(params))
+    state.onHoverRegionChanged(event_class, this.onHoverRegionChanged, this)
+    state.onRegionChanged(event_class, this.onRegionChanged, this)
+    state.onIndicatorChanged(event_class, this.onIndicatorChanged, this)
 
   requestData: () ->
     this.dataRequest = jQuery.ajax({
@@ -75,7 +81,6 @@ class MapTile
     delete this.dataRequest
 
     @utfgrid = data.utfgrid
-    @regionData = {}
 
     @paper.canvas.style.display = 'none'
 
@@ -95,30 +100,30 @@ class MapTile
         polygon_style_with_fill.fill = fill
         geometry.attr(polygon_style_with_fill)
 
-      @regionData[id] = { id: id, properties: properties, geometry: geometry }
+      region = new Region(properties.type, properties.uid, properties.name, properties.parents, properties.statistics)
+      @regionIdToRegion[id] = region
+      @regionIdToGeometry[id] = geometry
 
     @paper.canvas.style.display = ''
 
   getFillForStatistics: (statistics) ->
     return 'none' if !statistics
+    year_string = state.year.toString()
+    year_statistics = statistics[year_string]
+    return 'none' if !year_statistics
+    datum = year_statistics[@mapIndicator.name]
+    return 'none' if !datum
 
-    yearStatistics = statistics[state.year.toString()]
-    return 'none' if !yearStatistics
-
-    value = yearStatistics && yearStatistics[state.indicator.name]
-    return 'none' if !value
-
-    bucket = state.indicator.bucketForValue(value.value)
+    bucket = @mapIndicator.bucketForValue(datum.value)
     return 'none' if bucket is undefined
 
     globals.style.buckets[bucket]
 
   restyle: () ->
-    for id, region of @regionData
-      properties = region.properties
-      geometry = region.geometry
+    for id, region of @regionIdToRegion
+      geometry = @regionIdToGeometry[id]
 
-      fill = this.getFillForStatistics(statistics)
+      fill = this.getFillForStatistics(region.statistics)
       if fill == 'none'
         geometry.hide()
       else
@@ -155,6 +160,20 @@ class MapTile
     else
       ret
 
+  visibleRegionInHierarchy: (region) ->
+    stack = [region.id()]
+
+    while stack.length
+      region_id = stack.pop()
+      region = @regionIdToRegion[region_id]
+      geometry = @regionIdToGeometry[region_id]
+      if geometry && geometry[0].attrs['fill'] != 'none'
+        return region
+      else if region
+        stack.push(parent_region_id) for parent_region_id in region.parent_ids
+
+    undefined
+
   tilePointToRegion: (tilePoint) ->
     [ column, row ] = tilePoint
 
@@ -170,50 +189,83 @@ class MapTile
     id -= 32
 
     key = keys[id]
-    @regionData[key]
+    region = @regionIdToRegion[key]
+
+    this.visibleRegionInHierarchy(region)
 
   onMouseMove: (globalPoint) ->
     tilePoint = this.globalPointToTilePoint(globalPoint)
-    return if tilePoint is undefined
+    if tilePoint is undefined
+      @lastMouseMoveWasOnThisTile = false
+      return
+    @lastMouseMoveWasOnThisTile = true
 
     region = this.tilePointToRegion(tilePoint)
 
-    if !region && @hover_region_id
-      $(document).trigger('opencensus:regionhoverout')
+    if !region && @hover_region
+      state.setHoverRegion(undefined)
 
-    if region && (!@hover_region_id || region.id != @hover_region_id)
-      $(document).trigger('opencensus:regionhoverout') if @hover_region_id
-      $(document).trigger('opencensus:regionhoverin', [region.id, region.properties])
+    if region && (!@hover_region || !region.equals(@hover_region))
+      state.setHoverRegion(region)
 
   onMouseOut: () ->
-    $(document).trigger('opencensus:regionhoverout', [@hover_region_id]) if @hover_region_id && @glow
+    if @lastMouseMoveWasOnThisTile && @hover_region
+      state.setHoverRegion(undefined)
+    @lastMouseMoveWasOnThisTile = false
 
-  onRegionHoverIn: (region_id, properties) ->
-    @hover_region_id = region_id
+  onHoverRegionChanged: (hover_region) ->
+    if @hover_region
+      delete @hover_region
+      if @hover_region_glow
+        @hover_region_glow.remove()
+        delete @hover_region_glow
 
-    region = @regionData[region_id]
-    if region # if this tile contains at least part of the region
-      @paper.setStart()
-      # We can't use region.geometry.clone() because it produces warnings in Google Chrome 17.0.963.12 dev, Raphael 2.0.1
-      region.geometry.forEach (geometry) =>
-        path = geometry.attr('path')
-        @paper.path(path).attr({
-          stroke: '#000000',
-          'stroke-width': '2px'
-        })
-      @glow = @paper.setFinish()
+    if hover_region
+      @hover_region = hover_region
 
-  onRegionHoverOut: () ->
-    delete @hover_region_id
-    if @glow
-      @glow.remove()
-      delete @glow
+      geometrySet = @regionIdToGeometry[hover_region.id()]
+      if geometrySet # if this tile contains at least part of the region
+        @paper.setStart()
+        # We can't use region.geometry.clone() because it produces warnings in Google Chrome 17.0.963.12 dev, Raphael 2.0.1
+        geometrySet.forEach (geometry) =>
+          path = geometry.attr('path')
+          @paper.path(path).attr({
+            stroke: '#000000'
+          })
+        @hover_region_glow = @paper.setFinish()
 
-  onClick: (world_xy) ->
+  onRegionChanged: (selected_region) ->
+    if @selected_region
+      delete @selected_region
+      if @selected_region_glow
+        @selected_region_glow.remove()
+        delete @selected_region_glow
+
+    if selected_region
+      @selected_region = selected_region
+
+      geometrySet = @regionIdToGeometry[selected_region.id()]
+      if geometrySet # if this tile contains at least part of the region
+        @paper.setStart()
+        # We can't use region.geometry.clone() because it produces warnings in Google Chrome 17.0.963.12 dev, Raphael 2.0.1
+        geometrySet.forEach (geometry) =>
+          path = geometry.attr('path')
+          @paper.path(path).attr({
+            stroke: '#000000',
+            'stroke-width': '2.5px'
+          })
+        @selected_region_glow = @paper.setFinish()
+
+  onIndicatorChanged: (indicator) ->
+    @mapIndicator = globals.indicators.findMapIndicatorForTextIndicator(indicator)
+    this.restyle()
+
+  onClick: (globalPoint) ->
     tilePoint = this.globalPointToTilePoint(globalPoint)
     return if tilePoint is undefined
     region = this.tilePointToRegion(tilePoint)
-    $(document).trigger('opencensus:regionclick', [region])
+
+    state.setRegion(region)
 
   destroy: () ->
     this.dataRequest.abort() if this.dataRequest

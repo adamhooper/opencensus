@@ -1,11 +1,12 @@
 #= require app
 
 class Indicator
-  constructor: (properties) ->
-    @name = properties.name
-    @unit = properties.unit
-    @description = properties.description
-    @buckets_string = properties.buckets
+  constructor: (attributes) ->
+    @name = attributes.name
+    @value_type = attributes.value_type
+    @unit = attributes.unit
+    @description = attributes.description
+    @buckets_string = attributes.buckets
 
   buckets: ->
     return @memoized_buckets if @memoized_buckets
@@ -18,8 +19,12 @@ class Indicator
     @memoized_buckets = ret
 
   bucketForValue: (value) ->
+    return undefined if value is undefined
     for bucket, i in this.buckets()
       return i if value <= bucket.max
     undefined
+
+  equals: (other) ->
+    @name == other.name
 
 window.OpenCensus.models.Indicator = Indicator

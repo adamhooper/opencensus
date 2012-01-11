@@ -11,36 +11,55 @@ class State
     @year = defaults.year
     @indicator = globals.indicators.findByName(defaults.indicator_name)
     @region = undefined
-    @position = {}.extend(defaults.position)
+    @hover_region = undefined
+    @position = $.extend({}, defaults.position)
 
-  setYear: (@year) ->
-    $(document).trigger('opencensus:state:year-changed', @year)
+  setYear: (year) ->
+    return if year == @year
+    @year = year
+    $(document).trigger('opencensus:state:year_changed', @year)
 
-  setIndicator: (@indicator) ->
-    $(document).trigger('opencensus:state:indicator-changed', @indicator)
+  setIndicator: (indicator) ->
+    return if indicator.equals(@indicator)
+    @indicator = indicator
+    $(document).trigger('opencensus:state:indicator_changed', @indicator)
 
-  setRegion: (@region) ->
-    $(document).trigger('opencensus:state:region-changed', @region)
+  setRegion: (region) ->
+    return if !region && !@region
+    return if region && @region && region.equals(@region)
+    @region = region
+    $(document).trigger('opencensus:state:region_changed', @region)
+
+  setHoverRegion: (hover_region) ->
+    return if !hover_region && !@hover_region
+    return if hover_region && @hover_region && hover_region.equals(@hover_region)
+    @hover_region = hover_region
+    $(document).trigger('opencensus:state:hover_region_changed', @hover_region)
 
   setPosition: (position) ->
-    @position = {}.extend(position)
-    $(document).trigger('opencensus:state:position-changed', @position)
+    return if position.latitude = @position.latitude && position.longitude == @position.longitude && position.zoom == @position.zoom
+    @position = $.extend({}, position)
+    $(document).trigger('opencensus:state:position_changed', @position)
 
-  onYearChanged: (callerNamespace, func) ->
-    $(document).on "opencensus:state:year-changed.#{callerNamespace}", (e, year) ->
-      func(year)
+  onYearChanged: (callerNamespace, func, oThis = undefined) ->
+    $(document).on "opencensus:state:year_changed.#{callerNamespace}", (e, year) ->
+      func.call(oThis || window, year)
 
-  onIndicatorChanged: (callerNamespace, func) ->
-    $(document).on "opencensus:state:indicator-changed.#{callerNamespace}", (e, indicator) ->
-      func(indicator)
+  onIndicatorChanged: (callerNamespace, func, oThis = undefined) ->
+    $(document).on "opencensus:state:indicator_changed.#{callerNamespace}", (e, indicator) ->
+      func.call(oThis || window, indicator)
 
-  onRegionChanged: (callerNamespace, func) ->
-    $(document).on "opencensus:state:region-changed.#{callerNamespace}", (e, region) ->
-      func(region)
+  onRegionChanged: (callerNamespace, func, oThis = undefined) ->
+    $(document).on "opencensus:state:region_changed.#{callerNamespace}", (e, region) ->
+      func.call(oThis || window, region)
 
-  onPositionChanged: (callerNamespace, func) ->
-    $(document).on "opencensus:state:position-changed.#{callerNamespace}", (e, position) ->
-      func(position)
+  onHoverRegionChanged: (callerNamespace, func, oThis = undefined) ->
+    $(document).on "opencensus:state:hover_region_changed.#{callerNamespace}", (e, hover_region) ->
+      func.call(oThis || window, hover_region)
+
+  onPositionChanged: (callerNamespace, func, oThis = undefined) ->
+    $(document).on "opencensus:state:position_changed.#{callerNamespace}", (e, position) ->
+      func.call(oThis || window, position)
 
   removeHandlers: (callerNamespace) ->
     $(document).off(".#{callerNamespace}")
