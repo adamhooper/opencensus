@@ -10,6 +10,7 @@
 globals = window.OpenCensus.globals
 state = window.OpenCensus.state
 Region = window.OpenCensus.models.Region
+region_store = globals.region_store
 
 # Save some object creation
 polygon_style_without_fill = { stroke: globals.style.stroke, 'stroke-width': globals.style['stroke-width'] }
@@ -22,7 +23,6 @@ class MapTile
     @topLeftGlobalPoint = [ @coord.x * @tileSize.width, @coord.y * @tileSize.height ]
     @paper = Raphael(div, @tileSize.width, @tileSize.height)
     @utfgrid = {}
-    @regionIdToRegion = {}
     @regionIdToGeometry = {}
     @mapIndicator = globals.indicators.findMapIndicatorForTextIndicator(state.indicator)
     div.id = this.id()
@@ -101,7 +101,7 @@ class MapTile
         geometry.attr(polygon_style_with_fill)
 
       region = new Region(properties.type, properties.uid, properties.name, properties.parents, properties.statistics)
-      @regionIdToRegion[id] = region
+      region_store.add(region)
       @regionIdToGeometry[id] = geometry
 
     @paper.canvas.style.display = ''
@@ -120,8 +120,8 @@ class MapTile
     globals.style.buckets[bucket]
 
   restyle: () ->
-    for id, region of @regionIdToRegion
-      geometry = @regionIdToGeometry[id]
+    for id, geometry of @regionIdToGeometry
+      region = region_store.get(id)
 
       fill = this.getFillForStatistics(region.statistics)
       if fill == 'none'
@@ -160,20 +160,6 @@ class MapTile
     else
       ret
 
-  visibleRegionInHierarchy: (region) ->
-    stack = [region.id()]
-
-    while stack.length
-      region_id = stack.pop()
-      region = @regionIdToRegion[region_id]
-      geometry = @regionIdToGeometry[region_id]
-      if geometry && geometry[0].attrs['fill'] != 'none'
-        return region
-      else if region
-        stack.push(parent_region_id) for parent_region_id in region.parent_ids
-
-    undefined
-
   tilePointToRegion: (tilePoint) ->
     [ column, row ] = tilePoint
 
@@ -188,10 +174,9 @@ class MapTile
     id -= 1 if id >= 35
     id -= 32
 
-    key = keys[id]
-    region = @regionIdToRegion[key]
+    region_id = keys[id]
 
-    this.visibleRegionInHierarchy(region)
+    region_store.getNearestRegionWithDatum(state.year, @mapIndicator)
 
   onMouseMove: (globalPoint) ->
     tilePoint = this.globalPointToTilePoint(globalPoint)
@@ -272,6 +257,9 @@ class MapTile
 
     event_class = this.id()
     $(document).off(".#{event_class}")
+
+    for region_id, geometry of @regionIdToGeometry
+      region_store.remove(region_id)
 
 window.SvgMapType = (@tileSize) ->
 

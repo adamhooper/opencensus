@@ -12,4 +12,9 @@ class RegionTypeDb
   findByName: (name) ->
     @region_types_by_name[name]
 
+  indexOfName: (name) ->
+    for region_type, i in @region_types
+      return i if region_type.name == name
+    return undefined
+
 window.OpenCensus.models.RegionTypeDb = RegionTypeDb

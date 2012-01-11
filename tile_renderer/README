@@ -1,0 +1,53 @@
+== Tile format
+
+Tiles are built using the GeoJSON specification.
+
+They're built in two phases, though, because it takes a long time to generate GeoJSON data, even after optimization.
+
+=== Phase 1: GeoJSON data, UTFGrid
+
+See GeoJSON 1.0: http://geojson.org/geojson-spec.html
+See UTFGrid 1.2 spec (as of 2012-01-11): https://github.com/mapbox/utfgrid-spec/blob/master/1.2/utfgrid.md
+
+A tile looks like this:
+
+{
+  "type": "FeatureCollection", /* GeoJSON */
+  "features": [ /* GeoJSON */
+    {
+      "type": "Feature",
+      "geometry": ...GeoJSON geometry...
+      "id": "DisseminationArea-12314",
+      "properties": {
+        "uid": "12314",
+        "type": "DisseminationArea",
+        "name": "Statistics Canada-supplied name",
+        "statistics": {
+          "2011": {
+            "Population": {
+              "value": 4123,
+              "note": "This number is totally correct"
+            }
+          },
+          ...more statistics...
+        }
+      }
+    },
+    ...more features...
+  ],
+  "utfgrid": { /* Not banned by the GeoJSON spec */
+    "grid": ["...", "...", ... ], /* UTFGrid */
+    "keys": [ "", "Province-11", "ElectoralDistrict-132", ... ] /* UTFGrid */
+  }
+}
+
+The GeoJSON contains all data necessary. UTFGrid data is entirely redundant.
+
+In mass-rendering tiles, we'll skip querying for statistics and instead show:
+{ "statistics": { "0": { "TO-FILL": { "value": "Province-11" } } } }. It's
+complex because I was too lazy to make a simpler placeholder; nevertheless,
+one can substitute proper values in with a regular expression.
+
+We generate UTFGrid data by actually rendering the tiles onto in-memory SVGs
+during creation. The benefit: the browser can quickly look up a GeoJSON
+feature based on a pixel location.
