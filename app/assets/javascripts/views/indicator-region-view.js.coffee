@@ -62,7 +62,7 @@ class IndicatorRegionView
         map_datum = map_indicator_region_view.lookupDatum(state.year)
         map_value = map_datum && map_datum.value
         bucket = map_indicator.bucketForValue(map_value)
-        if bucket
+        if bucket isnt undefined
           fill = globals.style.buckets[bucket]
 
           $p = $('<p class="is-current-indicator">On map: <span class="legend-color">&nbsp;</span> <span class="value"></span> <span class="unit"></span></p>')
