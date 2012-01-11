@@ -11,19 +11,13 @@ IndicatorView = window.OpenCensus.views.IndicatorView
 
 class TextView
   constructor: (@div) ->
-    $(document).on 'opencensus:regionhoverin', (e, region_id, properties) =>
-      this.onRegionHoverIn(region_id, properties)
-    $(document).on 'opencensus:regionhoverout', (e) =>
-      this.onRegionHoverOut()
+    state.onRegionChanged('text-view', this.onRegionChanged, this)
 
   $div: () ->
     $(@div)
 
-  onRegionHoverIn: (region_id, properties) ->
-    this.setProperties(properties)
-
-  onRegionHoverOut: () ->
-    this.clear()
+  onRegionChanged: (region) ->
+    this.setRegion(region)
 
   usefulIndicators: () ->
     raw = [
@@ -34,18 +28,22 @@ class TextView
 
     { indicator: globals.indicators.findByName(r[0]), map_indicator: globals.indicators.findByName(r[1]) } for r in raw
 
-  setProperties: (properties) ->
+  setRegion: (region) ->
+    if (!region)
+      this.clear()
+      return
+
     $div = this.$div()
 
-    name = properties.name || '(unnamed)'
+    name = region.name || '(unnamed)'
     $h2 = $('<h2></h2>').text(name)
-    $h3 = $('<h3></h3>').text(properties.type)
+    $h3 = $('<h3></h3>').text(region.type)
 
     $div.empty()
     $div.append($h2)
     $div.append($h3)
 
-    this.setStatistics(properties.statistics)
+    this.setStatistics(region.statistics)
 
   setStatistics: (statistics) ->
     return unless statistics
@@ -88,7 +86,7 @@ class TextView
     this.$div().append($fragment)
 
   clear: () ->
-    this.$div().text('Hover over a region to see info...')
+    this.$div().text('Click on a region to see info...')
 
 $ ->
   div = document.getElementById('info')
