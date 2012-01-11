@@ -167,9 +167,9 @@ class MapTile
       region_id = stack.pop()
       region = @regionIdToRegion[region_id]
       geometry = @regionIdToGeometry[region_id]
-      if geometry.attr('fill') != 'none'
+      if geometry && geometry[0].attrs['fill'] != 'none'
         return region
-      else
+      else if region
         stack.push(parent_region_id) for parent_region_id in region.parent_ids
 
     undefined
