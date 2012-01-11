@@ -19,8 +19,12 @@ class Indicator
     @memoized_buckets = ret
 
   bucketForValue: (value) ->
+    return undefined if value is undefined
     for bucket, i in this.buckets()
       return i if value <= bucket.max
     undefined
+
+  equals: (other) ->
+    @name == other.name
 
 window.OpenCensus.models.Indicator = Indicator

@@ -23,7 +23,7 @@ class State
     $(document).trigger('opencensus:state:year_changed', @year)
 
   setIndicator: (indicator) ->
-    return if indicator.name == @indicator.name
+    return if indicator.equals(@indicator)
     @indicator = indicator
     $(document).trigger('opencensus:state:indicator_changed', @indicator)
 
