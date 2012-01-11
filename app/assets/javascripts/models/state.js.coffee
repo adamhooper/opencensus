@@ -14,9 +14,6 @@ class State
     @hover_region = undefined
     @position = $.extend({}, defaults.position)
 
-    $(document).on('opencensus:regionclick.state', (e, region) => this.setRegion(region))
-    $(document).on('opencensus:regionhover.state', (e, region) => this.setHoverRegion(region))
-
   setYear: (year) ->
     return if year == @year
     @year = year

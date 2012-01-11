@@ -187,14 +187,14 @@ class MapTile
     region = this.tilePointToRegion(tilePoint)
 
     if !region && @hover_region
-      $(document).trigger('opencensus:regionhover', [undefined])
+      state.setHoverRegion(undefined)
 
     if region && (!@hover_region || !region.equals(@hover_region))
-      $(document).trigger('opencensus:regionhover', [region])
+      state.setHoverRegion(region)
 
   onMouseOut: () ->
     if @lastMouseMoveWasOnThisTile && @hover_region
-      $(document).trigger('opencensus:regionhover', [undefined])
+      state.setHoverRegion(undefined)
     @lastMouseMoveWasOnThisTile = false
 
   onHoverRegionChanged: (hover_region) ->
@@ -248,7 +248,7 @@ class MapTile
     tilePoint = this.globalPointToTilePoint(globalPoint)
     return if tilePoint is undefined
     region = this.tilePointToRegion(tilePoint)
-    $(document).trigger('opencensus:regionclick', [region])
+    state.setRegion(region)
 
   destroy: () ->
     this.dataRequest.abort() if this.dataRequest
