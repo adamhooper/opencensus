@@ -25,7 +25,7 @@ class TileRenderer(object):
     def _getBoundingBoxSQL(self, padding = 0.0):
         nw, se = self._getBoundingBox(padding)
 
-        return 'ST_MakeBox2D(ST_MakePoint(%.12f, %.12f), ST_MakePoint(%.12f, %.12f))' % (nw.lon, nw.lat, se.lon, se.lat)
+        return 'ST_MakeBox2D(ST_Point(%.12f, %.12f), ST_Point(%.12f, %.12f))' % (nw.lon, nw.lat, se.lon, se.lat)
 
     def _getPolygonsSQL(self):
         nw, se = self._getBoundingBox()
@@ -124,12 +124,18 @@ class TileRenderer(object):
 
         for row in self.db_cursor:
             region_id = row['id']
+
+            parents = []
+            if row['parents'] and len(row['parents']):
+              parents = row['parents'].split(',')
+
             properties = {
                 'name': row['name'],
                 'type': row['type'],
                 'uid': row['uid'],
-                'parents': (row['parents'] or '').split('|')
+                'parents': parents
             }
+
             tile_data.addRegion(region_id, properties, row['geometry_geojson'], row['geometry_mercator_svg'])
 
         self._populateStatistics(tile_data)
