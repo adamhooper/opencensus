@@ -7,22 +7,20 @@
 # This migration doesn't *actually* try and figure out where the water is:
 # it estimates. The heuristic:
 #
-# "If two polygons are identical, then they represent an island."
-# 
-# Here's why. The two polygons represent the exact same area. The fact that
-# there are more than one of them means they're from different region types
-# (for instance, one is from a DistributionBlock and the other is a
-# DistributionArea). Since they're in the same place, we can assume one is
-# a parent of the other. And since the parent's polygon is no larger than its
-# child's polygon, it must be isolated. Hence, it's an island.
+# 1. Every polygon in a Province, ElectoralDistrict or MetropolitanArea is
+#    an island.
+# 2. Any other polygon that's identical to an island polygon is itself an
+#    island.
 #
-# Even if this heuristic isn't perfect, that's fine. This column is designed
-# for aesthetic and interactive pleasure, not for accuracy.
+# This column is designed for aesthetic and interactive pleasure, not for
+# accuracy.
 class AlterTableRegionPolygonsAddIsIsland < ActiveRecord::Migration
   def up
     add_column(:region_polygons, :is_island, :boolean, :default => false, :null => false)
 
-    execute('UPDATE region_polygons SET is_island = TRUE WHERE id IN (SELECT UNNEST(arr) FROM (SELECT ARRAY_AGG(id) AS arr FROM region_polygons GROUP BY max_longitude, min_longitude, max_latitude, min_latitude, area_in_m HAVING COUNT(*) > 1) x)')
+    execute("UPDATE region_polygons SET is_island = TRUE WHERE region_id IN (SELECT id FROM regions WHERE type IN ('Province', 'ElectoralDistrict', 'MetropolitanArea'))")
+
+    execute('UPDATE region_polygons SET is_island = TRUE WHERE is_island IS FALSE AND (max_longitude, min_longitude, max_latitude, min_latitude, area_in_m) IN (SELECT max_longitude, min_longitude, max_latitude, min_latitude, area_in_m FROM region_polygons WHERE is_island IS TRUE)')
   end
 
   def down
