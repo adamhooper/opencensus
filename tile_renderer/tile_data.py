@@ -19,7 +19,7 @@ class _NodeSet(object):
             self.nodes[region_type] = _Node(region_type, [])
         return self.nodes[region_type]
 
-    def getRootNode(self):
+    def getRootRegionTypes(self):
         candidates = set(self.nodes.keys())
         not_root = set()
 
@@ -30,12 +30,12 @@ class _NodeSet(object):
 
         candidates -= not_root
 
-        return candidates.pop()
+        return list(candidates)
 
-    # Returns [[ 'Province', 'EconomicRegion', 'DisseminationBlock'], [ 'Province', 'MetropolitanArea', ...], ...]
+    # Returns [[ 'Province', 'EconomicRegion', 'DisseminationBlock'], [ 'MetropolitanArea', ...], ...]
     def getHierarchyPaths(self):
         # A breadth-first search
-        paths = [[self.getRootNode()]]
+        paths = [[region_type] for region_type in self.getRootRegionTypes()]
         finished = False
 
         while not finished:
