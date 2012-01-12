@@ -23,12 +23,12 @@ class RegionStore
     region = this.get(region_id)
     return undefined if region is undefined
     return region if region.getDatum(year, indicator)
-    return undefined if region.parents is undefined
+    return undefined if region.parent_ids is undefined
 
     best_candidate = undefined
     best_index = -1
 
-    for parent_region_id in region.parents
+    for parent_region_id in region.parent_ids
       parent_region = this.getNearestRegionWithDatum(parent_region_id, year, indicator)
       if parent_region
         type = parent_region.type
