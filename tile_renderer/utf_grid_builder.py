@@ -71,7 +71,7 @@ class UTFGridBuilder:
 
     def _encode_id(self, id):
         encoded_id = id + 32
-        if encoded_id >= 32: encoded_id += 1
+        if encoded_id >= 34: encoded_id += 1
         if encoded_id >= 92: encoded_id += 1
         return encoded_id
 
