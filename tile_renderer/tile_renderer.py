@@ -68,7 +68,7 @@ class TileRenderer(object):
           ORDER BY r.position
           """ % (
               self.tile.getFloatDecimalsForZoom(),
-              bounds_sql, self.tile.coord.zoom + 1,
+              bounds_sql, self.tile.coord.zoom,
               nw.lon, se.lon, se.lat, nw.lat,
               self.tile.getMinAreaForZoom(),
               self.tile.getMinIslandAreaForZoom()
