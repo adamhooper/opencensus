@@ -1,6 +1,14 @@
 $search_height: 3em;
 $info_width: 15em;
 
+$color_search: gray;
+$color_notice: #070;
+$color_warning: #700;
+$color_error: $color_warning;
+$background_notice:  #cfc;
+$background_warning: #fcc;
+$background_error: $color_warning;
+
 html, body {
   margin: 0;
   padding: 0;
@@ -14,16 +22,70 @@ html, body {
 
 #search {
   position: absolute;
-  width: 100%;
-  left: 0;
   right: 0;
   top: 0;
+  width: $info_width;
   height: $search_height;
+  overflow: hidden;
+
+  p {
+    margin: 0;
+    padding: 0;
+    line-height: 1.5em;
+    white-space: nowrap;
+  }
+
+  label {
+    display: block;
+    height: 3em;
+    color: $color_search;
+  }
+
+  input.text {
+    display: block;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 1.5em;
+    right: 3em;
+  }
+  input.submit {
+    position: absolute;
+    height: 1.5em;
+    right: 0;
+    bottom: 0;
+    width: 3em;
+  }
+
+  div.notice, div.error, div.warning {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    line-height: 1.5em;
+    text-align: center;
+  }
+
+  div.notice {
+    color: $color_notice;
+    background: $background_notice;
+  }
+
+  div.warning {
+    color: $color_warning;
+    background: $background_warning;
+  }
+
+  div.error {
+    color: $color_error;
+    background: $background_error;
+  }
 }
 
 #map {
   position: absolute;
-  top: $search_height;
+  top: 0;
   left: 0;
   right: $info_width;
   bottom: 0;
@@ -36,18 +98,17 @@ html, body {
   top: $search_height;
   width: $info_width;
   bottom: 0;
-  font-size: .9em;
 
   h2 {
-    font: 1.2em Helvetica, sans-serif;
+    font: 1.1em Helvetica, sans-serif;
     font-weight: bold;
   }
   h3 {
-    font: 1.1em Helvetica, sans-serif;
+    font: 1.0em Helvetica, sans-serif;
     font-weight: normal;
   }
   h4 {
-    font: 1em Helvetica, sans-serif;
+    font: .9em Helvetica, sans-serif;
     font-weight: bold;
     display: inline;
   }
@@ -58,6 +119,9 @@ html, body {
   ul {
     list-style: none;
     font-size: .75em;
+  }
+  p {
+    font-size: .7em;
   }
 
   h2, h3, h4, h5, ul, p {

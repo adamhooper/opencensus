@@ -36,6 +36,12 @@ class State
     @hover_region = hover_region
     $(document).trigger('opencensus:state:hover_region_changed', @hover_region)
 
+  # Sets the position
+  #
+  # Required properties: "longitude", "latitude"
+  # Optional properties: "bounds", a [ nw-longitude, nw-latitude, se-longitude, se-latitude ] array
+  #                                which interested listeners can use to set the zoom
+  # Optional properties: "zoom", an integer
   setPosition: (position) ->
     return if position.latitude = @position.latitude && position.longitude == @position.longitude && position.zoom == @position.zoom
     @position = $.extend({}, position)
