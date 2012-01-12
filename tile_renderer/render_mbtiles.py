@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
-__requires__ = ['ModestMaps==1.2.0', 'psycopg2==2.4.3']
+__requires__ = ['ModestMaps==1.3.1', 'psycopg2==2.4.4']
 import pkg_resources
 
 from math import pi
 import sqlite3
+import time
 
 import ModestMaps
 from ModestMaps.Geo import MercatorProjection, deriveTransformation, Location
@@ -72,9 +73,11 @@ class MBTilesRenderer(object):
 
     def renderAtZoom(self, zoom, progress_callback=None):
         for tile in self.enumerateTilesAtZoom(zoom):
+            t1 = time.time()
             data = self._calculateTileData(tile)
             self._saveTileData(tile, data)
-            if progress_callback is not None: progress_callback(tile)
+            t2 = time.time()
+            if progress_callback is not None: progress_callback(tile, t2 - t1)
 
 if __name__ == '__main__':
     import sys
@@ -103,8 +106,8 @@ if __name__ == '__main__':
 
     renderer = MBTilesRenderer(256, 256, source_db, destination_db)
 
-    def progress_callback(tile):
-        sys.stderr.write('/%d/%d/%d.geojson\n' % (tile.zoom, tile.row, tile.column))
+    def progress_callback(tile, delay):
+        sys.stderr.write('/%d/%d/%d.geojson (%0.2fs)\n' % (tile.zoom, tile.row, tile.column, delay))
 
     for zoom in xrange(3, 14):
         renderer.renderAtZoom(zoom, progress_callback=progress_callback)
