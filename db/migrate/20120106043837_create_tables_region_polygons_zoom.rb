@@ -1,8 +1,15 @@
 class CreateTablesRegionPolygonsZoom < ActiveRecord::Migration
   def up
-    (1..18).each do |zoom|
+    zoom0_degrees_per_pixel = (170.0 / 256)
+
+    (3..15).each do |zoom|
+      # We can be off by 1 pixel with nobody noticing, because shapes have borders.
+      # So let's convert that to degrees--that's our allowed_error
+      degrees_per_pixel = zoom0_degrees_per_pixel / (2 ** zoom)
+      allowed_error = 2 * degrees_per_pixel # fuzzy -- lon has more degrees per pixel than lat
+
       table = "region_polygons_zoom#{zoom}"
-      execute("SELECT id, region_id, min_longitude, max_longitude, min_latitude, max_latitude, area_in_m, is_island, polygon_zoom#{zoom} AS polygon INTO #{table} FROM region_polygons")
+      execute("SELECT id, region_id, min_longitude, max_longitude, min_latitude, max_latitude, area_in_m, is_island, ST_MakeValid(ST_Buffer(ST_SimplifyPreserveTopology(polygon, #{allowed_error}), 0)) AS polygon INTO #{table} FROM region_polygons")
       execute("ALTER TABLE #{table} ADD PRIMARY KEY (id)")
       add_index(table, [ :region_id ])
       add_index(table, [ :min_longitude, :max_longitude, :min_latitude, :max_latitude, :area_in_m, :is_island ], :name => "#{table}_tile_matching_query")
@@ -10,7 +17,7 @@ class CreateTablesRegionPolygonsZoom < ActiveRecord::Migration
   end
 
   def down
-    (1..18).each do |zoom|
+    (3..15).each do |zoom|
       drop_table("region_polygons_zoom#{zoom}")
     end
   end
