@@ -94,7 +94,7 @@ class TileRenderer(object):
 
         if not self.include_statistics:
             for region_id in region_ids:
-                tile_data.addRegionStatistic(region_id, 0, 'TO-FILL', region_id)
+                tile_data.addRegionStatistic(region_id, 0, 'TO-FILL', region_id, None)
         else:
             sql = self._getStatisticsSQL(region_ids)
             self.db_cursor.execute(sql)
