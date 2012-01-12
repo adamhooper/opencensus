@@ -42,6 +42,5 @@ RegionTypeParent.create([
   { region_type: 'ConsolidatedSubdivision', parent_region_type: 'Division' },
   { region_type: 'Division', parent_region_type: 'EconomicRegion' },
   { region_type: 'ElectoralDistrict', parent_region_type: 'Province' },
-  { region_type: 'EconomicRegion', parent_region_type: 'Province' },
-  { region_type: 'MetropolitanArea', parent_region_type: 'Province' }
+  { region_type: 'EconomicRegion', parent_region_type: 'Province' }
 ])
