@@ -1,7 +1,7 @@
 class PopulateRegionParents < ActiveRecord::Migration
   def up
     rels = {
-      'DisseminationBlock' => [ 'dissemination_area' ], # Don't do electoral_district: it doesn't serve our purposes and it'll be too much data
+      'DisseminationBlock' => [ 'dissemination_area', 'electoral_district' ],
       'DisseminationArea' => [ 'tract', 'subdivision' ],
       'Tract' => [ 'metropolitan_area' ],
       'Subdivision' => [ 'consolidated_subdivision', 'metropolitan_area' ],
