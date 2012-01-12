@@ -56,7 +56,7 @@ class Tile(object):
     # back-end and the front-end. What's more, they make the map seem
     # cluttered. People can find the smaller polygons by zooming in.
     def getMinAreaForZoom(self):
-        min_pixels = 200
+        min_pixels = 300
         return int(self.getMetersPerPixel() ** 2 * min_pixels)
 
     # Get the minimum area an island polygon must have to be rendered.
