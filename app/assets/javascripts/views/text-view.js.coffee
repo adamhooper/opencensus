@@ -10,6 +10,8 @@ class TextView
     state.onRegionChanged('text-view', this.onRegionChanged, this)
     state.onIndicatorChanged('text-view', this.onIndicatorChanged, this)
 
+    this.redraw()
+
   $div: () ->
     $(@div)
 

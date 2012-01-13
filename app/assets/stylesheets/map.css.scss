@@ -1,7 +1,8 @@
 $search_height: 3em;
 $info_width: 15em;
 
-$color_search: gray;
+$color_subtle: gray;
+$color_search: $color_subtle;
 $color_notice: #070;
 $color_warning: #700;
 $color_error: $color_warning;
@@ -97,6 +98,40 @@ html, body {
   top: $search_height;
   width: $info_width;
   bottom: 0;
+
+  ul.region-ancestors {
+    margin: 0;
+    padding: 0;
+    display: block;
+    font-size: .8em;
+
+    li {
+      display: block;
+      margin: 0;
+      padding: 0;
+      border: 1px solid gray;
+    }
+
+    div.region-type {
+      display: inline;
+      font-size: .8em; // again
+      color: $color_subtle;
+    }
+
+    div.region-name {
+      display: inline;
+      font-weight: bold;
+    }
+
+    div.value {
+      float: right;
+    }
+  }
+
+  div.region-type {
+    color: $color_subtle;
+    font-size: .9em;
+  }
 
   h2 {
     font: 1.1em Helvetica, sans-serif;

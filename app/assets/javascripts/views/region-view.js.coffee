@@ -19,15 +19,45 @@ class RegionView
       return a[1] - b[1]
     return (indicator_and_index[0] for indicator_and_index in indicators_with_ordering)
 
+  getParentsFragment: () ->
+    ancestors = globals.region_store.getAncestors(@region.id())
+    return undefined if ancestors.length == 0
+
+    $ul = $('<ul class="region-ancestors"></ul>')
+    for region in ancestors
+      $li = $('<li></li>')
+
+      $type = $('<div class="region-type"></div>')
+      $type.text(region.type)
+      $li.append($type)
+
+      if region.name
+        $name = $('<div class="region-name"></div>')
+        $name.text(region.name)
+        $li.append($name)
+
+      datum = region.getDatum(state.year, state.indicator)
+      if datum
+        view = new IndicatorRegionView(state.indicator, region)
+        $value = $('<div class="value"></div>')
+        $value.text(view.formatNumber(datum.value))
+        $li.append($value)
+
+      $ul.append($li)
+    $ul
+
   getFragment: () ->
-    $ret = $('<div class="region"><h2></h2><h3></h3></div>')
+    $ret = $('<div class="region"><div class="region-type"></div><h2></h2></div>')
+    $ret.find('.region-type').text(@region.type)
     $ret.find('h2').text(@region.name || '(unnamed)')
-    $ret.find('h3').text(@region.type + ' ' + @region.uid)
 
     for indicator in this.listIndicators()
       indicatorRegionView = new IndicatorRegionView(indicator, @region)
       $fragment = indicatorRegionView.getFragment()
       $ret.append($fragment)
+
+    $parents = this.getParentsFragment()
+    $ret.prepend($parents) if $parents
 
     $ret
 

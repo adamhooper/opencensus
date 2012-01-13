@@ -16,12 +16,6 @@ class IndicatorRegionView
     f = h["format_#{@indicator.value_type}"]
     f(n)
 
-  lookupDatum: (year) ->
-    return undefined unless @region.statistics
-    in_year = @region.statistics[year.toString()]
-    return undefined unless in_year
-    in_year[@indicator.name]
-
   getMapIndicator: () ->
     globals.indicators.findMapIndicatorForTextIndicator(@indicator)
 
@@ -35,7 +29,7 @@ class IndicatorRegionView
     $ret = $('<div class="statistic"><h4></h4></div>')
     $ret.find('h4').text(@indicator.name)
 
-    datum = this.lookupDatum(state.year)
+    datum = @region.getDatum(state.year, @indicator)
 
     if !datum || datum.value is undefined
       $ret.append("<span class=\"no-data\">no #{state.year.toString()} data</span>")
@@ -59,7 +53,7 @@ class IndicatorRegionView
     if map_indicator
       if this.isCurrentIndicator()
         map_indicator_region_view = this.getMapIndicatorRegionView()
-        map_datum = map_indicator_region_view.lookupDatum(state.year)
+        map_datum = @region.getDatum(state.year, map_indicator)
         map_value = map_datum && map_datum.value
         bucket = map_indicator.bucketForValue(map_value)
         if bucket isnt undefined

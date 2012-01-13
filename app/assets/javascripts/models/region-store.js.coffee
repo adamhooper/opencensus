@@ -19,6 +19,41 @@ class RegionStore
     regionData = @regions[region_id]
     regionData && regionData.region || undefined
 
+  # Returns all ancestors, as a list from Province down to (possibly) DisseminationArea
+  getAncestors: (region_id) ->
+    region = this.get(region_id)
+    return [] if region is undefined
+
+    all_parent_ids = {}
+
+    parent_ids = region.parent_ids
+
+    while parent_ids.length > 0
+      old_parent_ids = parent_ids
+      parent_ids = []
+
+      for parent_id in old_parent_ids
+        parent_region = this.get(parent_id)
+
+        console.log(this)
+
+        if parent_region
+          [region_type, uid] = parent_id.split('-')
+          all_parent_ids[region_type] = parent_id
+
+          parent_ids.push(grandparent_id) for grandparent_id in parent_region.parent_ids
+
+    console.log(all_parent_ids)
+    ret = []
+    for region_type in @region_types.region_types
+      id = all_parent_ids[region_type.name]
+      if id
+        region = this.get(id)
+        if region
+          ret.push(region)
+
+    ret
+
   getNearestRegionWithDatum: (region_id, year, indicator) ->
     region = this.get(region_id)
     return undefined if region is undefined
