@@ -35,15 +35,12 @@ class RegionStore
       for parent_id in old_parent_ids
         parent_region = this.get(parent_id)
 
-        console.log(this)
-
         if parent_region
           [region_type, uid] = parent_id.split('-')
           all_parent_ids[region_type] = parent_id
 
           parent_ids.push(grandparent_id) for grandparent_id in parent_region.parent_ids
 
-    console.log(all_parent_ids)
     ret = []
     for region_type in @region_types.region_types
       id = all_parent_ids[region_type.name]
