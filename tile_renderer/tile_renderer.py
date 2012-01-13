@@ -63,7 +63,7 @@ class TileRenderer(object):
                       GROUP BY region_id
                      ) polygons
                   ON r.id = polygons.region_id
-          INNER JOIN region_parents_strings parents
+          LEFT JOIN region_parents_strings parents
                   ON r.id = parents.region_id
           ORDER BY r.position
           """ % (
