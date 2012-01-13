@@ -2,12 +2,10 @@
 #= require globals
 #= require state
 #= require helpers/format-numbers
-#= require views/indicator-view
 
 h = window.OpenCensus.helpers
 globals = window.OpenCensus.globals
 state = window.OpenCensus.state
-IndicatorView = window.OpenCensus.views.IndicatorView
 
 class IndicatorRegionView
   constructor: (@indicator, @region) ->
@@ -66,10 +64,6 @@ class IndicatorRegionView
           $ret.append($p)
         else
           $ret.append('<p class="is-current-indicator">On map</p>')
-
-        indicator_view = new IndicatorView(map_indicator)
-        $fragment = indicator_view.getLegendFragment()
-        $ret.append($fragment)
       else
         $p = $('<p class="make-current-indicator"><a href="#">Show on map</a></p>')
         $p.find('a').on 'click', (e) =>

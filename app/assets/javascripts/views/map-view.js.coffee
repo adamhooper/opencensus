@@ -39,6 +39,7 @@ class MapView
       maxZoom: globals.max_zoom,
       center: latlng,
       mapTypeId: google.maps.MapTypeId.ROADMAP,
+      mapTypeControl: false,
       styles: mapTypeStyle
     }
 
