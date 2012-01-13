@@ -4,6 +4,8 @@
 
 First, imported tables into "regions". Used ogr2ogr to import individual census files into their own tables, and then ran INSERT INTO ... SELECT ... to query from those individual tables into the "regions" table.
 
+There's one problem: Divisions don't have EconomicRegion parents, even though StatsCan's hierarchy diagram says they should. The reason is one exception: Halton, ON (west of Mississauga), which straddles two EconomicRegions. We'll set the parent to a random one of those two, since following StatsCan's hierarchy makes the rest of the code quicker and easier. UPDATE regions SET economic_region_uid = (SELECT MAX(r2.economic_region_uid) FROM regions r2 WHERE r2.type = 'Subdivision' AND r2.division_uid = regions.uid) WHERE type = 'Division';
+
 The "regions" table is our canonical data source. It's slow to create tiles from it, though. So we do speedups.
 
 ==== Speedups: the "region_polygons" table
