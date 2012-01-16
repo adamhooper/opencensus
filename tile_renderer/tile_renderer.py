@@ -94,8 +94,8 @@ class TileRenderer(object):
         if len(region_ids) == 0: return
 
         if not self.include_statistics:
-            for region_id in region_ids:
-                tile_data.addRegionStatistic(region_id, 0, 'TO-FILL', region_id, None)
+            for region_id, json_id in region_id_to_json_id.items():
+                tile_data.addRegionStatistic(json_id, 0, 'TO-FILL', region_id, None)
         else:
             sql = self._getStatisticsSQL(region_ids)
             self.db_cursor.execute(sql)
