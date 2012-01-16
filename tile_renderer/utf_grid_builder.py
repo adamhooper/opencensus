@@ -5,7 +5,7 @@ import struct
 
 import cairo
 
-from tile import Tile
+from utf_grid import UTFGrid
 
 # https://github.com/mapbox/mbtiles-spec/blob/master/1.1/utfgrid.md
 class UTFGridBuilder:
@@ -75,7 +75,7 @@ class UTFGridBuilder:
         if encoded_id >= 92: encoded_id += 1
         return encoded_id
 
-    def _get_utfgrid_grid(self):
+    def _calculate_grid(self):
         rows = []
 
         stride = self.image.get_stride()
@@ -93,8 +93,6 @@ class UTFGridBuilder:
 
         return rows
 
-    def get_utfgrid_data(self):
-        return {
-            'grid': self._get_utfgrid_grid(),
-            'keys': self.keys
-        }
+    def get_utfgrid(self):
+        grid = self._calculate_grid()
+        return UTFGrid(grid, self.keys)

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from tile_data import TileData
+import opencensus_json
 
 class TileRenderer(object):
     def __init__(self, tile, db_cursor, projection, include_statistics=True):
@@ -88,8 +89,8 @@ class TileRenderer(object):
 
         return query
 
-    def _populateStatistics(self, tile_data):
-        region_ids = tile_data.regionIds()
+    def _populateStatistics(self, tile_data, region_id_to_json_id):
+        region_ids = region_id_to_json_id.keys()
         if len(region_ids) == 0: return
 
         if not self.include_statistics:
@@ -101,6 +102,7 @@ class TileRenderer(object):
 
             for row in self.db_cursor:
                 region_id = row['region_id']
+                json_id = region_id_to_json_id[region_id]
 
                 name = row['name']
                 year = row['year']
@@ -114,13 +116,15 @@ class TileRenderer(object):
                     raise Exception('Unknown value type %r' % value_type)
                 note = row['note']
 
-                tile_data.addRegionStatistic(region_id, year, name, value, note)
+                tile_data.addRegionStatistic(json_id, year, name, value, note)
 
     def getTileData(self):
-        tile_data = TileData(self.tile)
+        tile_data = TileData(render_utfgrid_for_tile=self.tile)
 
         sql = self._getPolygonsSQL()
         self.db_cursor.execute(sql)
+
+        region_id_to_json_id = {}
 
         for row in self.db_cursor:
             region_id = row['id']
@@ -136,8 +140,11 @@ class TileRenderer(object):
                 'parents': parents
             }
 
-            tile_data.addRegion(region_id, properties, row['geometry_geojson'], row['geometry_mercator_svg'])
+            json_id = properties['type'] + '-' + properties['uid']
+            tile_data.addRegion(json_id, properties, row['geometry_geojson'], row['geometry_mercator_svg'])
 
-        self._populateStatistics(tile_data)
+            region_id_to_json_id[region_id] = json_id
 
-        return tile_data.toJson()
+        self._populateStatistics(tile_data, region_id_to_json_id)
+
+        return opencensus_json.encode(tile_data)
