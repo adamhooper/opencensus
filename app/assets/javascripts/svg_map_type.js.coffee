@@ -14,9 +14,11 @@ Region = window.OpenCensus.models.Region
 region_store = globals.region_store
 
 class InteractionGrid
-  constructor: (utfgrid) ->
+  constructor: (@tileSize, utfgrid) ->
     @grid = utfgrid.grid
     @keys = utfgrid.keys
+    @heightFactor = @grid.length / @tileSize.height
+    @widthFactor = @grid[0].length / @tileSize.width
 
   encodedIdToRegionId: (id) ->
     id -= 1 if id >= 93
@@ -26,12 +28,15 @@ class InteractionGrid
     @keys[id]
 
   pointToRegionId: (column, row) ->
-    encoded_id = @grid[row].charCodeAt(column)
+    grid_column = Math.floor(@widthFactor * column)
+    grid_row = Math.floor(@heightFactor * row)
+
+    encoded_id = @grid[grid_row].charCodeAt(grid_column)
     this.encodedIdToRegionId(encoded_id)
 
 class InteractionGridArray
-  constructor: (utfgrids) ->
-    @interaction_grids = (new InteractionGrid(utfgrid) for utfgrid in utfgrids)
+  constructor: (@tileSize, utfgrids) ->
+    @interaction_grids = (new InteractionGrid(@tileSize, utfgrid) for utfgrid in utfgrids)
 
   pointToRegionIds: (column, row) ->
     region_ids = (grid.pointToRegionId(column, row) for grid in @interaction_grids)
@@ -146,7 +151,7 @@ class MapTile
 
     @paper.canvas.style.display = ''
 
-    @interaction_grids = new InteractionGridArray(data.utfgrids)
+    @interaction_grids = new InteractionGridArray(@tileSize, data.utfgrids)
 
   getFillForStatistics: (statistics) ->
     return 'none' if !statistics
