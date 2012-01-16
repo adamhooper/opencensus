@@ -33,10 +33,31 @@ class MBTilesRenderer(object):
         self.destination_db = destination_db
         self.destination_db_cursor = destination_db.cursor()
 
-        (self.nw, self.se) = self._calculateBounds()
+        try:
+            (self.nw, self.se) = self._queryBounds()
+        except sqlite3.OperationalError:
+            self.maybeInitializeDatabase()
+            (self.nw, self.se) = self._queryBounds()
 
-        bounds_str = ','.join([str(self.nw.lon), str(self.se.lat), str(self.se.lon), str(self.nw.lat)])
+    def maybeInitializeDatabase(self):
+        self.destination_db_cursor.execute('CREATE TABLE metadata (name text, value text)')
+        for keyval in (
+                ('name', 'OpenCensus'),
+                ('type', 'overlay'),
+                ('version', '1'),
+                ('description', 'Statistics Canada census regions'),
+                ('format', 'geojson')
+                ):
+            self.destination_db_cursor.execute('INSERT INTO metadata (name, value) VALUES (?, ?)', keyval)
 
+        self.destination_db_cursor.execute('CREATE TABLE tiles (zoom_level integer, tile_column integer, tile_row integer, tile_data blob)')
+        self.destination_db_cursor.execute('CREATE UNIQUE INDEX tiles_index ON tiles (zoom_level, tile_row, tile_column)')
+
+        self.destination_db.commit()
+
+        (nw, se) = self._calculateBounds()
+
+        bounds_str = ','.join([str(nw.lon), str(se.lat), str(se.lon), str(nw.lat)])
         self.destination_db_cursor.execute(
                 'INSERT INTO metadata (name, value) VALUES (?, ?)',
                 ('bounds', bounds_str))
@@ -47,6 +68,14 @@ class MBTilesRenderer(object):
         row = self.source_db_cursor.fetchone()
         nw = Location(row['nw_latitude'], row['nw_longitude'])
         se = Location(row['se_latitude'], row['se_longitude'])
+        return (nw, se)
+
+    def _queryBounds(self):
+        self.destination_db_cursor.execute("SELECT value FROM metadata WHERE name = 'bounds'")
+        row = self.destination_db_cursor.fetchone()
+        numbers = map(float, row[0].split(','))
+        nw = Location(numbers[3], numbers[0])
+        se = Location(numbers[1], numbers[2])
         return (nw, se)
 
     def enumerateTilesAtZoom(self, zoom):
@@ -87,23 +116,6 @@ if __name__ == '__main__':
 
     source_db = psycopg2.connect(source_dsn)
     destination_db = sqlite3.connect(destination_dsn)
-    destination_db_cursor = destination_db.cursor()
-
-    destination_db_cursor.execute('CREATE TABLE metadata (name text, value text)')
-    for keyval in (
-            ('name', 'OpenCensus'),
-            ('type', 'overlay'),
-            ('version', '1'),
-            ('description', 'Statistics Canada census regions'),
-            ('format', 'geojson')
-            ):
-        destination_db_cursor.execute('INSERT INTO metadata (name, value) VALUES (?, ?)', keyval)
-
-    destination_db_cursor.execute('CREATE TABLE tiles (zoom_level integer, tile_column integer, tile_row integer, tile_data blob)')
-    destination_db_cursor.execute('CREATE UNIQUE INDEX tiles_index ON tiles (zoom_level, tile_row, tile_column)')
-
-    destination_db.commit()
-
     renderer = MBTilesRenderer(256, 256, source_db, destination_db)
 
     def progress_callback(tile, delay):
