@@ -55,13 +55,21 @@ class TileData(object):
     def utfgrids(self):
         if self._utfgrids is not None: return self._utfgrids
 
-        ret = []
+        self._utfgrids = []
 
         for builder in self.utfgrid_builders:
             grid = builder.get_utfgrid()
             grid.simplify()
             if len(grid.keys) > 1 or grid.keys[0] != '': # if there's a region
-                if grid not in ret:
-                    ret.append(grid)
+                if grid not in self._utfgrids:
+                    self._utfgrids.append(grid)
 
-        return ret
+        return self._utfgrids
+
+    def containsRegionBoundaries(self):
+        grids = self.utfgrids()
+
+        for grid in grids:
+            if len(grid.keys) > 1: return True
+
+        return False
