@@ -10,6 +10,9 @@ class UTFGrid:
         self.keys = keys
         self.grid = grid
 
+    def __eq__(self, other):
+        self.keys == other.keys and self.grid == other.grid
+
     def _simplify_grid(self):
         # Return a one-char grid if there's only one char
         first_char = self.grid[0][0]

@@ -55,7 +55,13 @@ class TileData(object):
     def utfgrids(self):
         if self._utfgrids is not None: return self._utfgrids
 
-        ret = [ builder.get_utfgrid() for builder in self.utfgrid_builders ]
-        map(lambda g: g.simplify(), ret)
-        filter(lambda g: len(g.keys) > 0 or g.keys[0] != '', ret)
+        ret = []
+
+        for builder in self.utfgrid_builders:
+            grid = builder.get_utfgrid()
+            grid.simplify()
+            if len(grid.keys) > 1 or grid.keys[0] != '': # if there's a region
+                if grid not in ret:
+                    ret.append(grid)
+
         return ret
