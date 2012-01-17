@@ -4,6 +4,7 @@ import TileStache
 from TileStache.Goodies.Providers.PostGeoJSON import Provider
 
 from db import source_db as _source_db, RealDictCursor as _RealDictCursor
+import opencensus_json
 from tile import Tile
 from tile_renderer import TileRenderer
 
@@ -17,7 +18,8 @@ class _SaveableResponse:
         if format != 'JSON':
             raise KnownUnknown('PostGeoJSON only saves .json tiles, not "%s"' % format)
 
-        out.write(unicode(self.content).encode('utf-8'))
+        geojson = opencensus_json.encode(self.content)
+        out.write(geojson.encode('utf-8'))
 
 class OpenCensusProvider(Provider):
     def __init__(self, layer):
@@ -33,6 +35,6 @@ class OpenCensusProvider(Provider):
         tile = Tile(width, height, coord)
         tileRenderer = TileRenderer(tile, cursor, self.layer.projection)
 
-        s = tileRenderer.getTileData()
+        tileData = tileRenderer.getTileData()
 
-        return _SaveableResponse(s)
+        return _SaveableResponse(tileData)

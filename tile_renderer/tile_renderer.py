@@ -147,4 +147,4 @@ class TileRenderer(object):
 
         self._populateStatistics(tile_data, region_id_to_json_id)
 
-        return opencensus_json.encode(tile_data)
+        return tile_data
