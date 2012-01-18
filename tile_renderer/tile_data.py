@@ -17,12 +17,12 @@ class TileData(object):
             self.utfgrid_builders = []
             for _unused in _region_type_sets:
                 self.utfgrid_builders.append(UTFGridBuilder(render_utfgrid_for_tile))
-        elif utfgrids:
+        elif utfgrids is not None:
             self._utfgrids = utfgrids
         else:
             raise ValueError('TileData() must receive either "utfgrids" or "render_utfgrid_for_tile" kwarg')
 
-        self.features = []
+        self.features = features
         self.region_id_to_properties = {}
         for feature in features:
             self.region_id_to_properties[feature['id']] = feature['properties']
@@ -51,6 +51,21 @@ class TileData(object):
         year_statistics[name] = { 'value': value }
         if note is not None and len(note) > 0:
             year_statistics[name]['note'] = note
+
+    def simplify_utfgrids(self):
+        if self._utfgrids is None: return
+
+        old_grids = self._utfgrids
+        self._utfgrids = []
+
+        for grid in old_grids:
+            grid.simplify()
+            if len(grid.keys) > 1 or grid.keys[0] != '': # if there's a region
+                if grid not in self._utfgrids:
+                    self._utfgrids.append(grid)
+
+        return self._utfgrids
+
 
     def utfgrids(self):
         if self._utfgrids is not None: return self._utfgrids
