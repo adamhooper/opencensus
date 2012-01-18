@@ -7,6 +7,7 @@ import os
 from math import pi
 import sqlite3
 import time
+import zlib
 
 import ModestMaps
 from ModestMaps.Geo import MercatorProjection, deriveTransformation, Location
@@ -165,10 +166,11 @@ class MBTilesRenderer(object):
                 tile_data = renderer.getTileData()
 
                 geojson = opencensus_json.encode(tile_data)
+                geojson_z = zlib.compress(geojson.encode('utf-8'))
 
                 self.destination_db_cursor.execute(
                     'INSERT OR REPLACE INTO tiles (zoom_level, tile_column, tile_row, tile_data) VALUES (?, ?, ?, ?)',
-                    (tile.zoom, tile.column, tile.row, geojson))
+                    (tile.zoom, tile.column, tile.row, geojson_z))
                 self.destination_db.commit()
 
                 if tile_data.containsRegionBoundaries():
@@ -191,10 +193,11 @@ if __name__ == '__main__':
 
     source_db = psycopg2.connect(source_dsn)
     destination_db = sqlite3.connect(destination_dsn)
+    destination_db.text_factory = str
 
     renderer = MBTilesRenderer(256, 256, source_db, destination_db)
 
     def progress_callback(tile, delay):
-        sys.stderr.write('/%d/%d/%d.geojson (%0.2fs)\n' % (tile.zoom, tile.row, tile.column, delay))
+        sys.stderr.write('/%d/%d/%d.geojson (%0.1fms)\n' % (tile.zoom, tile.row, tile.column, delay))
 
     renderer.work(progress_callback=progress_callback)
