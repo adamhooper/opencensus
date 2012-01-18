@@ -170,7 +170,7 @@ class MBTilesRenderer(object):
 
                 self.destination_db_cursor.execute(
                     'INSERT OR REPLACE INTO tiles (zoom_level, tile_column, tile_row, tile_data) VALUES (?, ?, ?, ?)',
-                    (tile.zoom, tile.column, tile.row, geojson_z))
+                    (tile.zoom, tile.column, tile.row, buffer(geojson_z)))
                 self.destination_db.commit()
 
                 if tile_data.containsRegionBoundaries():

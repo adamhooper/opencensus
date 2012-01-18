@@ -113,7 +113,7 @@ if __name__ == '__main__':
 
         t2 = time.time()
 
-        write_cursor.execute('INSERT INTO tiles (zoom_level, tile_row, tile_column, tile_data) VALUES (?, ?, ?, ?)', (tile.zoom, tile.row, tile.column, new_json_z))
+        write_cursor.execute('INSERT INTO tiles (zoom_level, tile_row, tile_column, tile_data) VALUES (?, ?, ?, ?)', (tile.zoom, tile.row, tile.column, buffer(new_json_z)))
 
         t3 = time.time()
 
