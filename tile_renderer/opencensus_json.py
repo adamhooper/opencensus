@@ -24,10 +24,10 @@ def encode(obj):
 
 def _decode_object(obj):
     if 'grid' in obj and 'keys' in obj:
-        return UTFGrid(obj['grid'], obj['keys'])
+        return _UTFGrid(obj['grid'], obj['keys'])
 
-    if 'type' in obj and 'features' in obj and 'utfgrids' in obj:
-        return TileData(obj, 'features', 'utfgrids')
+    if 'type' in obj and obj['type'] == 'FeatureCollection' and 'features' in obj and 'utfgrids' in obj:
+        return _TileData(obj['features'], obj['utfgrids'])
 
     return obj
 
