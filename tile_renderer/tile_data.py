@@ -11,7 +11,7 @@ def _decode_geojson(obj):
 _region_type_sets = region_types.as_sets()
 
 class TileData(object):
-    def __init__(self, features=[], utfgrids=None, render_utfgrid_for_tile=None):
+    def __init__(self, features=None, utfgrids=None, render_utfgrid_for_tile=None):
         if render_utfgrid_for_tile is not None:
             self._utfgrids = None
             self.utfgrid_builders = []
@@ -22,13 +22,20 @@ class TileData(object):
         else:
             raise ValueError('TileData() must receive either "utfgrids" or "render_utfgrid_for_tile" kwarg')
 
-        self.features = features
         self.region_id_to_properties = {}
-        for feature in features:
-            self.region_id_to_properties[feature['id']] = feature['properties']
+        if features is None:
+            self.features = []
+        else:
+            self.features = features
+            for feature in features:
+                self.region_id_to_properties[feature['id']] = feature['properties']
 
     def __len__(self):
         return len(self.features)
+
+    def __repr__(self):
+        return 'TileData with %d features and %d utfgrids' % (
+                len(self.features), len(self._utfgrids))
 
     def addRegion(self, region_id, properties, geometry_geojson, geometry_mercator_svg=None):
         geometry = _decode_geojson(geometry_geojson)
