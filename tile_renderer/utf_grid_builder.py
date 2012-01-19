@@ -95,4 +95,5 @@ class UTFGridBuilder:
 
     def get_utfgrid(self):
         grid = self._calculate_grid()
+        self.image.finish()
         return UTFGrid(grid, self.keys)
