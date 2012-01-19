@@ -2,7 +2,7 @@ class CreateTablesRegionPolygonsZoom < ActiveRecord::Migration
   def up
     zoom0_degrees_per_pixel = (170.0 / 256)
 
-    (3..15).each do |zoom|
+    (0..18).each do |zoom|
       # We can be off by 1 pixel with nobody noticing, because shapes have borders.
       # So let's convert that to degrees--that's our allowed_error
       degrees_per_pixel = zoom0_degrees_per_pixel / (2 ** zoom)
@@ -17,8 +17,9 @@ class CreateTablesRegionPolygonsZoom < ActiveRecord::Migration
   end
 
   def down
-    (3..15).each do |zoom|
-      drop_table("region_polygons_zoom#{zoom}")
+    (0..18).each do |zoom|
+      table_name = "region_polygons_zoom#{zoom}"
+      drop_table(table_name) if self.table_exists?(table_name)
     end
   end
 end
