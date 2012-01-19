@@ -15,7 +15,9 @@ def encode(obj):
             'features': obj.features,
             'utfgrids': _utfgrids_to_object_list(obj.utfgrids())
         }
-    return json.dumps(obj, ensure_ascii=False, check_circular=False, separators=(',', ':'))
+    s = json.dumps(obj, ensure_ascii=False, check_circular=False, separators=(',', ':'))
+
+    return s
 
 def _decode_object(obj):
     if 'grid' in obj and 'keys' in obj:
