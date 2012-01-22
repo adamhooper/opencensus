@@ -72,6 +72,12 @@ ActiveRecord::Schema.define(:version => 20120111154341) do
 # Could not dump table "region_polygons" because of following StandardError
 #   Unknown type 'geometry' for column 'polygon'
 
+# Could not dump table "region_polygons_zoom0" because of following StandardError
+#   Unknown type 'geometry' for column 'polygon'
+
+# Could not dump table "region_polygons_zoom1" because of following StandardError
+#   Unknown type 'geometry' for column 'polygon'
+
 # Could not dump table "region_polygons_zoom10" because of following StandardError
 #   Unknown type 'geometry' for column 'polygon'
 
@@ -88,6 +94,18 @@ ActiveRecord::Schema.define(:version => 20120111154341) do
 #   Unknown type 'geometry' for column 'polygon'
 
 # Could not dump table "region_polygons_zoom15" because of following StandardError
+#   Unknown type 'geometry' for column 'polygon'
+
+# Could not dump table "region_polygons_zoom16" because of following StandardError
+#   Unknown type 'geometry' for column 'polygon'
+
+# Could not dump table "region_polygons_zoom17" because of following StandardError
+#   Unknown type 'geometry' for column 'polygon'
+
+# Could not dump table "region_polygons_zoom18" because of following StandardError
+#   Unknown type 'geometry' for column 'polygon'
+
+# Could not dump table "region_polygons_zoom2" because of following StandardError
 #   Unknown type 'geometry' for column 'polygon'
 
 # Could not dump table "region_polygons_zoom3" because of following StandardError
