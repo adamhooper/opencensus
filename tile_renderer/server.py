@@ -31,14 +31,14 @@ if __name__ == '__main__':
                 'provider': {
                     'class': 'tile_data_provider:OpenCensusProvider'
                 },
-                'bounds': {
-                    'low': 0,
-                    'high': 18,
-                    'north': 90,
-                    'west': -141.00198,
-                    'east': -52.63,
-                    'south': 41.69
-                },
+                #'bounds': {
+                #    'low': 0,
+                #    'high': 18,
+                #    'north': 90,
+                #    'west': -141.00198,
+                #    'east': -52.63,
+                #    'south': 41.69
+                #},
                 'preview': {
                     'lat': 45.5,
                     'lon': -73.5,
