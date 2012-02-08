@@ -58,7 +58,7 @@ class TileRenderer(object):
                               AND %f >= min_longitude
                               AND %f <= max_latitude
                               AND %f >= min_latitude
-                              AND (area_in_m > %d OR (area_in_m > %d AND is_island IS TRUE))
+                              %s
                            ) x
                       WHERE GeometryType(geometry) IN ('POLYGON', 'MULTIPOLYGON')
                       GROUP BY region_id
@@ -68,11 +68,12 @@ class TileRenderer(object):
                   ON r.id = parents.region_id
           ORDER BY r.position
           """ % (
-              self.tile.getFloatDecimalsForZoom(),
+              self.tile.getFloatDecimalsForZoom() + (self.tile.zoom >= 15 and 1 or 0),
               bounds_sql, self.tile.coord.zoom,
               nw.lon, se.lon, se.lat, nw.lat,
-              self.tile.getMinAreaForZoom(),
-              self.tile.getMinIslandAreaForZoom()
+              self.tile.coord.zoom >= 15 and '' or (
+                'AND (area_in_m > %d OR (area_in_m > %d AND is_island IS TRUE))'
+                % (self.tile.getMinAreaForZoom(), self.tile.getMinIslandAreaForZoom()))
               )
 
         return query
