@@ -181,7 +181,8 @@ class MapTile
     "MapTile-#{@zoom}-#{@coord.x}-#{@coord.y}"
 
   url: () ->
-    "#{globals.json_tile_url}/regions/#{@zoom}/#{@coord.x}/#{@coord.y}.geojson"
+    base_url = globals.json_tile_url.replace('#{n}', ('' + ((@coord.x % 2) * 2 + (@coord.y % 2))))
+    "#{base_url}/regions/#{@zoom}/#{@coord.x}/#{@coord.y}.geojson"
 
   lat2y: (lat) ->
     # http://wiki.openstreetmap.org/wiki/Mercator#ActionScript_and_JavaScript
