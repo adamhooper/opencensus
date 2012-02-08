@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+# It takes too long to render the Territories--for too few people.
+# (It's callous, but practical.)
+# I ran this script when the bottom rows at zoom level 12 were rendering.
+
 import sys
 import psycopg2
 import zlib
