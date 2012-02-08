@@ -9,9 +9,6 @@ class CreateIndicatorRegionValues < ActiveRecord::Migration
       t.string :note
     end
 
-    add_index(:indicator_region_values, :indicator_id)
     add_index(:indicator_region_values, :region_id)
-    add_index(:indicator_region_values, [:indicator_id, :region_id])
-    add_index(:indicator_region_values, [:region_id, :indicator_id])
   end
 end
