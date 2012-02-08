@@ -24,41 +24,31 @@ from tile import Tile
 from tile_renderer import TileRenderer
 
 class MBTilesCoordQueue(object):
-    def __init__(self, db, projection):
+    def __init__(self, db, nw, se, projection):
         self.db = db
         self.db_cursor = db.cursor()
+        self.nw = nw
+        self.se = se
         self.projection = projection
 
-        # initialize DB
-        try:
-            self.db_cursor.execute('SELECT * FROM work_queue LIMIT 1')
-        except sqlite3.OperationalError:
-            self.initializeDatabase()
+    #    # initialize DB
+    #    try:
+    #        self.db_cursor.execute('SELECT * FROM work_queue LIMIT 1')
+    #    except sqlite3.OperationalError:
+    #        self.initializeDatabase()
 
-        (self.nw, self.se) = self._queryBounds()
+    #def initializeDatabase(self):
+    #    self.db_cursor.execute('CREATE TABLE work_queue (id INTEGER PRIMARY KEY AUTOINCREMENT, zoom_level INTEGER NOT NULL, tile_row INTEGER NOT NULL, tile_column INTEGER NOT NULL, worker INTEGER)')
+    #    self.db_cursor.execute('CREATE INDEX work_queue_workers ON work_queue (worker)')
 
-    def initializeDatabase(self):
-        self.db_cursor.execute('CREATE TABLE work_queue (zoom_level INTEGER NOT NULL, tile_row INTEGER NOT NULL, tile_column INTEGER NOT NULL, worker INTEGER, PRIMARY KEY (zoom_level, tile_row, tile_column))')
-        self.db_cursor.execute('CREATE INDEX work_queue_workers ON work_queue (worker)')
-
-        self.db_cursor.execute('INSERT OR REPLACE INTO work_queue (zoom_level, tile_column, tile_row, worker) VALUES (0, 0, 0, NULL)')
-        self.db.commit()
-
-    def _queryBounds(self):
-        self.db_cursor.execute("SELECT value FROM metadata WHERE name = 'bounds'")
-        row = self.db_cursor.fetchone()
-        if row is None: return None
-
-        numbers = map(float, row[0].split(','))
-        nw = Location(numbers[3], numbers[0])
-        se = Location(numbers[1], numbers[2])
-        return (nw, se)
+    #    self.db_cursor.execute('INSERT OR REPLACE INTO work_queue (zoom_level, tile_column, tile_row, worker) VALUES (0, 0, 0, NULL)')
+    #    self.db.commit()
 
     def getWorkerId(self):
         return os.getpid()
 
     def getPreviouslyReservedCoord(self):
-        self.db_cursor.execute('SELECT zoom_level, tile_row, tile_column FROM work_queue WHERE worker = ?', (self.getWorkerId(),))
+        self.db_cursor.execute('SELECT zoom_level, tile_row, tile_column FROM work_queue WHERE worker = %s', (self.getWorkerId(),))
         row = self.db_cursor.fetchone()
 
         if row is None: return None
@@ -70,19 +60,27 @@ class MBTilesCoordQueue(object):
     def get(self):
         ret = self.getPreviouslyReservedCoord()
 
-        if ret is None:
-            self.db_cursor.execute('SELECT zoom_level, tile_row, tile_column FROM work_queue WHERE worker IS NULL ORDER BY zoom_level, tile_row, tile_column LIMIT 1')
-            row = self.db_cursor.fetchone()
-            (zoom_level, tile_row, tile_column) = row
-            self.db_cursor.execute('UPDATE work_queue SET worker = ? WHERE worker IS NULL AND zoom_level = ? AND tile_row = ? AND tile_column = ?', (self.getWorkerId(), zoom_level, tile_row, tile_column))
+        while ret is None:
+            self.db_cursor.execute('UPDATE work_queue SET worker = %s WHERE worker IS NULL AND (zoom_level, tile_row, tile_column) = (SELECT zoom_level, tile_row, tile_column FROM work_queue WHERE worker IS NULL ORDER BY zoom_level, tile_row, tile_column LIMIT 1) RETURNING zoom_level, tile_row, tile_column', (self.getWorkerId(),))
             self.db.commit()
+            row = self.db_cursor.fetchone()
+            if row is not None:
+                (zoom, row, column) = row
+                coord = Coordinate(row, column, zoom)
+                return coord
+            #self.db_cursor.execute('SELECT id, worker FROM work_queue ORDER BY id LIMIT 10')
+            #for (id, worker) in self.db_cursor:
+            #    if worker is None:
+            #        self.db_cursor.execute('UPDATE work_queue SET worker = ? WHERE worker IS NULL AND id = ?', (self.getWorkerId(), id))
+            #        self.db.commit()
+            #        break
 
-            ret = self.getPreviouslyReservedCoord()
+            #ret = self.getPreviouslyReservedCoord()
 
         return ret
 
     def unreserveCoords(self):
-        self.db_cursor.execute('UPDATE work_queue SET worker = NULL WHERE worker = ?', (self.getWorkerId(),))
+        self.db_cursor.execute('UPDATE work_queue SET worker = NULL WHERE worker = %s', (self.getWorkerId(),))
         self.db.commit()
 
     def enumerateCoordChildren(self, coord):
@@ -97,12 +95,14 @@ class MBTilesCoordQueue(object):
                 yield possible_coord
 
     def queueCoordChildren(self, coord):
+        if coord.zoom >= 15: return
+
         for child_coord in self.enumerateCoordChildren(coord):
-            self.db_cursor.execute('INSERT OR REPLACE INTO work_queue (zoom_level, tile_column, tile_row, worker) VALUES (?, ?, ?, NULL)', (child_coord.zoom, child_coord.column, child_coord.row))
+            self.db_cursor.execute('INSERT INTO work_queue (zoom_level, tile_column, tile_row, worker) VALUES (%s, %s, %s, NULL)', (child_coord.zoom, child_coord.column, child_coord.row))
         self.db.commit()
 
     def markCoordFinished(self, coord):
-        self.db_cursor.execute('DELETE FROM work_queue WHERE zoom_level = ? AND tile_column = ? AND tile_row = ? AND worker = ?', (coord.zoom, coord.column, coord.row, self.getWorkerId()))
+        self.db_cursor.execute('DELETE FROM work_queue WHERE worker = %s AND zoom_level = %s AND tile_column = %s AND tile_row = %s', (self.getWorkerId(), coord.zoom, coord.column, coord.row))
         self.db.commit()
 
 class MBTilesRenderer(object):
@@ -123,11 +123,11 @@ class MBTilesRenderer(object):
         except sqlite3.OperationalError:
             self.initializeDatabase()
 
-        self.destination_db_cursor.execute('SELECT COUNT(*) FROM metadata WHERE name = ?', ('bounds',))
+        self.destination_db_cursor.execute('SELECT COUNT(*) FROM metadata WHERE name = %s', ('bounds',))
         if self.destination_db_cursor.fetchone()[0] == 0:
             (nw, se) = self._calculateBounds()
             bounds_str = ','.join([str(nw.lon), str(se.lat), str(se.lon), str(nw.lat)])
-            self.destination_db_cursor.execute('INSERT OR REPLACE INTO metadata (name, value) VALUES (?, ?)', ('bounds', bounds_str))
+            self.destination_db_cursor.execute('INSERT OR REPLACE INTO metadata (name, value) VALUES (%s, %s)', ('bounds', bounds_str))
             self.destination_db.commit()
 
 
@@ -140,7 +140,7 @@ class MBTilesRenderer(object):
                 ('description', 'Statistics Canada census regions'),
                 ('format', 'geojson')
                 ):
-            self.destination_db_cursor.execute('INSERT OR REPLACE INTO metadata (name, value) VALUES (?, ?)', keyval)
+            self.destination_db_cursor.execute('INSERT OR REPLACE INTO metadata (name, value) VALUES (%s, %s)', keyval)
 
         self.destination_db_cursor.execute('CREATE TABLE tiles (zoom_level INTEGER NOT NULL, tile_row INTEGER NOT NULL, tile_column INTEGER NOT NULL, tile_data blob, PRIMARY KEY (zoom_level, tile_row, tile_column))')
 
@@ -153,51 +153,74 @@ class MBTilesRenderer(object):
         se = Location(row['se_latitude'], row['se_longitude'])
         return (nw, se)
 
-    def work(self, progress_callback=None):
-        queue = MBTilesCoordQueue(self.destination_db, self.projection)
+    def _queryBounds(self):
+        self.destination_db_cursor.execute("SELECT value FROM metadata WHERE name = 'bounds'")
+        row = self.destination_db_cursor.fetchone()
+        if row is None: return None
+
+        numbers = map(float, row[0].split(','))
+        nw = Location(numbers[3], numbers[0])
+        se = Location(numbers[1], numbers[2])
+        return (nw, se)
+
+    def work(self):
+        (nw, se) = self._queryBounds()
+        queue = MBTilesCoordQueue(self.destination_db, nw, se, self.projection)
 
         try:
             while True:
                 t1 = time.time()
 
                 coord = queue.get()
+
+                t2 = time.time()
+
                 tile = Tile(self.tile_width, self.tile_height, coord)
                 renderer = TileRenderer(tile, self.source_db_cursor, self.projection, include_statistics=False)
                 tile_data = renderer.getTileData()
 
+                t3 = time.time()
+
                 geojson = opencensus_json.encode(tile_data)
                 geojson_z = zlib.compress(geojson.encode('utf-8'))
 
+                t4 = time.time()
+
+
                 self.destination_db_cursor.execute(
-                    'INSERT OR REPLACE INTO tiles (zoom_level, tile_column, tile_row, tile_data) VALUES (?, ?, ?, ?)',
+                    'INSERT INTO tiles (zoom_level, tile_column, tile_row, tile_data) VALUES (%s, %s, %s, %s)',
                     (tile.zoom, tile.column, tile.row, buffer(geojson_z)))
                 self.destination_db.commit()
 
+                t5 = time.time()
+
                 if tile_data.containsRegionBoundaries():
-                  queue.queueCoordChildren(coord)
+                    queue.queueCoordChildren(coord)
 
                 queue.markCoordFinished(coord)
 
-                if progress_callback is not None:
-                    t2 = time.time()
-                    tdiff = t2 - t1
-                    progress_callback(tile, tdiff)
+                t6 = time.time()
+
+                sys.stderr.write(
+                    '/%d/%d/%d.json (%d bytes): queue1 %0.1fms, tile %0.1fms, json %0.1fms, sql %0.1fms, queue2 %0.1fms\n' % (
+                        tile.zoom, tile.row, tile.column,
+                        len(geojson_z),
+                        (t2 - t1) * 1000, (t3 - t2) * 1000, (t4 - t3) * 1000, (t5 - t4) * 1000, (t6 - t5) * 1000))
         finally:
+            self.destination_db.rollback()
             queue.unreserveCoords()
 
 if __name__ == '__main__':
     import sys
 
     source_dsn = 'dbname=opencensus_dev user=opencensus_dev password=opencensus_dev host=localhost'
-    destination_dsn = sys.argv[1]
+    #destination_dsn = sys.argv[1]
+    destination_dsn = source_dsn
 
     source_db = psycopg2.connect(source_dsn)
-    destination_db = sqlite3.connect(destination_dsn)
-    destination_db.text_factory = str
+    #destination_db = sqlite3.connect(destination_dsn, isolation_level='EXCLUSIVE')
+    destination_db = psycopg2.connect(destination_dsn)
 
     renderer = MBTilesRenderer(256, 256, source_db, destination_db)
 
-    def progress_callback(tile, delay):
-        sys.stderr.write('/%d/%d/%d.geojson (%0.1fms)\n' % (tile.zoom, tile.row, tile.column, delay))
-
-    renderer.work(progress_callback=progress_callback)
+    renderer.work()
