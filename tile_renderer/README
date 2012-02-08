@@ -46,7 +46,7 @@ A tile looks like this:
 The GeoJSON contains all data necessary. UTFGrid data is entirely redundant.
 
 In mass-rendering tiles, we'll skip querying for statistics and instead show:
-{ "statistics": { "0": { "TO-FILL": { "value": "Province-11" } } } }. It's
+{ "statistics": { "0": { "TO-FILL": { "value": (region_id) } } } }. It's
 complex because I was too lazy to make a simpler placeholder; nevertheless,
 one can substitute proper values in with a regular expression.
 
@@ -62,3 +62,36 @@ see both (aside from actual hit-detection on vector data) is to transmit
 two distinct hierarchies.
 
 All this happens in ./render_mbtiles.py
+
+==== Implementation
+
+We keep a "work_queue" so that render_mbtiles.py can be run in multiple
+processes and can be stopped and started without errors.
+
+As it happens, Canada's north is *enormous* using Google's spherical
+mercator projection, which stretches the poles. It also contains complex
+polygons that take a long time to render. An average Nunavut tile takes
+several times as long to render as an average New Brunswick one. Plus, the 
+population is extremely low. We have limited time to render; these tiles
+contain less useful information than the tiles in the Windsor corridor and
+they take too long to render.
+
+So we don't render the north past zoom level 12. This was done by running
+./reject_northern_work_queue_tiles.py after the north was rendered at zoom
+level 12 and before zoom level 13 began.
+
+=== Phase 2: Statistics
+
+We render a table of region_id -> statistics, which looks like the "statistics"
+section in the GeoJSON tile description above. It's straightforward to generate
+this: just loop over indicator_region_values, group by region and year, and
+encode as JSON.
+
+This is in ./render_statistics.py
+
+=== Phase 3: Merge
+
+1. Create a hash of region_id -> statistics, using the above table.
+2. For each tile:
+2a. Parse the tile's JSON
+2b. For each "0" year in the JSON, replace the entire hash with statistics.
