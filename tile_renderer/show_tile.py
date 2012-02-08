@@ -7,7 +7,7 @@ from db import source_db
 
 def fetch_tile_data(cursor, zoom_level, row, column):
     cursor.execute('SELECT tile_data FROM tiles WHERE zoom_level = %s AND tile_row = %s AND tile_column = %s', (zoom_level, row, column))
-    row = c.fetchone()
+    row = cursor.fetchone()
     if row is None: return None
     data_z = row[0]
     data = zlib.decompress(data_z)
