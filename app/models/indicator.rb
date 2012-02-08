@@ -45,6 +45,10 @@ class Indicator < ActiveRecord::Base
     end
   end
 
+  def delete_all_possible_indicator_region_values
+    IndicatorRegionValue.connection.execute("DELETE FROM indicator_region_values WHERE indicator_id = #{id}")
+  end
+
   def create_all_possible_indicator_region_values
     select_sql = sql.dup
     wheres = []

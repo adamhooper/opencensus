@@ -8,16 +8,14 @@ Rails.application.require_environment!
 indicators = Indicator.where("sql IS NOT NULL AND sql <> ''")
 
 indicators.each do |indicator|
-  Indicator.transaction do
-    puts "Processing indicator: #{indicator.name}"
-    puts "Deleting existing..."
-    indicator.indicator_region_values.delete_all
-    puts "Creating new values, using #{indicator.sql.inspect}..."
-    indicator.create_all_possible_indicator_region_values
-    puts "Calculating buckets..."
-    indicator.set_sensible_buckets!
-    puts indicator.buckets
-    puts "Saving..."
-    indicator.save!
-  end
+  puts "Processing indicator: #{indicator.name}"
+  puts "Deleting existing..."
+  indicator.delete_all_possible_indicator_region_values
+  puts "Creating new values, using #{indicator.sql.inspect}..."
+  indicator.create_all_possible_indicator_region_values
+  puts "Calculating buckets..."
+  indicator.set_sensible_buckets!
+  puts indicator.buckets
+  puts "Saving..."
+  indicator.save!
 end
