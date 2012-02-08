@@ -8,7 +8,7 @@ import zlib
 TILES_DB = 'mbtiles.sqlite3'
 STATS_DB = 'statistics.sqlite3'
 
-_URL_REGEX = re.compile('^/(?P<zoom_level>\d+)/(?P<row>\d+)/(?P<column>\d+)\.json$')
+_URL_REGEX = re.compile('^/regions/(?P<zoom_level>\d\d*)/(?P<column>\d\d*)/(?P<row>\d\d*)\.(?:geo)?json$')
 
 _tiles_cursor = None
 _stats_cursor = None
@@ -79,7 +79,10 @@ def application(env, start_response):
     tile_data = _get_tile_data(zoom_level, row, column)
 
     if tile_data is None:
-        start_response('404 Not Found', [('Content-Type', 'text/plain')])
+        start_response('400 Not Found', [
+            ('Content-Type', 'text/plain'),
+            ('Access-Control-Allow-Origin', 'http://opencensus.adamhooper.com')
+        ])
         return ['Tile not found']
 
     # Build a dictionary that points to the parts of tile_data we want
@@ -96,5 +99,9 @@ def application(env, start_response):
     ustring = json.dumps(tile_data, ensure_ascii=False, check_circular=False, separators=(',', ':'))
     utf8string = ustring.encode('utf-8')
 
-    start_response('200 OK', [('Content-Type', 'application/json;charset=UTF-8'), ('Content-Length', len(utf8string))])
+    start_response('200 OK', [
+        ('Content-Type', 'application/json;charset=UTF-8'),
+        ('Content-Length', str(len(utf8string))),
+        ('Access-Control-Allow-Origin', 'http://opencensus.adamhooper.com')
+    ])
     return [utf8string]
