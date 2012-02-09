@@ -15,7 +15,8 @@ Indicator.create([
   { name: 'Area', unit: 'km²', description: 'Land area', value_type: 'float' },
   { name: 'Population density', unit: 'people per km²', description: '', value_type: 'float', sql: '{Population} / {Area}' },
   { name: 'Dwelling density', unit: 'dwellings per km²', description: '', value_type: 'float', sql: '{Dwellings} / {Area}' },
-  { name: 'People per dwelling', unit: 'people per dwelling', description: '', value_type: 'float', sql: '{Population} / {Dwellings}' }
+  { name: 'People per dwelling', unit: 'people per dwelling', description: '', value_type: 'float', sql: '{Population} / {Dwellings}' },
+  { name: 'Population growth', unit: '%', description: 'How many more or fewer people are in this region', value_type: 'float', sql: '100.0 * {Population} / {Population:previous} WHERE {Population:previous} > 0' }
 ])
 
 RegionType.create([
