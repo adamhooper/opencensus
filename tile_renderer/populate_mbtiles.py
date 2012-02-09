@@ -1,6 +1,12 @@
 #!/usr/bin/env python
 
 # Dumps the "tiles" table into an sqlite3 database
+#
+# DO NOT USE THIS! It takes too much memory. Instead,
+# just pg_dump as SQL, convert "'\x" to "x'" (that's the
+# ANSI BLOB starter) and run the resulting file as an
+# SQLite script--starting with the VERY important SQL,
+# "PRAGMA synchronous = OFF"
 
 __requires__ = ['psycopg2==2.4.4']
 import pkg_resources
