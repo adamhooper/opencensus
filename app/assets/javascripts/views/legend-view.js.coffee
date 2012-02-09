@@ -35,7 +35,7 @@ class LegendView
 
     $ul = $('<ul></ul>')
     for bucket, i in mapIndicator.buckets()
-      fill = globals.style.buckets[i]
+      fill = mapIndicator.bucket_colors && mapIndicator.bucket_colors[i] || globals.style.buckets[i]
 
       $li = $('<li><span class="sample">&nbsp;</span><span class="min"></span> to <span class="max"></span></li>')
       $li.find('.sample').css('background', fill)

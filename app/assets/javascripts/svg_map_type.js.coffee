@@ -164,7 +164,7 @@ class MapTile
     bucket = @mapIndicator.bucketForValue(datum.value)
     return 'none' if bucket is undefined
 
-    globals.style.buckets[bucket]
+    @mapIndicator.bucket_colors && @mapIndicator.bucket_colors[bucket] || globals.style.buckets[bucket]
 
   restyle: () ->
     for id, geometry of @regionIdToGeometry

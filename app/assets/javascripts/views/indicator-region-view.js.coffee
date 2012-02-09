@@ -55,7 +55,7 @@ class IndicatorRegionView
         map_value = map_datum && map_datum.value
         bucket = map_indicator.bucketForValue(map_value)
         if bucket isnt undefined
-          fill = globals.style.buckets[bucket]
+          fill = map_indicator.bucket_colors && map_indicator.bucket_colors[bucket] || globals.style.buckets[bucket]
 
           $p = $('<p class="is-current-indicator">On map: <span class="legend-color">&nbsp;</span> <span class="value"></span> <span class="unit"></span></p>')
           $p.find('span.legend-color').css('background', fill)

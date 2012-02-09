@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120111154341) do
+ActiveRecord::Schema.define(:version => 20120209141952) do
 
   create_table "indicator_region_types", :id => false, :force => true do |t|
     t.integer "id",             :null => false
@@ -29,9 +29,6 @@ ActiveRecord::Schema.define(:version => 20120111154341) do
   end
 
   add_index "indicator_region_values", ["indicator_id", "region_id", "year"], :name => "indicator_region_values_unique_index", :unique => true
-  add_index "indicator_region_values", ["indicator_id", "region_id"], :name => "indicator_region_values_indicator_id_region_id"
-  add_index "indicator_region_values", ["indicator_id"], :name => "indicator_region_values_indicator_id"
-  add_index "indicator_region_values", ["region_id", "indicator_id"], :name => "indicator_region_values_region_id_indicator_id"
   add_index "indicator_region_values", ["region_id"], :name => "indicator_region_values_region_id"
 
   create_table "indicators", :force => true do |t|
@@ -41,6 +38,12 @@ ActiveRecord::Schema.define(:version => 20120111154341) do
     t.string "value_type"
     t.string "buckets"
     t.string "sql"
+    t.string "bucket_colors"
+  end
+
+  create_table "metadata", :id => false, :force => true do |t|
+    t.string "name",  :limit => nil, :null => false
+    t.string "value", :limit => nil
   end
 
   create_table "region_indicators", :id => false, :force => true do |t|
@@ -151,6 +154,35 @@ ActiveRecord::Schema.define(:version => 20120111154341) do
     t.integer "auth_srid"
     t.string  "srtext",    :limit => 2048
     t.string  "proj4text", :limit => 2048
+  end
+
+  create_table "tiles", :id => false, :force => true do |t|
+    t.integer "zoom_level",  :null => false
+    t.integer "tile_row",    :null => false
+    t.integer "tile_column", :null => false
+    t.binary  "tile_data",   :null => false
+  end
+
+  create_table "tiles2", :id => false, :force => true do |t|
+    t.integer "zoom_level"
+    t.integer "tile_row"
+    t.integer "tile_column"
+    t.binary  "tile_data"
+  end
+
+  create_table "work_queue", :id => false, :force => true do |t|
+    t.integer "zoom_level",  :null => false
+    t.integer "tile_row",    :null => false
+    t.integer "tile_column", :null => false
+    t.integer "worker"
+  end
+
+  add_index "work_queue", ["worker"], :name => "work_queue_worker"
+
+  create_table "work_queue_rejects", :id => false, :force => true do |t|
+    t.integer "zoom_level",  :null => false
+    t.integer "tile_row",    :null => false
+    t.integer "tile_column", :null => false
   end
 
 end

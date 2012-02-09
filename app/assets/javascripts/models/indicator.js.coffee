@@ -7,6 +7,7 @@ class Indicator
     @unit = attributes.unit
     @description = attributes.description
     @buckets_string = attributes.buckets
+    @bucket_colors = attributes.bucket_colors && attributes.bucket_colors.split(/;/)
 
   buckets: ->
     return @memoized_buckets if @memoized_buckets
