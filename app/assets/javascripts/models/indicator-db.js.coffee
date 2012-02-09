@@ -18,6 +18,7 @@ class IndicatorDb
     raw = [
       [ 'Area', null ],
       [ 'Population', 'Population density' ],
+      [ 'Population growth', 'Population growth' ],
       [ 'Dwellings', 'Dwelling density' ],
       [ 'People per dwelling', 'People per dwelling' ]
     ]
