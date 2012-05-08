@@ -53,10 +53,10 @@ def _get_tile_data(zoom_level, row, column):
             r.id, r.uid, r.type, r.name, rps.parents,
             ST_AsGeoJSON(ST_Collect(ST_Transform(ST_SetSRID(rpt.geometry_srid3857, 3857), 4326))) AS geojson,
             ST_AsSVG(ST_Collect(rpt.geometry_srid3857)) AS svg
-        FROM region_polygon_tiles2 rpt
-        INNER JOIN region_polygons_metadata2 rpm ON rpt.region_polygon_id = rpm.region_polygon_id
+        FROM region_polygon_tiles rpt
+        INNER JOIN region_polygons_metadata rpm ON rpt.region_polygon_id = rpm.region_polygon_id
         INNER JOIN regions r ON rpm.region_id = r.id
-        INNER JOIN region_parents_strings2 rps ON r.id = rps.region_id
+        INNER JOIN region_parents_strings rps ON r.id = rps.region_id
         WHERE rpt.zoom_level = %s AND rpt.tile_row = %s AND rpt.tile_column = %s
         GROUP BY r.id, r.position, r.type, r.name, rps.parents
         ORDER BY r.position
