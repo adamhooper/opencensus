@@ -14,11 +14,18 @@ When fetching a tile, we need to quickly find a pre-rendered list of polygons at
 
 To create "region_polygons": `INSERT INTO region_polygons (region_id, polygon) SELECT id, ST_Dump(geography).geom FROM regions;`. For any MultiPolygon, the ST_Dump() will create one row in region_polygons for each inner polygon.
 
-Next, we can cache massively.
+Add an area, in square metres. `UPDATE region_polygons SET area_in_m = ST_Area(ST_SetSRID(polygon, 4326));`
 
-First, the area: `UPDATE region_polygons SET area_in_m = ST_Area(ST_SetSRID(polygon, 4326));`
+Add is_island, because it's helfpul for making the map look right. If an island takes up 40 pixels, people will see it and want to see data on it; for a 40-pixel polygon that isn't an island, it might be okay to show only the polygon's parent's data.
 
-Add columns: min_longitude, max_longitude, min_latitude, max_latitude, is_island. is_island is helfpul for making the map look right. See db/migrations/ for info on how is_island is derived.
+With is_island and area_in_m, we can decide which polygons to show at which zoom levels:
+
+1. Set min_zoom_level for every polygon, up to 15 (because 15 is our max zoom level). Do this by finding out how many pixels the polygon would fill at that zoom level, and turning it on if it fills enough.
+2. Set the same min_zoom_level for all polygons with the same parent region. That means all or no tracts within a metropolitan area will appear, for instance, or all or no dissemination blocks within an area.
+
+Why #1? Because we don't want every polygon showing up at every zoom level. Why #2? Because we don't want only *some* sub-regions of a given region showing up. (Also, we don't want only some *polygons* of a single region showing up, and #2 happens to solve that problem, too.)
+
+With that, we know which polygons we want to render at which zoom levels. Next, we need to render those polygons into tiles. See tile_renderer/ for that.
 
 Then simplify, adding to separate tables so that neighbouring tiles use rows from the same general spot: `SELECT id, region_id, min_longitude, max_longitude, min_latitude, max_latitude, area_in_m, is_island, ST_SimplifyPreserveTopology(polygon, 0.46875000000000000000000) INTO region_polygons_zoom18';
 
