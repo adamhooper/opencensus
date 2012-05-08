@@ -54,7 +54,7 @@ class RegionStore
   getNearestRegionWithDatum: (region_id, year, indicator) ->
     region = this.get(region_id)
     return undefined if region is undefined
-    return region if region.getDatum(year, indicator)
+    return region if region.getDatum(year, indicator)?
     return undefined if region.parent_ids is undefined
 
     best_candidate = undefined
