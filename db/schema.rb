@@ -11,7 +11,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20120209141952) do
+ActiveRecord::Schema.define(:version => 20130414223828) do
 
   create_table "indicator_region_types", :id => false, :force => true do |t|
     t.integer "id",             :null => false
@@ -72,8 +72,26 @@ ActiveRecord::Schema.define(:version => 20120209141952) do
     t.string  "parents",   :limit => nil
   end
 
+  create_table "region_polygon_tiles", :id => false, :force => true do |t|
+    t.integer "region_polygon_id", :null => false
+    t.integer "zoom_level",        :null => false
+    t.integer "tile_row",          :null => false
+    t.integer "tile_column",       :null => false
+    t.text    "geojson_fragment",  :null => false
+  end
+
 # Could not dump table "region_polygons" because of following StandardError
 #   Unknown type 'geometry' for column 'polygon'
+
+  create_table "region_polygons_metadata", :id => false, :force => true do |t|
+    t.integer "id",                          :null => false
+    t.integer "region_id"
+    t.integer "area_in_m",      :limit => 8
+    t.boolean "is_island"
+    t.integer "min_zoom_level"
+  end
+
+  add_index "region_polygons_metadata", ["region_id"], :name => "region_polygons_metadata_region_id"
 
 # Could not dump table "region_polygons_zoom0" because of following StandardError
 #   Unknown type 'geometry' for column 'polygon'
@@ -137,8 +155,7 @@ ActiveRecord::Schema.define(:version => 20120209141952) do
     t.string "parent_region_type"
   end
 
-  create_table "region_types", :id => false, :force => true do |t|
-    t.integer "id",                      :null => false
+  create_table "region_types", :force => true do |t|
     t.string  "name",     :limit => nil, :null => false
     t.integer "position",                :null => false
   end
@@ -171,13 +188,10 @@ ActiveRecord::Schema.define(:version => 20120209141952) do
   end
 
   create_table "work_queue", :id => false, :force => true do |t|
-    t.integer "zoom_level",  :null => false
-    t.integer "tile_row",    :null => false
-    t.integer "tile_column", :null => false
+    t.integer "zoom_level",        :null => false
+    t.integer "region_polygon_id", :null => false
     t.integer "worker"
   end
-
-  add_index "work_queue", ["worker"], :name => "work_queue_worker"
 
   create_table "work_queue_rejects", :id => false, :force => true do |t|
     t.integer "zoom_level",  :null => false

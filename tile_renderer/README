@@ -65,20 +65,30 @@ All this happens in ./render_mbtiles.py
 
 ==== Implementation
 
-We keep a "work_queue" so that render_mbtiles.py can be run in multiple
-processes and can be stopped and started without errors.
+We start by creating a work_queue, which says which polygons should be
+rendered at which zoom levels. It will contain a "worker" column
+so multiple processes can coordinate who's working on what.
 
-As it happens, Canada's north is *enormous* using Google's spherical
-mercator projection, which stretches the poles. It also contains complex
-polygons that take a long time to render. An average Nunavut tile takes
-several times as long to render as an average New Brunswick one. Plus, the 
-population is extremely low. We have limited time to render; these tiles
-contain less useful information than the tiles in the Windsor corridor and
-they take too long to render.
+`CREATE TABLE work_queue (zoom_level INT NOT NULL,
+    region_polygon_id INT NOT NULL, worker INT DEFAULT NULL,
+    PRIMARY KEY (zoom_level, region_polygon_id));`
+`INSERT INTO work_queue (zoom_level, region_polygon_id)
+    SELECT id, generate_series(min_zoom_level, 15) FROM region_polygons;`
+`CREATE INDEX work_queue_worker ON work_queue (worker);`
 
-So we don't render the north past zoom level 12. This was done by running
-./reject_northern_work_queue_tiles.py after the north was rendered at zoom
-level 12 and before zoom level 13 began.
+Then we run ./render_polygons_into_tiles.py, which does this:
+
+1. Select a polygon and zoom level, and "lock" them in work_queue.
+2. Simplify the polygon and slice it into all the tiles it fits in.
+3. Add those tiles to region_polygon_tiles, which was created like this:
+
+`CREATE TABLE region_polygon_tiles (region_polygon_id INT NOT NULL,
+    zoom_level INT NOT NULL, tile_row INT NOT NULL, tile_column INT NOT NULL, 
+    geojson_fragment TEXT NOT NULL,
+    PRIMARY KEY (region_polygon_id, zoom_level, tile_row, tile_column));`
+
+Finally, we run ./merge_region_polygon_tiles.py, which iterates over each
+tile, merging GeoJSON fragments and adding region metadata.
 
 === Phase 2: Statistics
 
