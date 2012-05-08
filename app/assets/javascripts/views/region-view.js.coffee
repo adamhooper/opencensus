@@ -48,6 +48,7 @@ class RegionView
 
   getFragment: () ->
     $ret = $('<div class="region"><div class="region-type"></div><h2></h2></div>')
+    $ret.attr('id', "region-#{@region.id()}")
     $ret.find('.region-type').text(@region.type)
     $ret.find('h2').text(@region.name || '(unnamed)')
 
