@@ -50,11 +50,11 @@ class _NodeSet(object):
 
         return paths
 
-_region_type_sets = None
-def as_sets():
-    global _region_type_sets
-    if _region_type_sets is not None:
-        return _region_type_sets
+_region_type_lists = None
+def as_lists():
+    global _region_type_lists
+    if _region_type_lists is not None:
+        return _region_type_lists
 
     nodes = _NodeSet()
     root_region_type_candidates = set()
@@ -69,7 +69,16 @@ def as_sets():
         child_node = nodes.getNode(region_type)
         parent_node.children.append(child_node)
 
-    paths = nodes.getHierarchyPaths()
+    _region_type_lists = nodes.getHierarchyPaths()
+    return _region_type_lists
+
+_region_type_sets = None
+def as_sets():
+    global _region_type_sets
+    if _region_type_sets is not None:
+        return _region_type_sets
+
+    paths = as_lists()
 
     # paths now looks like:
     # [
@@ -107,3 +116,8 @@ def as_sets():
 
     _region_type_sets = ret
     return _region_type_sets
+
+if __name__ == '__main__':
+    print 'Finding region hierarchies...'
+    for l in as_lists():
+        print ','.join(l)
