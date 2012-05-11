@@ -24,7 +24,7 @@ class WorkQueueRenderer:
         return row
 
     def set_done_if_done(self):
-        self.cursor.execute('SELECT zoom_level FROM work_queue LIMIT 1')
+        self.cursor.execute('SELECT zoom_level FROM work_queue WHERE worker IS NULL LIMIT 1')
         row = self.cursor.fetchone()
 
         if row is None:
@@ -127,9 +127,10 @@ class WorkQueueRenderer:
             self.unreserve_tasks()
 
 def main():
-    from db import source_db as db
+    import db
+    source_db = db.connect()
 
-    renderer = WorkQueueRenderer(256, db)
+    renderer = WorkQueueRenderer(256, source_db)
     renderer.work()
 
 if __name__ == '__main__':

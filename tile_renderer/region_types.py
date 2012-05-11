@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from db import source_db as _source_db
+import db
 
 class _Node(object):
     def __init__(self, region_type, children):
@@ -60,7 +60,7 @@ def as_sets():
     root_region_type_candidates = set()
 
     sql = 'SELECT parent_region_type, region_type FROM region_type_parents'
-    cursor = _source_db.cursor()
+    cursor = db.connect().cursor()
     cursor.execute(sql)
 
     for row in cursor:

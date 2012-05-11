@@ -3,17 +3,15 @@
 import re
 
 import opencensus_json
-from db import source_db
+import db
 from coord import Coord
 from tile import Tile
 from tile_data import TileData
 
 _URL_REGEX = re.compile('^/tiles/(?P<zoom_level>\d\d*)/(?P<column>\d\d*)/(?P<row>\d\d*)\.(?:geo)?json$')
 
-def _get_region_statistics(region_ids):
+def _get_region_statistics(cursor, region_ids):
     if len(region_ids) == 0: return {}
-
-    cursor = source_db.cursor()
 
     cursor.execute("""
         SELECT
@@ -46,7 +44,7 @@ def _get_region_statistics(region_ids):
     return ret
 
 def _get_tile_data(zoom_level, row, column):
-    cursor = source_db.cursor()
+    cursor = db.connect().cursor()
 
     cursor.execute("""
         SELECT
@@ -87,7 +85,7 @@ def _get_tile_data(zoom_level, row, column):
         tile_data.addRegion(region_json_id, properties, region_geojson, region_svg)
         region_id_to_json_id[region_id] = region_json_id
 
-    region_statistics = _get_region_statistics(region_id_to_json_id.keys())
+    region_statistics = _get_region_statistics(cursor, region_id_to_json_id.keys())
 
     for region_id, one_region_statistics in region_statistics.items():
         json_id = region_id_to_json_id[region_id]
