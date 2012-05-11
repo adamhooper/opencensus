@@ -50,6 +50,10 @@ psql -f `dirname $0`/preprocess-polygons.sql
 ## Render polygon tiles
 `dirname $0`/../tile_renderer/render_region_polygon_tiles.py
 
+## Build UTFGrids
+psql -f `dirname $0`/prepare-utfgrids.sql
+`dirname $0`/../tile_renderer/render_utfgrids.py
+
 ## Turn those into "tiles", without stats
 `dirname $0`/../tile_renderer/agglomerate-region_polygon_tiles.py
 
