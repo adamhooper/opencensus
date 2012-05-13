@@ -16,7 +16,7 @@
 # Ignore all logfiles and tempfiles.
 /log/*.log
 /tmp
-/tile_renderer/cache
+/tile_renderer/ext/build/
 
 /db/shapes/g*000b11*.*
 /db/shapes/92-160-g2011001-eng.pdf

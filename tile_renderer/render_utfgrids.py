@@ -1,6 +1,9 @@
 #!/usr/bin/env python2.7
 
 import json
+import os
+import sys
+import distutils.util
 
 from work_queue import WorkQueue as _WorkQueue
 from utf_grid_builder import UTFGridBuilder as _UTFGridBuilder
@@ -8,11 +11,40 @@ from region_types import as_sets as _get_region_type_sets
 from tile import Tile as _Tile
 from coord import Coord as _Coord
 
+sys.path.append('%s/ext/build/lib.%s-%d.%d' % (os.path.dirname(__file__), distutils.util.get_platform(), sys.version_info.major, sys.version_info.minor))
+try:
+    import speedups
+
+    def _preprocess_svg_path(svg_path, builder):
+        return speedups.svg_path_to_cairo_path(svg_path, builder.meters_per_half_map, builder.pixels_per_meter, builder.left, builder.top)
+
+    def _add_path_to_builder(cairo_path, key, builder):
+        builder.add_cairo_path(cairo_path, key)
+except ImportError:
+    print 'Running WITHOUT the "speedups" module.'
+    print 'For faster operation, run "python setup.py build" in the ext/ directory and then run this program again.'
+
+    def _preprocess_svg_path(svg_path, builder):
+        return svg_path
+
+    def _add_path_to_builder(svg_path, key, builder):
+        builder.add(svg_path, key)
+sys.path.pop()
+
 def _dump_json(obj):
     return json.dumps(obj, ensure_ascii=False, check_circular=False, separators=(',', ':'))
 
 def create_worker(db, tile_size):
     cursor = db.cursor()
+    # We don't need to render parents, because of the way we chose our zoom
+    # levels when rendering polygons. In a given tile:
+    #
+    # 1. For any shown polygon, all polygons in that region are shown.
+    # 2. For any shown region, all sibling regions are shown.
+    # 3. Sibling regions cover parent regions.
+    #
+    # Therefore, if we draw a parent region on a grid, we know its children
+    # will overwrite it. So why bother?
     cursor.execute('''
         PREPARE select_data (INT, INT, INT) AS
         SELECT r.type, r.uid, ST_AsSVG(ST_Collect(rpt.geometry_srid3857)) AS svg
@@ -20,6 +52,14 @@ def create_worker(db, tile_size):
         INNER JOIN region_polygons_metadata rpm ON rpt.region_polygon_id = rpm.region_polygon_id
         INNER JOIN regions r ON rpm.region_id = r.id
         WHERE rpt.zoom_level = $1 AND rpt.tile_row = $2 AND rpt.tile_column = $3
+          AND r.id NOT IN (
+            SELECT rp2.parent_region_id
+            FROM region_polygon_tiles rpt2
+            INNER JOIN region_polygons_metadata rpm2 ON rpt2.region_polygon_id = rpm2.region_polygon_id
+            INNER JOIN regions r2 ON rpm2.region_id = r2.id
+            INNER JOIN region_parents rp2 ON r2.id = rp2.region_id
+            WHERE rpt2.zoom_level = $1 AND rpt2.tile_row = $2 AND rpt2.tile_column = $3
+            )
         GROUP BY r.type, r.uid, r.position
         ORDER BY r.position
         ''')
@@ -31,18 +71,26 @@ def create_worker(db, tile_size):
 
     region_type_sets = _get_region_type_sets()
 
+    coord = _Coord(0, 0, 0)
+    tile = _Tile(tile_size, tile_size, coord)
+
+    builders = [ ( rts, _UTFGridBuilder(tile) ) for rts in region_type_sets ]
+
     def worker(zoom_level, tile_row, tile_column):
         coord = _Coord(tile_row, tile_column, zoom_level)
         tile = _Tile(tile_size, tile_size, coord)
 
-        builders = [ ( rts, _UTFGridBuilder(tile) ) for rts in region_type_sets ]
+        for rts, builder in builders:
+            builder.reset_to_new_tile(tile)
 
         cursor.execute('EXECUTE select_data (%s, %s, %s)', (zoom_level, tile_row, tile_column))
+
         for region_type, region_uid, svg in cursor:
+            path = _preprocess_svg_path(svg, builders[0][1]) # all builders have the same params
             json_id = region_type + '-' + region_uid
             for rts, builder in builders:
                 if region_type in rts:
-                    builder.add(svg, json_id)
+                    _add_path_to_builder(path, json_id, builder)
 
         utfgrid_objects = []
 
