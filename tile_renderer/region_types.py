@@ -94,7 +94,7 @@ def as_sets():
     # we also need its Tract and ElectoralRegion. These will be in three
     # UTFGrids.
     #
-    # The client needs:
+    # In that example, the client needs:
     # * one UTFGrid with the longest chain
     # * one UTFGrid with ElectoralRegion
     # * one UTFGrid with Tract and MetropolitanArea
@@ -102,19 +102,10 @@ def as_sets():
     #
     # That is, each grid contains the smallest possible amount of info that
     # the grid before doesn't give.
-    paths.sort(lambda x,y: len(y) - len(x))
+    #
+    # How do we do this? We render all four grids and eliminate equal ones.
 
-    used_region_types = set()
-    ret = []
-    for path in paths:
-      region_types = set(path)
-      region_types.difference_update(used_region_types)
-      if not len(region_types): continue
-
-      ret.append(region_types)
-      used_region_types.update(region_types)
-
-    _region_type_sets = ret
+    _region_type_sets = map(set, paths)
     return _region_type_sets
 
 if __name__ == '__main__':
