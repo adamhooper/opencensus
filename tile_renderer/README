@@ -45,11 +45,6 @@ A tile looks like this:
 
 The GeoJSON contains all data necessary. UTFGrid data is entirely redundant.
 
-In mass-rendering tiles, we'll skip querying for statistics and instead show:
-{ "statistics": { "0": { "TO-FILL": { "value": (region_id) } } } }. It's
-complex because I was too lazy to make a simpler placeholder; nevertheless,
-one can substitute proper values in with a regular expression.
-
 We generate UTFGrid data by actually rendering the tiles onto in-memory SVGs
 during creation. The benefit: the browser can quickly look up a GeoJSON
 feature based on a pixel location.
@@ -61,34 +56,32 @@ Subdivision isn't a parent of the Tract. The only way for the client to
 see both (aside from actual hit-detection on vector data) is to transmit
 two distinct hierarchies.
 
-All this happens in ./render_mbtiles.py
+We mass-render into the "utfgrids" and "tile_features" tables. Both are keyed
+by (zoom_level, tile_row, tile_column), which are standard across mapping
+platforms. The latter table is also keyed by region ID and contains all the
+properties we need. You can imagine, then, for a given tile, how we populate
+the "utfgrids" column (a single SQL cell) and the "features" list (each entry
+corresponds to an SQL row).
+
+We do not render "statistics" in this phase. We postpone that to the last
+possible instant, because we need to pre-process everything we can. That way,
+when new statistics come out we can publish them much more quickly.
 
 ==== Implementation
 
-We start by creating a work_queue, which says which polygons should be
-rendered at which zoom levels. It will contain a "worker" column
-so multiple processes can coordinate who's working on what.
+1. Import regions from StatsCan data into the database.
+2. From those regions, extract polygons. (script/preprocess-polygons.sql)
+3. Decide which polygons to render at which zoom levels. (script/preprocess-polygons.sql)
+4. Render them into region_polygon_tiles. (tile_renderer/render_region_polygon_tiles.py)
+5. From region_polygon_tiles, render UTFGrids. (script/preprocess-utfgrids.sql, tile_renderer/render_utfgrids.py)
+6. From region_polygon_tiles, render feature_tiles. (script/process-features.sql -- no Python needed)
 
-`CREATE TABLE work_queue (zoom_level INT NOT NULL,
-    region_polygon_id INT NOT NULL, worker INT DEFAULT NULL,
-    PRIMARY KEY (zoom_level, region_polygon_id));`
-`INSERT INTO work_queue (zoom_level, region_polygon_id)
-    SELECT id, generate_series(min_zoom_level, 15) FROM region_polygons;`
-`CREATE INDEX work_queue_worker ON work_queue (worker);`
+Generally, straight SQL is much faster than Python because it works on all
+its source data in bulk, instead of a row at a time. We only use Python where
+it makes more sense:
 
-Then we run ./render_polygons_into_tiles.py, which does this:
-
-1. Select a polygon and zoom level, and "lock" them in work_queue.
-2. Simplify the polygon and slice it into all the tiles it fits in.
-3. Add those tiles to region_polygon_tiles, which was created like this:
-
-`CREATE TABLE region_polygon_tiles (region_polygon_id INT NOT NULL,
-    zoom_level INT NOT NULL, tile_row INT NOT NULL, tile_column INT NOT NULL, 
-    geojson_fragment TEXT NOT NULL,
-    PRIMARY KEY (region_polygon_id, zoom_level, tile_row, tile_column));`
-
-Finally, we run ./merge_region_polygon_tiles.py, which iterates over each
-tile, merging GeoJSON fragments and adding region metadata.
+1. Slicing a polygon into tiles: there's no good way in SQL to slice the way we do.
+2. Rendering UTFGrids: we render SVG to an image buffer; SQL doesn't do that.
 
 === Phase 2: Statistics
 
@@ -101,7 +94,15 @@ This is in ./render_statistics.py
 
 === Phase 3: Merge
 
-1. Create a hash of region_id -> statistics, using the above table.
-2. For each tile:
-2a. Parse the tile's JSON
-2b. For each "0" year in the JSON, replace the entire hash with statistics.
+For a given tile:
+
+1. Select the UTFGrid JSON (an Array) from "utfgrids".
+2. Select the features from "feature_tiles".
+3. With the region IDs from step 2, select statistics from "statistics".
+4. Create the "features" JSON Array using the results from steps 2 and 3.
+5. Create the entire JSON tile through string concatenation.
+
+There's no need for decoding and encoding JSON. The whole thing could
+conceivably be done using SQL. (Why *not* merge as SQL? Because we merge on
+the fly. Otherwise we'd be stuck with an 8GB database on our development
+machine that we need to move to our servers. That would be too slow.)
