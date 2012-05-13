@@ -106,3 +106,62 @@ There's no need for decoding and encoding JSON. The whole thing could
 conceivably be done using SQL. (Why *not* merge as SQL? Because we merge on
 the fly. Otherwise we'd be stuck with an 8GB database on our development
 machine that we need to move to our servers. That would be too slow.)
+
+== Time and space
+
+There is a massive amount of geographic data to process, which is why it's all
+done in Phase 1. But how long will it take?
+
+On a speedy computer (Intel four-core, 2.5Ghz CPU, 8GB RAM), it takes about a
+week to build a web-server-ready database--if you do the proper optimizations.
+
+Why so long?
+
+In total, there are about 45 million tiles to render. That means spending 2ms
+on every tile on one processor takes one day. With a four-core machine, that
+speeds up to 6 hours.
+
+We put most of our operations on the database server itself. Anything else
+requires a round-trip to the database server for every tile, which takes hours.
+
+Here's a rough breakdown:
+
+1. Preparing to render polygons: about a day
+2. Rendering region_polygon_tiles: about three days
+3. Rendering utfgrids: less than a day (with optimizations)
+4. Rendering tile_features: less than a day
+5. Importing indicator_region_values: a few minutes
+6. Rendering statistics: a few minutes
+
+Tasks 2 and 3 can be split across computers. Either make them share a database
+server, or do the manual work of partitioning the work_queue and work_queue2
+tables, running render_region_polygon_tiles.py and render_utfgrids.py on the
+separate computers, and then merging the resulting region_polygon_tiles and
+utfgrids tables afterwards. (And since utfgrids depends exactly on the data
+produced from region_polygon_tiles, you don't need to merge the tables after
+step 2 and split them before step 3.)
+
+=== Optimizations
+
+==== PostgreSQL
+
+Our use case with PostgreSQL is: a few clients (either a single SQL command, or
+a small army of paralellel processes doing the same few queries--ideally one
+per CPU core. Few connections, massive computations. Turn work_mem up
+(e.g. 32MB) and turn maintenance_work_mem way up (e.g. 1GB). Turn off
+synchronous_commit: we can restart our processing at any command, and it's very
+slow for lots of commits (which our work_queue method uses). Bump
+checkpoint_segments up (e.g., to 64) because we do some enormous UPDATEs.
+
+The work_queue overhead, in steps 2 and 3 above, comes out to roughly 10-15%,
+which is acceptable.
+
+==== Python
+
+Run `python setup.py build` in the `tile_renderer/ext` directory for some
+huge speed-ups to UTFGrid rendering (from 20ms to 3ms on a speedy computer).
+We use C code to avoid Python objects and to optimize a loop that turns an
+ARGB image buffer into Unicode strings.
+
+Incidentally: Python threading isn't ideal for us, because of its Global
+Interpreter Lock. We use processes instead.
