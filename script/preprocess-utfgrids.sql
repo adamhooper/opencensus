@@ -67,3 +67,5 @@ UPDATE regions SET position = CASE type
   ELSE NULL
   END;
 CREATE INDEX regions_utfgrid_data ON regions (id, type, uid, position);
+
+CREATE INDEX region_parents_parent_region_id ON region_parents (parent_region_id, region_id);
