@@ -32,7 +32,7 @@ class WorkQueue:
         self.done = False
 
         self.cursor.execute('PREPARE get_reserved_task AS SELECT %s FROM %s WHERE worker = %d' % (', '.join(args), self.table, self.get_worker_id()))
-        self.cursor.execute('PREPARE is_done AS SELECT 1 FROM %s WHERE worker IS NULL LIMIT 1' % (self.table,))
+        self.cursor.execute('PREPARE isnt_done AS SELECT 1 FROM %s WHERE worker IS NULL LIMIT 1' % (self.table,))
         self.cursor.execute('''
             PREPARE reserve_task AS
             UPDATE %s
@@ -54,6 +54,11 @@ class WorkQueue:
     def get_reserved_task(self):
         self.cursor.execute('EXECUTE get_reserved_task')
         return self.cursor.fetchone()
+
+    def maybe_set_done(self):
+        self.cursor.execute('EXECUTE isnt_done')
+        if not self.cursor.fetchone():
+            self.done = True
 
     def reserve_task_and_commit(self):
         ret = self.get_reserved_task()
