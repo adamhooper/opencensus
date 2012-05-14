@@ -72,7 +72,15 @@ class MapTile
     @interaction_grids = undefined
     @regionIdToGeometry = {}
     @mapIndicator = globals.indicators.findMapIndicatorForTextIndicator(state.indicator)
-    div.id = this.id()
+
+    childDiv = div.ownerDocument.createElement('div')
+    childDiv.style.position = 'absolute'
+    childDiv.style.top = 0
+    childDiv.style.bottom = 0
+    childDiv.style.left = 0
+    childDiv.style.right = 0
+    div.appendChild(childDiv)
+    @paper = Raphael(childDiv, @tileSize.width, @tileSize.height)
 
     this.requestData()
 
@@ -289,7 +297,7 @@ class MapTile
     state.setRegion(region)
 
   destroy: () ->
-    this.dataRequest.abort() if this.dataRequest
+    this.dataRequest.abort() if this.dataRequest?
 
     event_class = this.id()
     $(document).off(".#{event_class}")
@@ -305,17 +313,20 @@ window.SvgMapType.prototype.getTile = (coord, zoom, ownerDocument) ->
   div = ownerDocument.createElement('div')
   div.style.width = "#{@tileSize.width}px"
   div.style.height = "#{@tileSize.height}px"
+  div.style.position = 'relative'
   $(div).css('opacity', globals.style.opacity)
 
   tile = new MapTile(@tileSize, coord, zoom, div)
+  div.id = tile.id()
   window.SvgMapType.Instances[tile.id()] = tile
 
   div
 
 window.SvgMapType.prototype.releaseTile = (div) ->
-  tile_id = div.childNodes[0].id
+  tile_id = div.id
   tile = window.SvgMapType.Instances[tile_id]
-  tile.destroy() if tile
+  tile.destroy() if tile?
   window.SvgMapType.Instances[tile_id] = undefined
 
-  div.removeChild(div.childNodes[0])
+  $(div).empty()
+  div.id = undefined
