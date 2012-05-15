@@ -10,9 +10,9 @@ class Region
     @type == rhs.type && @uid == rhs.uid
 
   getDatum: (year, indicator) ->
-    return undefined unless @statistics
+    return undefined unless @statistics?
     in_year = @statistics[year.toString()]
-    return undefined unless in_year
+    return undefined unless in_year?
     in_year[indicator.name]
 
 window.OpenCensus.models.Region = Region
