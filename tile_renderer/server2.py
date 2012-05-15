@@ -47,28 +47,32 @@ def _get_tile_data(zoom_level, row, column):
     cursor = db.connect().cursor()
 
     cursor.execute("""
+        SELECT utfgrids FROM utfgrids WHERE zoom_level = %s AND tile_row = %s AND tile_column = %s
+        """, (zoom_level, row, column))
+
+    result = cursor.fetchone()
+    if not result: return None
+
+    utfgrids = opencensus_json.decode(result[0])
+
+    cursor.execute("""
         SELECT
-            r.id, r.uid, r.type, r.name, rps.parents,
-            ST_AsGeoJSON(ST_Collect(ST_Transform(ST_SetSRID(rpt.geometry_srid3857, 3857), 4326))) AS geojson,
-            ST_AsSVG(ST_Collect(rpt.geometry_srid3857)) AS svg
-        FROM region_polygon_tiles rpt
-        INNER JOIN region_polygons_metadata rpm ON rpt.region_polygon_id = rpm.region_polygon_id
-        INNER JOIN regions r ON rpm.region_id = r.id
-        INNER JOIN region_parents_strings rps ON r.id = rps.region_id
-        WHERE rpt.zoom_level = %s AND rpt.tile_row = %s AND rpt.tile_column = %s
-        GROUP BY r.id, r.position, r.type, r.name, rps.parents
-        ORDER BY r.position
+            f.region_id, f.json_id, f.region_name, f.geojson_geometry, rps.parents
+        FROM feature_tiles f
+        INNER JOIN region_parents_strings rps ON f.region_id = rps.region_id
+        WHERE f.zoom_level = %s AND f.tile_row = %s AND f.tile_column = %s
+        ORDER BY f.position
         """, (zoom_level, row, column))
 
     coord = Coord(row, column, zoom_level)
     tile = Tile(256, 256, coord)
-    tile_data = TileData(render_utfgrid_for_tile=tile)
+    tile_data = TileData(utfgrids=utfgrids)
 
     region_id_to_json_id = {}
 
     for row in cursor:
-        (region_id, region_uid, region_type, region_name, region_parents, region_geojson, region_svg) = row
-        region_json_id = '%s-%s' % (region_type, region_uid)
+        (region_id, region_json_id, region_name, region_geojson, region_parents) = row
+        region_type, region_uid = region_json_id.split('-', 1)
 
         if not region_parents or not len(region_parents):
             region_parents = []
@@ -82,7 +86,7 @@ def _get_tile_data(zoom_level, row, column):
             'parents': region_parents,
         }
 
-        tile_data.addRegion(region_json_id, properties, region_geojson, region_svg)
+        tile_data.addRegion(region_json_id, properties, region_geojson)
         region_id_to_json_id[region_id] = region_json_id
 
     region_statistics = _get_region_statistics(cursor, region_id_to_json_id.keys())
@@ -110,7 +114,7 @@ def application(env, start_response):
     if tile_data is None:
         start_response('400 Not Found', [
             ('Content-Type', 'text/plain'),
-            ('Access-Control-Allow-Origin', 'http://opencensus.adamhooper.com')
+            ('Access-Control-Allow-Origin', '*')
         ])
         return ['Tile not found']
 

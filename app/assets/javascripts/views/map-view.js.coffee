@@ -14,21 +14,45 @@ class MapView
 
     mapTypeStyle = [
       {
-        elementType: "geometry",
-        stylers: [
-          { saturation: -100 },
-          { gamma: 0.5 }
-        ]
-      },{
-        elementType: "labels",
         stylers: [
           { visibility: "off" }
         ]
       },{
         featureType: "water",
+        elementType: "geometry",
         stylers: [
-          { saturation: 35 },
-          { lightness: 14 }
+          { visibility: "on" },
+          { saturation: -20 }
+        ]
+      },{
+        featureType: "administrative.country",
+        stylers: [
+          { visibility: "on" }
+        ]
+      },{
+        featureType: "administrative.province",
+        stylers: [
+          { visibility: "on" }
+        ]
+      },{
+        featureType: "road.highway",
+        stylers: [
+          { visibility: "on" },
+          { saturation: -100 },
+          { gamma: 0.87 }
+        ]
+      },{
+        featureType: "poi.park",
+        elementType: "geometry",
+        stylers: [
+          { visibility: "on" },
+          { saturation: -30 }
+        ]
+      },{
+        featureType: "road.arterial",
+        stylers: [
+          { visibility: "on" },
+          { saturation: -99 }
         ]
       }
     ]
@@ -51,13 +75,9 @@ class MapView
         projection = @map.getProjection()
         zoomLevel = @map.getZoom()
         latLng = e.latLng
-        world_xy = projection.fromLatLngToPoint(latLng)
-        multiplier = 1 << zoomLevel
-        pixel_xy = [
-          Math.round(world_xy.x * multiplier),
-          Math.round(world_xy.y * multiplier)
-        ]
-        $(document).trigger('opencensus:' + event_type, [pixel_xy])
+        xy = projection.fromLatLngToPoint(latLng)
+        world_xy = [ (xy.x - 128) / 256 * 20037508.342789244 * 2, -(xy.y - 128) / 256 * 20037508.342789244 * 2 ]
+        $(document).trigger('opencensus:' + event_type, [world_xy])
 
     register_event(event_type) for event_type in [ 'mousemove', 'click' ]
 

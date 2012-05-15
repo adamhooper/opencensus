@@ -60,17 +60,28 @@ class InteractionGridArray
     best_region
 
 # Save some object creation
-polygon_style_without_fill = { stroke: globals.style.stroke, 'stroke-width': globals.style['stroke-width'] }
-polygon_style_with_fill = { stroke: globals.style.stroke, 'stroke-width': globals.style['stroke-width'], fill: undefined }
+polygon_style_base = {
+  stroke: globals.style.stroke,
+  'stroke-width': globals.style['stroke-width']
+}
+overlay_polygon_styles = {
+  hover: $.extend({}, polygon_style_base, globals.hover_style),
+  selected: $.extend({}, polygon_style_base, globals.selected_style),
+}
 
 class MapTile
-  constructor: (@tileSize, @coord, @zoom, div) ->
-    @zoomFactor = Math.pow(2, @zoom)
-    @multiplier = @zoomFactor / 360
-    @topLeftGlobalPoint = [ @coord.x * @tileSize.width, @coord.y * @tileSize.height ]
-    @paper = Raphael(div, @tileSize.width, @tileSize.height)
+  constructor: (@tileSize, @coord, @zoom, @div) ->
+    # http://www.maptiler.org/google-maps-coordinates-tile-bounds-projection/
+    zoomFactor = Math.pow(2, @zoom)
+    @pixelsPerMeterHorizontal = @tileSize.width * zoomFactor / (20037508.342789244 * 2)
+    @pixelsPerMeterVertical = @tileSize.height * zoomFactor / (20037508.342789244 * 2)
+    leftGlobalMeter = (-20037508.342789244 + @coord.x * @tileSize.width / @pixelsPerMeterHorizontal)
+    topGlobalMeter = (-20037508.342789244 + @coord.y * @tileSize.height / @pixelsPerMeterVertical)
+    @topLeftGlobalPixel = [ leftGlobalMeter * @pixelsPerMeterHorizontal, topGlobalMeter * @pixelsPerMeterVertical ]
+
     @interaction_grids = undefined
-    @regionIdToGeometry = {}
+    @regions = {} # json_id => { region: region, geometry: GeoJSON geometry, element: Raphael element }
+    @overlayElements = {}
     @mapIndicator = globals.indicators.findMapIndicatorForTextIndicator(state.indicator)
 
     childDiv = div.ownerDocument.createElement('div')
@@ -79,8 +90,17 @@ class MapTile
     childDiv.style.bottom = 0
     childDiv.style.left = 0
     childDiv.style.right = 0
-    div.appendChild(childDiv)
+    @div.appendChild(childDiv)
     @paper = Raphael(childDiv, @tileSize.width, @tileSize.height)
+
+    overlayDiv = div.ownerDocument.createElement('div')
+    overlayDiv.style.position = 'absolute'
+    overlayDiv.style.top = 0
+    overlayDiv.style.bottom = 0
+    overlayDiv.style.left = 0
+    overlayDiv.style.right = 0
+    @div.appendChild(overlayDiv)
+    @overlayPaper = Raphael(overlayDiv, @tileSize.width, @tileSize.height)
 
     this.requestData()
 
@@ -100,28 +120,25 @@ class MapTile
     })
 
   drawPolygon: (coordinates) ->
-    ring_strings = []
+    strings = []
 
     for ring_coordinates in coordinates
-      strings = []
+      for globalMeter, i in ring_coordinates
+        if i == 0
+          strings.push('M')
+        else
+          strings.push('L')
 
-      lonlat = ring_coordinates.shift()
-      xy = this.lonlatToPointOnTile(lonlat)
-      strings.push('M')
-      strings.push(xy[0].toFixed(2))
-      strings.push(xy[1].toFixed(2))
-      strings.push('L')
-
-      for lonlat in ring_coordinates
-        xy = this.lonlatToPointOnTile(lonlat)
+        xy = this.globalMeterToTilePixel(globalMeter)
         strings.push(xy[0].toFixed(2))
+        strings.push(',')
         strings.push(xy[1].toFixed(2))
 
-      strings.push('Z ')
+      strings.push('Z')
 
-      ring_strings.push(strings.join(' '))
+    path = strings.join('')
 
-    @paper.path(ring_strings.join(''))
+    @paper.path(path)
 
   drawGeometry: (geometry) ->
     switch geometry.type
@@ -131,35 +148,51 @@ class MapTile
         this.drawPolygon(subcoordinates) for subcoordinates in geometry.coordinates
       when 'Polygon'
         this.drawPolygon(geometry.coordinates)
-    
+
+  getFillForRegion: (region) ->
+    datum = region.getDatum(state.year, @mapIndicator)
+    return undefined unless datum? && datum.value?
+    bucket = @mapIndicator.bucketForValue(datum.value)
+    return undefined unless bucket? && @mapIndicator.bucket_colors?
+
+    @mapIndicator.bucket_colors[bucket] || globals.style.buckets[bucket]
+
   handleData: (data) ->
     delete this.dataRequest
-
-    @paper.canvas.style.display = 'none'
 
     for feature in data.features
       id = feature.id
       properties = feature.properties
-      @paper.setStart()
-      this.drawGeometry(feature.geometry)
-      geometry = @paper.setFinish()
-
-      fill = this.getFillForStatistics(properties.statistics)
-
-      if fill == 'none'
-        geometry.attr(polygon_style_without_fill)
-        geometry.hide()
-      else
-        polygon_style_with_fill.fill = fill
-        geometry.attr(polygon_style_with_fill)
-
       region = new Region(properties.type, properties.uid, properties.name, properties.parents, properties.statistics)
       region_store.add(region)
-      @regionIdToGeometry[id] = geometry
+      @regions[region.id()] = { region: region, geometry: feature.geometry }
+
+    @interaction_grids = new InteractionGridArray(@tileSize, data.utfgrids)
+
+    this.drawRegions()
+
+  drawRegions: () ->
+    @paper.canvas.style.display = 'none'
+
+    for regionId, regionData of @regions
+      @paper.setStart()
+      this.drawGeometry(regionData.geometry)
+      element = @paper.setFinish()
+      regionData.element = element
+
+      element.attr(polygon_style_base)
+
+      fill = this.getFillForRegion(regionData.region)
+
+      if fill?
+        element.attr({ fill: fill })
+      else
+        element.hide()
 
     @paper.canvas.style.display = ''
 
-    @interaction_grids = new InteractionGridArray(@tileSize, data.utfgrids)
+    this.onHoverRegionChanged(state.hover_region)
+    this.onRegionChanged(state.region)
 
   getFillForStatistics: (statistics) ->
     return 'none' if !statistics
@@ -167,7 +200,7 @@ class MapTile
     year_statistics = statistics[year_string]
     return 'none' if !year_statistics
     datum = year_statistics[@mapIndicator.name]
-    return 'none' if !datum
+    return 'none' if !datum?
 
     bucket = @mapIndicator.bucketForValue(datum.value)
     return 'none' if bucket is undefined
@@ -175,15 +208,16 @@ class MapTile
     @mapIndicator.bucket_colors && @mapIndicator.bucket_colors[bucket] || globals.style.buckets[bucket]
 
   restyle: () ->
-    for id, geometry of @regionIdToGeometry
-      region = region_store.get(id)
+    for regionId, regionData of @regions
+      region = regionData.region
+      element = regionData.element
 
-      fill = this.getFillForStatistics(region.statistics)
+      fill = this.getFillForRegion(region)
       if fill == 'none'
-        geometry.hide()
+        element.hide()
       else
-        geometry.attr({ fill: fill })
-        geometry.show()
+        element.attr({ fill: fill })
+        element.show()
 
   id: () ->
     "MapTile-#{@zoom}-#{@coord.x}-#{@coord.y}"
@@ -192,108 +226,79 @@ class MapTile
     base_url = globals.json_tile_url.replace('#{n}', ('' + ((@coord.x % 2) * 2 + (@coord.y % 2))))
     "#{base_url}/#{@zoom}/#{@coord.x}/#{@coord.y}.geojson"
 
-  lat2y: (lat) ->
-    # http://wiki.openstreetmap.org/wiki/Mercator#ActionScript_and_JavaScript
-    180 / Math.PI * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360))
-
-  lonlatToGlobalPoint: (lonlat) ->
-    [
-      @multiplier * (lonlat[0] + 180),
-      @multiplier * (180 - this.lat2y(lonlat[1]))
+  globalMeterToTilePixel: (globalMeter) ->
+    tilePixel = [
+      globalMeter[0] * @pixelsPerMeterHorizontal - @topLeftGlobalPixel[0],
+      - globalMeter[1] * @pixelsPerMeterVertical - @topLeftGlobalPixel[1]
     ]
+    tilePixel
 
-  lonlatToPointOnTile: (lonlat) ->
-    c = this.lonlatToGlobalPoint(lonlat)
-    [
-      @tileSize.width * c[0] - @topLeftGlobalPoint[0],
-      @tileSize.height * c[1] - @topLeftGlobalPoint[1]
-    ]
-
-  globalPointToTilePoint: (globalPoint) ->
-    ret = [ globalPoint[0] - @topLeftGlobalPoint[0], globalPoint[1] - @topLeftGlobalPoint[1] ]
+  globalMeterToTilePixelOrUndefined: (globalMeter) ->
+    ret = this.globalMeterToTilePixel(globalMeter)
     if ret[0] < 0 || ret[1] < 0 || ret[0] >= @tileSize.width || ret[1] >= @tileSize.height
       undefined
     else
       ret
 
-  tilePointToRegion: (tilePoint) ->
-    [ column, row ] = tilePoint
+  tilePixelToRegion: (tilePixel) ->
+    [ column, row ] = tilePixel
 
-    return undefined unless @interaction_grids
+    return undefined unless @interaction_grids?
     @interaction_grids.pointToRegionWithDatum(column, row, state.year, @mapIndicator)
 
-  onMouseMove: (globalPoint) ->
-    tilePoint = this.globalPointToTilePoint(globalPoint)
-    if tilePoint is undefined
+  onMouseMove: (globalMeter) ->
+    tilePixel = this.globalMeterToTilePixelOrUndefined(globalMeter)
+
+    if tilePixel?
+      @lastMouseMoveWasOnThisTile = true
+
+      region = this.tilePixelToRegion(tilePixel) # may be undefined
+      state.setHoverRegion(region) # Will only set if it's different
+    else
       @lastMouseMoveWasOnThisTile = false
-      return
-    @lastMouseMoveWasOnThisTile = true
 
-    region = this.tilePointToRegion(tilePoint)
-
-    if !region && @hover_region
-      state.setHoverRegion(undefined)
-
-    if region && (!@hover_region || !region.equals(@hover_region))
-      state.setHoverRegion(region)
+    true
 
   onMouseOut: () ->
-    if @lastMouseMoveWasOnThisTile && @hover_region
+    if @lastMouseMoveWasOnThisTile
+      @lastMouseMoveWasOnThisTile = false
       state.setHoverRegion(undefined)
-    @lastMouseMoveWasOnThisTile = false
+
+    true
+
+  setOverlayElement: (name, region) ->
+    if @overlayElements[name]?
+      @overlayElements[name].remove()
+      delete @overlayElements[name]
+
+    if region
+      element = @regions[region.id()]?.element
+
+      if element?
+        @overlayPaper.setStart()
+        # We can't use region.geometry.clone() because it's in a different document
+        element.forEach (geometry) =>
+          path = geometry.attr('path') # assume it's a path
+          @overlayPaper.path(path).attr(overlay_polygon_styles[name])
+        @overlayElements[name] = @overlayPaper.setFinish()
 
   onHoverRegionChanged: (hover_region) ->
-    if @hover_region
-      delete @hover_region
-      if @hover_region_glow
-        @hover_region_glow.remove()
-        delete @hover_region_glow
-
-    if hover_region
-      @hover_region = hover_region
-
-      geometrySet = @regionIdToGeometry[hover_region.id()]
-      if geometrySet # if this tile contains at least part of the region
-        @paper.setStart()
-        # We can't use region.geometry.clone() because it produces warnings in Google Chrome 17.0.963.12 dev, Raphael 2.0.1
-        geometrySet.forEach (geometry) =>
-          path = geometry.attr('path')
-          @paper.path(path).attr({
-            stroke: '#000000'
-          })
-        @hover_region_glow = @paper.setFinish()
+    this.setOverlayElement('hover', hover_region)
+    @overlayElements.hover?.toBack()
 
   onRegionChanged: (selected_region) ->
-    if @selected_region
-      delete @selected_region
-      if @selected_region_glow
-        @selected_region_glow.remove()
-        delete @selected_region_glow
-
-    if selected_region
-      @selected_region = selected_region
-
-      geometrySet = @regionIdToGeometry[selected_region.id()]
-      if geometrySet # if this tile contains at least part of the region
-        @paper.setStart()
-        # We can't use region.geometry.clone() because it produces warnings in Google Chrome 17.0.963.12 dev, Raphael 2.0.1
-        geometrySet.forEach (geometry) =>
-          path = geometry.attr('path')
-          @paper.path(path).attr({
-            stroke: '#000000',
-            'stroke-width': '2.5px'
-          })
-        @selected_region_glow = @paper.setFinish()
+    this.setOverlayElement('selected', selected_region)
+    @overlayElements.selected?.toFront()
 
   onIndicatorChanged: (indicator) ->
     @mapIndicator = globals.indicators.findMapIndicatorForTextIndicator(indicator)
     this.restyle()
 
-  onClick: (globalPoint) ->
-    tilePoint = this.globalPointToTilePoint(globalPoint)
-    return if tilePoint is undefined
-    region = this.tilePointToRegion(tilePoint)
+  onClick: (globalMeter) ->
+    tilePixel = this.globalMeterToTilePixelOrUndefined(globalMeter)
+    return if !tilePixel?
 
+    region = this.tilePixelToRegion(tilePixel)
     state.setRegion(region)
 
   destroy: () ->
@@ -302,8 +307,15 @@ class MapTile
     event_class = this.id()
     $(document).off(".#{event_class}")
 
-    for region_id, geometry of @regionIdToGeometry
+    for region_id, regionData of @regions
       region_store.remove(region_id)
+
+    @regions = {}
+    @overlayElements = {}
+    @overlayPaper.remove()
+    @paper.remove()
+    $(@div).empty()
+    delete @div
 
 window.SvgMapType = (@tileSize) ->
 
@@ -327,6 +339,4 @@ window.SvgMapType.prototype.releaseTile = (div) ->
   tile = window.SvgMapType.Instances[tile_id]
   tile.destroy() if tile?
   window.SvgMapType.Instances[tile_id] = undefined
-
-  $(div).empty()
   div.id = undefined
