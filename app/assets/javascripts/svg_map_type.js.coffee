@@ -129,10 +129,13 @@ class MapTile
         else
           strings.push('L')
 
-        xy = this.globalMeterToTilePixel(globalMeter)
-        strings.push(xy[0].toFixed(2))
+        # Optimize: insert globalMeterToTilePixel() inline
+        x = globalMeter[0] * @pixelsPerMeterHorizontal - @topLeftGlobalPixel[0]
+        y = -globalMeter[1] * @pixelsPerMeterVertical - @topLeftGlobalPixel[1]
+
+        strings.push(x.toFixed(2))
         strings.push(',')
-        strings.push(xy[1].toFixed(2))
+        strings.push(y.toFixed(2))
 
       strings.push('Z')
 
@@ -227,11 +230,10 @@ class MapTile
     "#{base_url}/#{@zoom}/#{@coord.x}/#{@coord.y}.geojson"
 
   globalMeterToTilePixel: (globalMeter) ->
-    tilePixel = [
+    [
       globalMeter[0] * @pixelsPerMeterHorizontal - @topLeftGlobalPixel[0],
       - globalMeter[1] * @pixelsPerMeterVertical - @topLeftGlobalPixel[1]
     ]
-    tilePixel
 
   globalMeterToTilePixelOrUndefined: (globalMeter) ->
     ret = this.globalMeterToTilePixel(globalMeter)
