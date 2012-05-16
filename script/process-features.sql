@@ -47,4 +47,4 @@ GROUP BY
   r.position
 ORDER BY rpt.zoom_level, rpt.tile_row, rpt.tile_column, r.position, rpm.region_id;
 
-CLUSTER tile_features USING tile_features_pkey;
+CLUSTER feature_tiles USING feature_tiles_pkey;
