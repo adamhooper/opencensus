@@ -42,7 +42,8 @@ class WorkQueue:
                 SELECT %s
                 FROM %s
                 WHERE worker IS NULL
-                LIMIT 1)
+                LIMIT 1
+                FOR UPDATE)
             RETURNING %s'''
             % (self.table, self.get_worker_id(), ', '.join(self.args), ', '.join(self.args), self.table, ', '.join(self.args)))
         self.cursor.execute('PREPARE unreserve_tasks AS UPDATE %s SET worker = NULL WHERE worker = %d' % (self.table, self.get_worker_id()))
@@ -61,22 +62,20 @@ class WorkQueue:
             self.done = True
 
     def reserve_task_and_commit(self):
-        ret = self.get_reserved_task()
         attempt = 0
 
-        while ret is None:
+        while True:
             attempt += 1
 
             if attempt >= 5:
                 self.maybe_set_done()
                 if self.done:
-                    break
+                    return None
 
             self.cursor.execute('EXECUTE reserve_task')
             self.db.commit()
             ret = self.cursor.fetchone()
-
-        return ret
+            if ret: return ret
 
     def unreserve_tasks_and_commit(self):
         self.cursor.execute('EXECUTE unreserve_tasks')
