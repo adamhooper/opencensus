@@ -76,7 +76,9 @@ class MapTile
     @pixelsPerMeterHorizontal = @tileSize.width * zoomFactor / (20037508.342789244 * 2)
     @pixelsPerMeterVertical = @tileSize.height * zoomFactor / (20037508.342789244 * 2)
     leftGlobalMeter = (-20037508.342789244 + @coord.x * @tileSize.width / @pixelsPerMeterHorizontal)
-    topGlobalMeter = (-20037508.342789244 + @coord.y * @tileSize.height / @pixelsPerMeterVertical)
+    topGlobalMeter = (20037508.342789244 - @coord.y * @tileSize.height / @pixelsPerMeterVertical)
+    widthInMeters = @tileSize.width / @pixelsPerMeterHorizontal
+    heightInMeters = @tileSize.height / @pixelsPerMeterVertical
     @topLeftGlobalPixel = [ leftGlobalMeter * @pixelsPerMeterHorizontal, topGlobalMeter * @pixelsPerMeterVertical ]
 
     @interaction_grids = undefined
@@ -91,7 +93,12 @@ class MapTile
     childDiv.style.left = 0
     childDiv.style.right = 0
     @div.appendChild(childDiv)
-    @paper = new Paper(childDiv, { width: @tileSize.width, height: @tileSize.height })
+    @paper = new Paper(childDiv, {
+      width: @tileSize.width,
+      height: @tileSize.height,
+      viewBox: "#{leftGlobalMeter} #{-topGlobalMeter} #{widthInMeters} #{heightInMeters}",
+      scaleY: -1,
+    })
 
     overlayDiv = div.ownerDocument.createElement('div')
     overlayDiv.style.position = 'absolute'
@@ -100,7 +107,12 @@ class MapTile
     overlayDiv.style.left = 0
     overlayDiv.style.right = 0
     @div.appendChild(overlayDiv)
-    @overlayPaper = new Paper(overlayDiv, { width: @tileSize.width, height: @tileSize.height })
+    @overlayPaper = new Paper(overlayDiv, {
+      width: @tileSize.width,
+      height: @tileSize.height,
+      viewBox: "#{leftGlobalMeter} #{-topGlobalMeter} #{widthInMeters} #{heightInMeters}",
+      scaleY: -1,
+    })
 
     this.requestData()
 
@@ -133,13 +145,9 @@ class MapTile
         else
           strings.push(lineto)
 
-        # Optimize: insert globalMeterToTilePixel() inline
-        x = globalMeter[0] * @pixelsPerMeterHorizontal - @topLeftGlobalPixel[0]
-        y = -globalMeter[1] * @pixelsPerMeterVertical - @topLeftGlobalPixel[1]
-
-        strings.push(x.toFixed(2))
+        strings.push(globalMeter[0])
         strings.push(',')
-        strings.push(y.toFixed(2))
+        strings.push(globalMeter[1])
 
       strings.push(close)
 
@@ -229,7 +237,7 @@ class MapTile
   globalMeterToTilePixel: (globalMeter) ->
     [
       globalMeter[0] * @pixelsPerMeterHorizontal - @topLeftGlobalPixel[0],
-      - globalMeter[1] * @pixelsPerMeterVertical - @topLeftGlobalPixel[1]
+      @topLeftGlobalPixel[1] - globalMeter[1] * @pixelsPerMeterVertical
     ]
 
   globalMeterToTilePixelOrUndefined: (globalMeter) ->
