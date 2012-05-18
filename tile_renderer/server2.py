@@ -10,6 +10,8 @@ from tile_data import TileData
 
 _URL_REGEX = re.compile('^/tiles/(?P<zoom_level>\d\d*)/(?P<column>\d\d*)/(?P<row>\d\d*)\.(?:geo)?json$')
 
+_REGION_ID_REGEX = re.compile('"region_id":(\d+)')
+
 def _get_region_statistics(cursor, region_ids):
     if len(region_ids) == 0: return {}
 
@@ -22,6 +24,8 @@ def _get_region_statistics(cursor, region_ids):
         """, (tuple(region_ids),))
 
     ret = {}
+    for region_id in region_ids:
+        ret[region_id] = {}
 
     for row in cursor:
         (region_id, indicator_name, year, value_type, value_integer, value_float, note) = row
@@ -31,15 +35,14 @@ def _get_region_statistics(cursor, region_ids):
         elif value_type == 'float':
             value = value_float
 
-        if region_id not in ret:
-            ret[region_id] = []
+        region_statistics = ret[region_id]
+        year_string = str(year)
+        if year_string not in region_statistics:
+            region_statistics[year_string] = {}
 
-        ret[region_id].append({
-            'year': year,
-            'name': indicator_name,
-            'value': value,
-            'note': note,
-        })
+        stat = region_statistics[year_string][indicator_name] = { 'value': value }
+        if note:
+            stat['note'] = note
 
     return ret
 
@@ -47,56 +50,74 @@ def _get_tile_data(zoom_level, row, column):
     cursor = db.connect().cursor()
 
     cursor.execute("""
-        SELECT utfgrids FROM utfgrids WHERE zoom_level = %s AND tile_row = %s AND tile_column = %s
+        SELECT tile_data FROM tiles WHERE zoom_level = %s AND tile_row = %s AND tile_column = %s
         """, (zoom_level, row, column))
 
     result = cursor.fetchone()
     if not result: return None
 
-    utfgrids = opencensus_json.decode(result[0])
+    raw_json = result[0]
 
-    cursor.execute("""
-        SELECT
-            f.region_id, f.json_id, f.region_name, f.geojson_geometry, rps.parents
-        FROM feature_tiles f
-        INNER JOIN region_parents_strings rps ON f.region_id = rps.region_id
-        WHERE f.zoom_level = %s AND f.tile_row = %s AND f.tile_column = %s
-        ORDER BY f.position
-        """, (zoom_level, row, column))
+    region_id_strings = _REGION_ID_REGEX.findall(raw_json)
+    region_ids = map(int, region_id_strings)
 
-    coord = Coord(row, column, zoom_level)
-    tile = Tile(256, 256, coord)
-    tile_data = TileData(utfgrids=utfgrids)
+    statistics = _get_region_statistics(cursor, region_ids)
+    json = _REGION_ID_REGEX.sub(lambda m: '"statistics":%s' % (opencensus_json.encode(statistics[int(m.group(1))]),), raw_json)
 
-    region_id_to_json_id = {}
+    return json
 
-    for row in cursor:
-        (region_id, region_json_id, region_name, region_geojson, region_parents) = row
-        region_type, region_uid = region_json_id.split('-', 1)
+    #cursor.execute("""
+    #    SELECT utfgrids FROM utfgrids WHERE zoom_level = %s AND tile_row = %s AND tile_column = %s
+    #    """, (zoom_level, row, column))
 
-        if not region_parents or not len(region_parents):
-            region_parents = []
-        else:
-            region_parents = region_parents.split(',')
+    #result = cursor.fetchone()
+    #if not result: return None
 
-        properties = {
-            'name': region_name,
-            'type': region_type,
-            'uid': region_uid,
-            'parents': region_parents,
-        }
+    #utfgrids = opencensus_json.decode(result[0])
 
-        tile_data.addRegion(region_json_id, properties, region_geojson)
-        region_id_to_json_id[region_id] = region_json_id
+    #cursor.execute("""
+    #    SELECT
+    #        f.region_id, f.json_id, f.region_name, f.geojson_geometry, rps.parents
+    #    FROM feature_tiles f
+    #    INNER JOIN region_parents_strings rps ON f.region_id = rps.region_id
+    #    WHERE f.zoom_level = %s AND f.tile_row = %s AND f.tile_column = %s
+    #    ORDER BY f.position
+    #    """, (zoom_level, row, column))
 
-    region_statistics = _get_region_statistics(cursor, region_id_to_json_id.keys())
+    #coord = Coord(row, column, zoom_level)
+    #tile = Tile(256, 256, coord)
+    #tile_data = TileData(utfgrids=utfgrids)
 
-    for region_id, one_region_statistics in region_statistics.items():
-        json_id = region_id_to_json_id[region_id]
-        for x in one_region_statistics:
-            tile_data.addRegionStatistic(json_id, x['year'], x['name'], x['value'], x['note'])
+    #region_id_to_json_id = {}
 
-    return tile_data
+    #for row in cursor:
+    #    (region_id, region_json_id, region_name, region_geojson, region_parents) = row
+    #    region_type, region_uid = region_json_id.split('-', 1)
+
+    #    if not region_parents or not len(region_parents):
+    #        region_parents = []
+    #    else:
+    #        region_parents = region_parents.split(',')
+
+    #    properties = {
+    #        'name': region_name,
+    #        'type': region_type,
+    #        'uid': region_uid,
+    #        'parents': region_parents,
+    #    }
+
+    #    tile_data.addRegion(region_json_id, properties, region_geojson)
+    #    region_id_to_json_id[region_id] = region_json_id
+
+    #region_statistics = _get_region_statistics(cursor, region_id_to_json_id.keys())
+
+    #for region_id, one_region_statistics in region_statistics.items():
+    #    json_id = region_id_to_json_id[region_id]
+    #    for x in one_region_statistics:
+    #        tile_data.addRegionStatistic(json_id, x['year'], x['name'], x['value'], x['note'])
+
+    #ustring = opencensus_json.encode(tile_data)
+    #return ustring
 
 def application(env, start_response):
     url_match = _URL_REGEX.match(env['PATH_INFO'])
@@ -109,16 +130,15 @@ def application(env, start_response):
     row = int(url_match.group('row'))
     column = int(url_match.group('column'))
 
-    tile_data = _get_tile_data(zoom_level, row, column)
+    ustring = _get_tile_data(zoom_level, row, column)
 
-    if tile_data is None:
+    if ustring is None:
         start_response('400 Not Found', [
             ('Content-Type', 'text/plain'),
             ('Access-Control-Allow-Origin', '*')
         ])
         return ['Tile not found']
 
-    ustring = opencensus_json.encode(tile_data)
     utf8string = ustring.encode('utf-8')
 
     start_response('200 OK', [

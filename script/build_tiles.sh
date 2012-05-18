@@ -55,7 +55,8 @@ psql -f `dirname $0`/prepare-utfgrids.sql
 `dirname $0`/../tile_renderer/render_utfgrids.py
 
 ## Turn those into "tiles", without stats
-`dirname $0`/../tile_renderer/agglomerate-region_polygon_tiles.py
+psql -f `dirname $0`/prepare-tiles.sql
+`dirname $0`/../tile_renderer/render_tiles.py
 
 ## Build stats schema
 psql -f `dirname $0`/create-statistics-schema.sql

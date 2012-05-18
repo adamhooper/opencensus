@@ -121,8 +121,12 @@ In total, there are about 45 million tiles to render. That means spending 2ms
 on every tile on one processor takes one day. With a four-core machine, that
 speeds up to 6 hours.
 
-We put most of our operations on the database server itself. Anything else
-requires a round-trip to the database server for every tile, which takes hours.
+We put many operations on the database server itself, and for the rest we use
+a "work_queue" design pattern, with a database table storing a queue of tasks.
+The disadvantage of work_queue is its overhead: for 45M tiles, it's about 1ms
+per tile: 3 hours. The disadvantages of straight SQL are that it's
+single-threaded, it can't be interrupted and PostgreSQL sometimes decides to
+create enormous temporary tables.
 
 Here's a rough breakdown:
 
