@@ -88,9 +88,9 @@ class SvgEngine
 
   setElementVisibility: (engineElement, visibility) ->
     if visibility
-      engineElement.style.display = 'none'
-    else
       engineElement.style.display = ''
+    else
+      engineElement.style.display = 'none'
 
   elementToFront: (engineElement) ->
     engineElement.parentNode.appendChild(engineElement)
