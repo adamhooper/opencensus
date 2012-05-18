@@ -134,9 +134,10 @@ class MapTile
   drawPolygon: (paper, coordinates, style) ->
     strings = []
 
-    moveto = 'M'
-    lineto = 'L'
-    close = 'Z'
+    moveto = Paper.Engine.PathInstructions.moveto
+    lineto = Paper.Engine.PathInstructions.lineto
+    close = Paper.Engine.PathInstructions.close
+    finish = Paper.Engine.PathInstructions.finish
 
     for ring_coordinates in coordinates
       for globalMeter, i in ring_coordinates
@@ -150,6 +151,8 @@ class MapTile
         strings.push(globalMeter[1])
 
       strings.push(close)
+
+    strings.push(finish)
 
     path = strings.join('')
 
