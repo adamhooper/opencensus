@@ -213,10 +213,10 @@ class MapTile
       element = regionData.element
 
       fill = this.getFillForRegion(region)
-      if fill == 'none'
+      if !fill?
         element.hide()
       else
-        element.attr({ fill: fill })
+        element.updateStyle({ fill: fill })
         element.show()
 
   id: () ->
