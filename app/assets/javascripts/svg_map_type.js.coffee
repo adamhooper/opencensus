@@ -1,12 +1,11 @@
 #= require jquery
 #= require json2
-#= require raphael
 
 #= require app
 #= require globals
 #= require state
 #= require models/region
-#= require raphael-optimizations
+#= require paper
 
 globals = window.OpenCensus.globals
 region_types = globals.region_types
@@ -81,7 +80,7 @@ class MapTile
     @topLeftGlobalPixel = [ leftGlobalMeter * @pixelsPerMeterHorizontal, topGlobalMeter * @pixelsPerMeterVertical ]
 
     @interaction_grids = undefined
-    @regions = {} # json_id => { region: region, geometry: GeoJSON geometry, element: Raphael element }
+    @regions = {} # json_id => { region: region, geometry: GeoJSON geometry, element: Paper element }
     @overlayElements = {}
     @mapIndicator = globals.indicators.findMapIndicatorForTextIndicator(state.indicator)
 
@@ -92,7 +91,7 @@ class MapTile
     childDiv.style.left = 0
     childDiv.style.right = 0
     @div.appendChild(childDiv)
-    @paper = Raphael(childDiv, @tileSize.width, @tileSize.height)
+    @paper = new Paper(childDiv, { width: @tileSize.width, height: @tileSize.height })
 
     overlayDiv = div.ownerDocument.createElement('div')
     overlayDiv.style.position = 'absolute'
@@ -101,7 +100,7 @@ class MapTile
     overlayDiv.style.left = 0
     overlayDiv.style.right = 0
     @div.appendChild(overlayDiv)
-    @overlayPaper = Raphael(overlayDiv, @tileSize.width, @tileSize.height)
+    @overlayPaper = new Paper(overlayDiv, { width: @tileSize.width, height: @tileSize.height })
 
     this.requestData()
 
@@ -123,9 +122,9 @@ class MapTile
   drawPolygon: (paper, coordinates, style) ->
     strings = []
 
-    moveto = Raphael.optimized_path_creation_strings.moveto
-    lineto = Raphael.optimized_path_creation_strings.lineto
-    close = Raphael.optimized_path_creation_strings.close
+    moveto = 'M'
+    lineto = 'L'
+    close = 'Z'
 
     for ring_coordinates in coordinates
       for globalMeter, i in ring_coordinates
@@ -146,7 +145,7 @@ class MapTile
 
     path = strings.join('')
 
-    paper.optimized_path(path, style)
+    paper.path(path, style)
 
   drawGeometry: (paper, geometry, style) ->
     switch geometry.type
@@ -179,8 +178,6 @@ class MapTile
     this.drawRegions()
 
   drawRegions: () ->
-    @paper.canvas.style.display = 'none'
-
     style = $.extend({}, polygon_style_base)
 
     for regionId, regionData of @regions
@@ -193,8 +190,6 @@ class MapTile
       regionData.element = element
 
       element.hide() if !fill?
-
-    @paper.canvas.style.display = ''
 
     this.onHoverRegionChanged(state.hover_region)
     this.onRegionChanged(state.region)
@@ -273,9 +268,9 @@ class MapTile
   setOverlayElement: (name, region) ->
     if @overlayElements[name]?
       @overlayElements[name].remove()
-      delete @overlayElements[name]
+      @overlayElements[name] = undefined
 
-    if region
+    if region?
       geometry = @regions[region.id]?.geometry
 
       if geometry?
@@ -286,7 +281,7 @@ class MapTile
 
   onHoverRegionChanged: (hover_region) ->
     this.setOverlayElement('hover', hover_region)
-    @overlayElements.hover?.toBack()
+    @overlayElements.selected?.toFront()
 
   onRegionChanged: (selected_region) ->
     this.setOverlayElement('selected', selected_region)
