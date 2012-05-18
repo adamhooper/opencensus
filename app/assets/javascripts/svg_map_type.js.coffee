@@ -6,6 +6,7 @@
 #= require state
 #= require models/region
 #= require paper
+#= require parse_opencensus_geojson
 
 globals = window.OpenCensus.globals
 region_types = globals.region_types
@@ -127,7 +128,7 @@ class MapTile
   requestData: () ->
     this.dataRequest = jQuery.ajax({
       url: this.url(),
-      dataType: 'json',
+      dataType: 'text',
       success: (data) => this.handleData(data)
     })
 
@@ -159,13 +160,16 @@ class MapTile
     paper.path(path, style)
 
   drawGeometry: (paper, geometry, style) ->
-    switch geometry.type
-      when  'GeometryCollection'
-        this.drawGeometry(paper, subgeometry, style) for subgeometry in geometry.geometries
-      when 'MultiPolygon'
-        this.drawPolygon(paper, subcoordinates, style) for subcoordinates in geometry.coordinates
-      when 'Polygon'
-        this.drawPolygon(paper, geometry.coordinates, style)
+    if typeof(geometry) == 'string'
+      paper.path(geometry, style)
+    else
+      switch geometry.type
+        when  'GeometryCollection'
+          this.drawGeometry(paper, subgeometry, style) for subgeometry in geometry.geometries
+        when 'MultiPolygon'
+          this.drawPolygon(paper, subcoordinates, style) for subcoordinates in geometry.coordinates
+        when 'Polygon'
+          this.drawPolygon(paper, geometry.coordinates, style)
 
   getFillForRegion: (region) ->
     datum = region.getDatum(state.year, @mapIndicator)
@@ -177,6 +181,8 @@ class MapTile
 
   handleData: (data) ->
     delete this.dataRequest
+
+    data = parse_opencensus_geojson(data)
 
     for feature in data.features
       properties = feature.properties
