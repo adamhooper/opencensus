@@ -20,7 +20,7 @@ class RegionView
     return (indicator_and_index[0] for indicator_and_index in indicators_with_ordering)
 
   getParentsFragment: () ->
-    ancestors = globals.region_store.getAncestors(@region.id())
+    ancestors = globals.region_store.getAncestors(@region.id)
     return undefined if ancestors.length == 0
 
     $ul = $('<ul class="region-ancestors"></ul>')
@@ -48,7 +48,7 @@ class RegionView
 
   getFragment: () ->
     $ret = $('<div class="region"><div class="region-type"></div><h2></h2></div>')
-    $ret.attr('id', "region-#{@region.id()}")
+    $ret.attr('id', "region-#{@region.id}")
     $ret.find('.region-type').text(@region.type)
     $ret.find('h2').text(@region.name || '(unnamed)')
 

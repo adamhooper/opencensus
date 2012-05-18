@@ -5,9 +5,9 @@ class RegionStore
     @regions = {}
 
   add: (region) ->
-    if regionData = @regions[region.id()]
+    if regionData = @regions[region.id]
       regionData.count += 1
-    else @regions[region.id()] = { region: region, count: 1 }
+    else @regions[region.id] = { region: region, count: 1 }
 
   remove: (region_id) ->
     if regionData = @regions[region_id]

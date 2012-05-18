@@ -1,10 +1,8 @@
 #= require app
 
 class Region
-  constructor: (@type, @uid, @name, @parent_ids, @statistics) ->
-
-  id: () ->
-    "#{@type}-#{@uid}"
+  constructor: (@id, @name, @parent_ids, @statistics) ->
+    [@type, @uid] = @id.split(/-/)
 
   equals: (rhs) ->
     @type == rhs.type && @uid == rhs.uid

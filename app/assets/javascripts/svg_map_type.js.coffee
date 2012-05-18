@@ -6,6 +6,7 @@
 #= require globals
 #= require state
 #= require models/region
+#= require raphael-optimizations
 
 globals = window.OpenCensus.globals
 region_types = globals.region_types
@@ -119,15 +120,19 @@ class MapTile
       success: (data) => this.handleData(data)
     })
 
-  drawPolygon: (coordinates) ->
+  drawPolygon: (paper, coordinates, style) ->
     strings = []
+
+    moveto = Raphael.optimized_path_creation_strings.moveto
+    lineto = Raphael.optimized_path_creation_strings.lineto
+    close = Raphael.optimized_path_creation_strings.close
 
     for ring_coordinates in coordinates
       for globalMeter, i in ring_coordinates
         if i == 0
-          strings.push('M')
+          strings.push(moveto)
         else
-          strings.push('L')
+          strings.push(lineto)
 
         # Optimize: insert globalMeterToTilePixel() inline
         x = globalMeter[0] * @pixelsPerMeterHorizontal - @topLeftGlobalPixel[0]
@@ -137,20 +142,20 @@ class MapTile
         strings.push(',')
         strings.push(y.toFixed(2))
 
-      strings.push('Z')
+      strings.push(close)
 
     path = strings.join('')
 
-    @paper.path(path)
+    paper.optimized_path(path, style)
 
-  drawGeometry: (geometry) ->
+  drawGeometry: (paper, geometry, style) ->
     switch geometry.type
       when  'GeometryCollection'
-        this.drawGeometry(subgeometry) for subgeometry in geometry.geometries
+        this.drawGeometry(paper, subgeometry, style) for subgeometry in geometry.geometries
       when 'MultiPolygon'
-        this.drawPolygon(subcoordinates) for subcoordinates in geometry.coordinates
+        this.drawPolygon(paper, subcoordinates, style) for subcoordinates in geometry.coordinates
       when 'Polygon'
-        this.drawPolygon(geometry.coordinates)
+        this.drawPolygon(paper, geometry.coordinates, style)
 
   getFillForRegion: (region) ->
     datum = region.getDatum(state.year, @mapIndicator)
@@ -164,11 +169,10 @@ class MapTile
     delete this.dataRequest
 
     for feature in data.features
-      id = feature.id
       properties = feature.properties
-      region = new Region(properties.type, properties.uid, properties.name, properties.parents, properties.statistics)
+      region = new Region(feature.id, properties.name, properties.parents, properties.statistics)
       region_store.add(region)
-      @regions[region.id()] = { region: region, geometry: feature.geometry }
+      @regions[region.id] = { region: region, geometry: feature.geometry }
 
     @interaction_grids = new InteractionGridArray(@tileSize, data.utfgrids)
 
@@ -177,20 +181,18 @@ class MapTile
   drawRegions: () ->
     @paper.canvas.style.display = 'none'
 
+    style = $.extend({}, polygon_style_base)
+
     for regionId, regionData of @regions
+      fill = this.getFillForRegion(regionData.region)
+      style.fill = fill || 'none'
+
       @paper.setStart()
-      this.drawGeometry(regionData.geometry)
+      this.drawGeometry(@paper, regionData.geometry, style)
       element = @paper.setFinish()
       regionData.element = element
 
-      element.attr(polygon_style_base)
-
-      fill = this.getFillForRegion(regionData.region)
-
-      if fill?
-        element.attr({ fill: fill })
-      else
-        element.hide()
+      element.hide() if !fill?
 
     @paper.canvas.style.display = ''
 
@@ -274,14 +276,12 @@ class MapTile
       delete @overlayElements[name]
 
     if region
-      element = @regions[region.id()]?.element
+      geometry = @regions[region.id]?.geometry
 
-      if element?
+      if geometry?
         @overlayPaper.setStart()
         # We can't use region.geometry.clone() because it's in a different document
-        element.forEach (geometry) =>
-          path = geometry.attr('path') # assume it's a path
-          @overlayPaper.path(path).attr(overlay_polygon_styles[name])
+        this.drawGeometry(@overlayPaper, geometry, overlay_polygon_styles[name])
         @overlayElements[name] = @overlayPaper.setFinish()
 
   onHoverRegionChanged: (hover_region) ->
