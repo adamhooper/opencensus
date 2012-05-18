@@ -60,6 +60,13 @@ class SvgEngine
       version: '1.1',
       xmlns: 'http://www.w3.org/2000/svg',
     })
+    @svg.setAttribute('viewBox', attrs.viewBox) if attrs.viewBox?
+    if attrs.scaleX? || attrs.scaleY?
+      @g = this._createEngineElement('g')
+      @g.setAttribute('transform', "scale(#{attrs.scaleX || 1} #{attrs.scaleY || 1})")
+      @svg.appendChild(@g)
+    else
+      @g = @svg
     @svg.style.cssText = 'overflow:hidden;position:relative'
     div.appendChild(@svg)
 
@@ -75,7 +82,7 @@ class SvgEngine
     engineElement.setAttribute('stroke-width', attrs['stroke-width'] || '1')
     engineElement.setAttribute('fill', attrs.fill || 'none')
     engineElement.setAttribute('d', pathString)
-    @svg.appendChild(engineElement)
+    @g.appendChild(engineElement)
 
     new PaperElement(this, engineElement)
 
@@ -98,6 +105,7 @@ class SvgEngine
   remove: () ->
     @svg.parentNode && @svg.parentNode.removeChild(@svg)
     @svg = undefined
+    @g = undefined
 
 class Paper
   constructor: (div, attrs) ->
