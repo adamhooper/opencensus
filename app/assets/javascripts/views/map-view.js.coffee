@@ -42,13 +42,6 @@ class MapView
           { gamma: 0.87 }
         ]
       },{
-        featureType: "poi.park",
-        elementType: "geometry",
-        stylers: [
-          { visibility: "on" },
-          { saturation: -30 }
-        ]
-      },{
         featureType: "road.arterial",
         stylers: [
           { visibility: "on" },
