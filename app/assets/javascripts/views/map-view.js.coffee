@@ -57,11 +57,16 @@ class MapView
       center: latlng,
       mapTypeId: google.maps.MapTypeId.ROADMAP,
       mapTypeControl: false,
-      styles: mapTypeStyle
+      streetViewControl: false,
+      styles: mapTypeStyle,
     }
 
     @map = new google.maps.Map(@div, options)
-    @inHandlers = {}
+
+    svgMapType = new SvgMapType(new google.maps.Size(256, 256))
+    @map.overlayMapTypes.insertAt(0, svgMapType)
+
+    state.onPositionChanged('map', this.onPositionChanged, this)
 
     register_event = (event_type) =>
       google.maps.event.addListener @map, event_type, (e) =>
@@ -78,11 +83,6 @@ class MapView
       $(document).trigger('opencensus:mouseout')
 
     google.maps.event.addListener(@map, 'bounds_changed', () => this.onMapBoundsChanged())
-
-    svgMapType = new SvgMapType(new google.maps.Size(256, 256))
-    @map.overlayMapTypes.insertAt(0, svgMapType)
-
-    state.onPositionChanged('map', this.onPositionChanged, this)
 
   onPositionChanged: (position) ->
     return if @handlingPositionChange
