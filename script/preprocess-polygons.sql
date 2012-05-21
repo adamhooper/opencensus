@@ -5,6 +5,7 @@
 -- into the "regions" table described in create-regions-table.sql
 
 -- The end result is the following (plus intermediate tables)
+-- - region_types(name, description, position)
 -- - regions(id, type, uid, name, dissemination_block_uid, ..._uid, geometry,
 --           given_area_in_m, polygon_area_in_m, position, subtype)
 --   * holds region metadata and canonical geometry
@@ -27,6 +28,27 @@ INSERT INTO regions ("type", "uid", name, geometry)
 SELECT 'Country', '', 'Canada', ST_Union(geometry)
 FROM regions
 WHERE type = 'Province';
+
+DROP TABLE IF EXISTS region_types;
+CREATE TABLE region_types (
+  id SERIAL NOT NULL PRIMARY KEY, -- for Rails
+  name VARCHAR NOT NULL,
+  description VARCHAR NOT NULL,
+  position INT NOT NULL
+);
+INSERT INTO region_types (name, description, position)
+VALUES
+('Country', 'Country', 0),
+('Province', 'Province', 1),
+('ElectoralDistrict', 'Electoral district', 2),
+('EconomicRegion', 'Economic region', 3),
+('MetropolitanArea', 'Metropolitan area', 4),
+('Division', 'Census division', 5),
+('ConsolidatedSubdivision', 'Consolidated subdivision', 6),
+('Subdivision', 'Census subdivision', 7),
+('Tract', 'Census tract', 8),
+('DisseminationArea', 'Census dissemination area', 9),
+('DisseminationBlock', 'Census dissemination block', 10);
 
 DROP TABLE IF EXISTS region_parents;
 CREATE TABLE region_parents (
