@@ -27,13 +27,17 @@ class State
   setRegion: (region) ->
     return if !region && !@region
     return if region && @region && region.equals(@region)
+    globals.region_store.decrementCount(@region.id) if @region?
     @region = region
+    globals.region_store.incrementCount(@region.id) if @region?
     $(document).trigger('opencensus:state:region_changed', @region)
 
   setHoverRegion: (hover_region) ->
     return if !hover_region && !@hover_region
     return if hover_region && @hover_region && hover_region.equals(@hover_region)
+    globals.region_store.decrementCount(@hover_region.id) if @hover_region?
     @hover_region = hover_region
+    globals.region_store.incrementCount(@hover_region.id) if @hover_region?
     $(document).trigger('opencensus:state:hover_region_changed', @hover_region)
 
   # Sets the position

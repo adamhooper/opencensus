@@ -4,6 +4,19 @@ class RegionStore
   constructor: (@region_types) ->
     @regions = {}
 
+  _changeCount: (region_id, diff) ->
+    if regionData = @regions[region_id]
+      regionData.count += diff
+
+      for parent_id in regionData.region.parent_ids
+        this._changeCount(parent_id, diff) # Don't care about duplicates
+
+  incrementCount: (region_id) ->
+    this._changeCount(region_id, 1)
+
+  decrementCount: (region_id) ->
+    this._changeCount(region_id, -1)
+
   add: (region) ->
     if regionData = @regions[region.id]
       regionData.count += 1
