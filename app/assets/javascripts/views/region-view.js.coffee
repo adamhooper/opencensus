@@ -36,7 +36,7 @@ class RegionView
         $name.text(region.name)
         $li.append($name)
 
-      datum = region.getDatum(state.year, state.indicator)
+      datum = region.getDatum(state.indicator)
       if datum
         view = new IndicatorRegionView(state.indicator, region)
         $value = $('<div class="value"></div>')

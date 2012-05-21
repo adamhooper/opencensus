@@ -8,16 +8,10 @@ defaults = globals.defaults
 
 class State
   constructor: ->
-    @year = defaults.year
     @indicator = globals.indicators.findByName(defaults.indicator_name)
     @region = undefined
     @hover_region = undefined
     @position = $.extend({}, defaults.position)
-
-  setYear: (year) ->
-    return if year == @year
-    @year = year
-    $(document).trigger('opencensus:state:year_changed', @year)
 
   setIndicator: (indicator) ->
     return if indicator.equals(@indicator)
@@ -50,10 +44,6 @@ class State
     return if position.latitude = @position.latitude && position.longitude == @position.longitude && position.zoom == @position.zoom
     @position = $.extend({}, position)
     $(document).trigger('opencensus:state:position_changed', @position)
-
-  onYearChanged: (callerNamespace, func, oThis = undefined) ->
-    $(document).on "opencensus:state:year_changed.#{callerNamespace}", (e, year) ->
-      func.call(oThis || window, year)
 
   onIndicatorChanged: (callerNamespace, func, oThis = undefined) ->
     $(document).on "opencensus:state:indicator_changed.#{callerNamespace}", (e, indicator) ->

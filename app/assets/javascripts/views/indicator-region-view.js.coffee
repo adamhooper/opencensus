@@ -27,10 +27,10 @@ class IndicatorRegionView
     $ret = $('<div class="statistic"><h4></h4></div>')
     $ret.find('h4').text(@indicator.name)
 
-    datum = @region.getDatum(state.year, @indicator)
+    datum = @region.getDatum(@indicator)
 
     if !datum || datum.value is undefined
-      $ret.append("<span class=\"no-data\">no #{state.year.toString()} data</span>")
+      $ret.append("<span class=\"no-data\">no data</span>")
     else
       $value = $('<span class="value"></span>')
       $value.text(this.formatNumber(datum.value))
@@ -51,11 +51,11 @@ class IndicatorRegionView
     if map_indicator
       if this.isCurrentIndicator()
         map_indicator_region_view = this.getMapIndicatorRegionView()
-        map_datum = @region.getDatum(state.year, map_indicator)
+        map_datum = @region.getDatum(map_indicator)
         map_value = map_datum && map_datum.value
         bucket = map_indicator.bucketForValue(map_value)
-        if bucket isnt undefined
-          fill = map_indicator.bucket_colors && map_indicator.bucket_colors[bucket] || globals.style.buckets[bucket]
+        if bucket?
+          fill = map_indicator.bucket_colors[bucket]
 
           $p = $('<p class="is-current-indicator">On map: <span class="legend-color">&nbsp;</span> <span class="value"></span> <span class="unit"></span></p>')
           $p.find('span.legend-color').css('background', fill)

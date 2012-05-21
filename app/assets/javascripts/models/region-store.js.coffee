@@ -64,17 +64,17 @@ class RegionStore
 
     ret
 
-  getNearestRegionWithDatum: (region_id, year, indicator) ->
+  getNearestRegionWithDatum: (region_id, indicator) ->
     region = this.get(region_id)
     return undefined if region is undefined
-    return region if region.getDatum(year, indicator)?
+    return region if region.getDatum(indicator)?
     return undefined if region.parent_ids is undefined
 
     best_candidate = undefined
     best_index = -1
 
     for parent_region_id in region.parent_ids
-      parent_region = this.getNearestRegionWithDatum(parent_region_id, year, indicator)
+      parent_region = this.getNearestRegionWithDatum(parent_region_id, indicator)
       if parent_region
         type = parent_region.type
         index = @region_types.indexOfName(type)

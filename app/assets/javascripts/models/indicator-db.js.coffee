@@ -16,9 +16,8 @@ class IndicatorDb
     return @text_and_map_indicators if @text_and_map_indicators
 
     raw = [
-      [ 'Area', null ],
       [ 'Population', 'Population density' ],
-      [ 'Population growth', 'Population growth' ],
+      #[ 'Population growth', 'Population growth' ],
       [ 'Dwellings', 'Dwelling density' ],
       [ 'People per dwelling', 'People per dwelling' ]
     ]

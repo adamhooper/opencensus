@@ -35,12 +35,22 @@ class LegendView
 
     $ul = $('<ul></ul>')
     for bucket, i in mapIndicator.buckets()
-      fill = mapIndicator.bucket_colors && mapIndicator.bucket_colors[i] || globals.style.buckets[i]
+      fill = mapIndicator.bucket_colors[i]
 
-      $li = $('<li><span class="sample">&nbsp;</span><span class="min"></span> to <span class="max"></span></li>')
+      $li = $('<li><span class="sample">&nbsp;</span><span class="min"></span><span class="range"> to </span><span class="max"></span></li>')
       $li.find('.sample').css('background', fill)
-      $li.find('.min').text(format_number(bucket.min))
-      $li.find('.max').text(format_number(bucket.max))
+      if bucket.min?
+        $li.find('.min').text(format_number(bucket.min))
+      if bucket.max?
+        $li.find('.max').text(format_number(bucket.max))
+      if !bucket.min?
+        $li.find('.min').remove()
+        $li.find('.range').remove()
+        $li.find('.max').prepend('up to ')
+      if !bucket.max?
+        $li.find('.max').remove()
+        $li.find('.range').remove()
+        $li.find('.min').prepend('over ')
 
       $ul.append($li)
 

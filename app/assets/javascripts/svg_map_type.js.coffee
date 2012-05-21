@@ -44,14 +44,14 @@ class InteractionGridArray
     $.unique(region_ids)
 
   # Returns the "best" Region--using region_types ordering
-  pointToRegionWithDatum: (column, row, year, indicator) ->
+  pointToRegionWithDatum: (column, row, indicator) ->
     region_ids = this.pointToRegionIds(column, row)
 
     best_region = undefined
     best_index = -1
 
     for region_id in region_ids
-      region = region_store.getNearestRegionWithDatum(region_id, year, indicator)
+      region = region_store.getNearestRegionWithDatum(region_id, indicator)
       if region
         index = region_types.indexOfName(region.type)
         if index > best_index
@@ -172,12 +172,10 @@ class MapTile
           this.drawPolygon(paper, geometry.coordinates, style)
 
   getFillForRegion: (region) ->
-    datum = region.getDatum(state.year, @mapIndicator)
-    return undefined unless datum? && datum.value?
+    datum = region.getDatum(@mapIndicator)
+    return undefined unless datum?.value?
     bucket = @mapIndicator.bucketForValue(datum.value)
-    return undefined unless bucket? && @mapIndicator.bucket_colors?
-
-    @mapIndicator.bucket_colors[bucket] || globals.style.buckets[bucket]
+    bucket? && @mapIndicator.bucket_colors?[bucket]
 
   handleData: (data) ->
     delete this.dataRequest
@@ -210,19 +208,6 @@ class MapTile
 
     this.onHoverRegionChanged(state.hover_region)
     this.onRegionChanged(state.region)
-
-  getFillForStatistics: (statistics) ->
-    return 'none' if !statistics
-    year_string = state.year.toString()
-    year_statistics = statistics[year_string]
-    return 'none' if !year_statistics
-    datum = year_statistics[@mapIndicator.name]
-    return 'none' if !datum?
-
-    bucket = @mapIndicator.bucketForValue(datum.value)
-    return 'none' if bucket is undefined
-
-    @mapIndicator.bucket_colors && @mapIndicator.bucket_colors[bucket] || globals.style.buckets[bucket]
 
   restyle: () ->
     for regionId, regionData of @regions
@@ -260,7 +245,7 @@ class MapTile
     [ column, row ] = tilePixel
 
     return undefined unless @interaction_grids?
-    @interaction_grids.pointToRegionWithDatum(column, row, state.year, @mapIndicator)
+    @interaction_grids.pointToRegionWithDatum(column, row, @mapIndicator)
 
   onMouseMove: (globalMeter) ->
     tilePixel = this.globalMeterToTilePixelOrUndefined(globalMeter)
