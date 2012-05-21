@@ -4,4 +4,4 @@
 # table. It can only be run after build_tiles.sh.
 
 `dirname $0`/../statistics_importer/import_2011_popdwe.py `dirname $0`/../db/statistics/2011_92-151_XBB_txt.zip
-`dirname $0`/../statistics_importer/calculate_2011_popdwe_rates.py
+`dirname $0`/../statistics_importer/import_2006_agesex.py `dirname $0`/../db/statistics/94-575-XCB2006005.ZIP

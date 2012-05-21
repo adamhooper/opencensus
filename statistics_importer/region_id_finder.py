@@ -10,8 +10,10 @@ class RegionIdFinder(object):
         except KeyError:
             return None
 
-    def region_ids(self):
-        for subdict in self._data.values():
+    def region_ids(self, **kwargs):
+        for region_type, subdict in self._data.items():
+            if 'region_types' in kwargs and region_type not in kwargs['region_types']: continue
+
             for region_id in subdict.values():
                 yield region_id
 
