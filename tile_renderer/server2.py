@@ -6,7 +6,6 @@ import opencensus_json
 import db
 from coord import Coord
 from tile import Tile
-from tile_data import TileData
 
 _URL_REGEX = re.compile('^/tiles/(?P<zoom_level>\d\d*)/(?P<column>\d\d*)/(?P<row>\d\d*)\.(?:geo)?json$')
 
