@@ -33,10 +33,10 @@ VALUES
 ('agem', 'Population by age, male', '', '', 'string', NULL, NULL),
 ('agef', 'Population by age, female', '', '', 'string', NULL, NULL),
 ('age', 'Population by age', '', '', 'string', NULL, NULL),
-('agemean', 'Mean age', '', '', 'integer', 'less than 20, 20 to 30, 30 to 40, 40 to 50, more than 50', '#ffffd4,#fed98e,#fe9929,#d95f0e,#993404'),
-('agemedian', 'Median age', '', '', 'integer', 'less than 20, 20 to 30, 30 to 40, 40 to 50, more than 50', '#ffffb2,#fecc5c,#fd8d3c,#f03b20,#bd0026');
+('agemedian', 'Median age', '', '', 'float', 'less than 35, 35 to 40, 40 to 45, 45 to 50, more than 50', '#ffffb2,#fecc5c,#fd8d3c,#f03b20,#bd0026'),
+('sexm', 'Male percentage', '%', 'How many people are male', 'float', 'less than 48, 48 to 49.5, 49.5 to 50.5, 50.5 to 52, more than 52', '#d7191c,#fdae61,#ffffbf,#abd9e9,#2c7bb6');
 
-DROP TABLE IF EXISTS indicator_region_values;
+dROP TABLE IF EXISTS indicator_region_values;
 CREATE TABLE indicator_region_values (
   region_id INT NOT NULL,
   indicator_id INT NOT NULL,

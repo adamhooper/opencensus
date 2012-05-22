@@ -19,7 +19,9 @@ class IndicatorDb
       [ 'Population', 'Population density' ],
       #[ 'Population growth', 'Population growth' ],
       [ 'Dwellings', 'Dwelling density' ],
-      [ 'People per dwelling', 'People per dwelling' ]
+      [ 'People per dwelling', 'People per dwelling' ],
+      [ 'Male percentage', 'Male percentage' ],
+      [ 'Median age', 'Median age' ],
     ]
 
     @text_and_map_indicators = ({ indicator: this.findByName(r[0]), map_indicator: this.findByName(r[1]) } for r in raw)
