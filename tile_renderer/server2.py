@@ -17,7 +17,7 @@ def _get_region_statistics(cursor, region_ids):
 
     cursor.execute("""
         SELECT
-            v.region_id, i.name, i.value_type, v.value_integer, v.value_float, v.note
+            v.region_id, i.name, i.value_type, v.value_integer, v.value_float, v.value_string, v.note
         FROM indicator_region_values v
         INNER JOIN indicators i ON v.indicator_id = i.id
         WHERE v.region_id IN %s
@@ -28,12 +28,14 @@ def _get_region_statistics(cursor, region_ids):
         ret[region_id] = {}
 
     for row in cursor:
-        (region_id, indicator_name, value_type, value_integer, value_float, note) = row
+        (region_id, indicator_name, value_type, value_integer, value_float, value_string, note) = row
         value = None
         if value_type == 'integer':
             value = value_integer
         elif value_type == 'float':
             value = value_float
+        elif value_type == 'string':
+            value = value_string
 
         region_statistics = ret[region_id]
         stat = region_statistics[indicator_name] = { 'value': value }
