@@ -64,13 +64,6 @@ class IndicatorRegionView
           $ret.append($p)
         else
           $ret.append('<p class="is-current-indicator">On map</p>')
-      else
-        $p = $('<p class="make-current-indicator"><a href="#">Show on map</a></p>')
-        $p.find('a').on 'click', (e) =>
-          e.preventDefault()
-          e.stopPropagation()
-          state.setIndicator(@indicator)
-        $ret.append($p)
 
     $ret
 
