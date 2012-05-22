@@ -33,7 +33,21 @@ class LegendView
       $unit.find('strong').text(mapIndicator.unit)
       $div.append($unit)
 
-    $ul = $('<ul></ul>')
+    $others = $('<div class="others">or show:<ul></ul></div>')
+    $ul = $others.find('ul')
+    for obj in globals.indicators.findTextAndMapIndicators()
+      continue if obj.map_indicator.name == mapIndicator.name
+      $li = $('<li><a href="#"></a></li>')
+      $li.find('a').text(obj.indicator.name)
+      $li.data('indicator', obj.indicator)
+      $li.on 'click', (e) ->
+        e.preventDefault()
+        indicator = $(e.target).closest('li').data('indicator')
+        state.setIndicator(indicator)
+      $ul.append($li)
+    $div.append($others)
+
+    $ul = $('<ul class="swatches"></ul>')
     for bucket, i in mapIndicator.buckets()
       fill = mapIndicator.bucket_colors[i]
 

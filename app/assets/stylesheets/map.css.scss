@@ -185,7 +185,22 @@ html, body {
     padding-left: .5em;
   }
 
-  ul {
+  div.others {
+    display: inline;
+    padding-left: 2em;
+
+    ul {
+      display: inline;
+      padding: 0;
+    }
+
+    li {
+      display: inline;
+      padding: 0 0 0 .5em;
+    }
+  }
+
+  ul.swatches {
     list-style: none;
     margin: 0;
     padding: 0;
