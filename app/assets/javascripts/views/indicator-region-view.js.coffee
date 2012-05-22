@@ -2,10 +2,13 @@
 #= require globals
 #= require state
 #= require helpers/format-numbers
+#= require views/age-graph-view
 
 h = window.OpenCensus.helpers
 globals = window.OpenCensus.globals
 state = window.OpenCensus.state
+
+AgeGraphView = window.OpenCensus.views.AgeGraphView
 
 class IndicatorRegionView
   constructor: (@indicator, @region) ->
@@ -64,6 +67,10 @@ class IndicatorRegionView
           $ret.append($p)
         else
           $ret.append('<p class="is-current-indicator">On map</p>')
+
+    if @indicator.name == 'Median age'
+      graph = new AgeGraphView(@region)
+      $ret.append(graph.getFragment())
 
     $ret
 
