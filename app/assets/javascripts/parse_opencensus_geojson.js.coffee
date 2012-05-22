@@ -2,6 +2,7 @@
 #= require paper
 
 GEOJSON_REGEXP = /\{"crs".*?\}\},.*"features":\[(.*)\],"utfgrids":(.*)\}/
+FEATURE_REGEXP = /"id":"([^"]*)","properties":(.*),"geometry":(.*)/
 
 geometry_json_to_string = (geometry_json) ->
   moveto = Paper.Engine.PathInstructions.moveto
@@ -42,13 +43,15 @@ window.parse_opencensus_geojson = (text) ->
   result = GEOJSON_REGEXP.exec(text)
   return undefined if !result?
 
-  feature_jsons = result[1]
+  features_json = result[1]
   utfgrids_json = result[2]
 
   features = []
 
-  feature_regexp = /\{"type":"Feature","id":"([^"]*)","properties":(.*?),"geometry":(.*?\]\]\])\}/g
-  while (feature_match = feature_regexp.exec(feature_jsons))?
+  feature_jsons = features_json.split(/\{"type":"Feature"/)
+  for feature_json in feature_jsons
+    feature_match = FEATURE_REGEXP.exec(feature_json)
+    continue if !feature_match?
     id = feature_match[1]
     properties_json = feature_match[2]
     geometry_json = feature_match[3]
