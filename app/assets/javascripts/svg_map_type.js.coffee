@@ -174,6 +174,7 @@ class MapTile
   getFillForRegion: (region) ->
     datum = region.getDatum(@mapIndicator)
     return undefined unless datum?.value?
+    return undefined if datum.z <= @zoom
     bucket = @mapIndicator.bucketForValue(datum.value)
     bucket? && @mapIndicator.bucket_colors?[bucket]
 
