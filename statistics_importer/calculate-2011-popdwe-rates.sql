@@ -4,7 +4,7 @@ INSERT INTO indicator_region_values (region_id, indicator_id, value_float, note)
 SELECT
   i.region_id,
   (SELECT id FROM indicators WHERE key = 'popdens') AS indicator_id,
-  i.value_integer::FLOAT / (CASE WHEN r.given_area_in_m > 0 THEN r.given_area_in_m::FLOAT / 1000000 ELSE 1.0 END) AS density,
+  i.value_integer::FLOAT / (CASE WHEN r.given_area_in_m > 0 THEN r.given_area_in_m::FLOAT / 1000000 WHEN r.polygon_area_in_m > 0 THEN r.polygon_area_in_m::FLOAT / 1000000 ELSE 1.0 END) AS density,
   i.note AS note
 FROM indicator_region_values i
 INNER JOIN regions r ON i.region_id = r.id
@@ -14,7 +14,7 @@ INSERT INTO indicator_region_values (region_id, indicator_id, value_float, note)
 SELECT
   i.region_id,
   (SELECT id FROM indicators WHERE key = 'dwedens') AS indicator_id,
-  i.value_integer::FLOAT / (CASE WHEN r.given_area_in_m > 0 THEN r.given_area_in_m::FLOAT / 1000000 ELSE 1.0 END) AS density,
+  i.value_integer::FLOAT / (CASE WHEN r.given_area_in_m > 0 THEN r.given_area_in_m::FLOAT / 1000000 WHEN r.polygon_area_in_m > 0 THEN r.polygon_area_in_m::FLOAT / 1000000 ELSE 1.0 END) AS density,
   i.note AS note
 FROM indicator_region_values i
 INNER JOIN regions r ON i.region_id = r.id
