@@ -58,5 +58,5 @@ psql -f `dirname $0`/prepare-utfgrids.sql
 psql -f `dirname $0`/prepare-tiles.sql
 `dirname $0`/../tile_renderer/render_tiles.py
 
-## Build stats schema
-psql -f `dirname $0`/create-statistics-schema.sql
+## Export them to SQLite3
+`dirname $0`/../tile_renderer/export_mbtiles.py | sqlite3 `dirname $0`/../db/tiles.sqlite3
