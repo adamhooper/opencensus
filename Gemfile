@@ -1,7 +1,9 @@
 source 'http://rubygems.org'
 
 gem 'rails'
-gem 'pg'
+gem 'pg' # for metadata served in HTML
+gem 'sqlite3' # for pre-processed data
+gem 'composite_primary_keys' # for Tile
 gem 'haml'
 gem 'therubyracer'
 

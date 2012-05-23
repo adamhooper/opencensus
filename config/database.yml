@@ -21,3 +21,13 @@ production:
   username: opencensus_dev
   password: opencensus_dev
   database: opencensus_dev
+
+tiles:
+  adapter: sqlite3
+  database: db/tiles.sqlite3
+  timeout: 5000
+
+statistics:
+  adapter: sqlite3
+  database: db/statistics.sqlite3
+  timeout: 5000
