@@ -17,7 +17,7 @@ class IndicatorDb
 
     raw = [
       [ 'Population', 'Population density' ],
-      #[ 'Population growth', 'Population growth' ],
+      [ 'Population growth', 'Population growth' ],
       [ 'Dwellings', 'Dwelling density' ],
       [ 'People per dwelling', 'People per dwelling' ],
       [ 'Male percentage', 'Male percentage' ],
