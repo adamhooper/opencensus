@@ -1,2 +1,0 @@
-class Subdivision < Region
-end

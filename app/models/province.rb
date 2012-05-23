@@ -1,2 +1,0 @@
-class Province < Region
-end

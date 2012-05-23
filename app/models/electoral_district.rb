@@ -1,2 +1,0 @@
-class ElectoralDistrict < Region
-end

@@ -1,2 +1,0 @@
-class DisseminationArea < Region
-end
