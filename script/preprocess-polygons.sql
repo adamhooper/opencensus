@@ -226,6 +226,11 @@ WHERE polygon_area_in_m > 0; -- we won't render 0-size regions
 -- favour tiny tracts a bit, by taking "average" to mean "70th percentile". As
 -- in, "if the 70th-percentile-big tract is visible, all are visible."
 -- (For 60th percentile, we use (100-70)/100 = 0.3.)
+--
+-- Unfortunately, MetropolitanArea and Province are both direct children of
+-- Country, and therefore all the tiny MetropolitanAreas make the Provinces
+-- disappear. The root problem is that MetropolitanAreas shouldn't be included
+-- in this logic because they're not adjacent to one another. Exclude them.
 UPDATE region_min_zoom_levels
 SET min_zoom_level = medians.zoom
 FROM region_parents rp
@@ -238,10 +243,14 @@ INNER JOIN (
       FROM region_parents rp2
       INNER JOIN region_min_zoom_levels rmzl2
         ON rp2.region_id = rmzl2.region_id
+      -- Exclude MetropolitanArea siblings
+      INNER JOIN regions r ON r.id = rmzl2.region_id AND r.type <> 'MetropolitanArea'
       ORDER BY rp2.parent_region_id, rmzl2.min_zoom_level) x1
     GROUP BY parent_region_id) x2
   ) medians ON rp.parent_region_id = medians.parent_region_id
-WHERE rp.region_id = region_min_zoom_levels.region_id;
+WHERE rp.region_id = region_min_zoom_levels.region_id
+-- Don't update the zoom levels of MetropolitanAreas
+AND rp.region_id NOT IN (SELECT id FROM regions WHERE type = 'MetropolitanArea');
 
 -- Calculate min_zoom_level *per polygon*
 
