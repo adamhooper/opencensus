@@ -28,7 +28,7 @@ except ImportError:
     print 'For faster operation, run "python setup.py build" in the ext/ directory and then run this program again.'
 
     def _argb256_to_unicode(data, offset):
-        return _ints_to_unicdoe(data, offset, 256)
+        return _ints_to_unicode(data, offset, 256)
 sys.path.pop()
 
 # https://github.com/mapbox/mbtiles-spec/blob/master/1.1/utfgrid.md
