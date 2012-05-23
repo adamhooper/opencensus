@@ -1,5 +1,6 @@
 #!/usr/bin/env python2.7
 
+import json
 import zlib
 
 import psycopg2
@@ -7,8 +8,7 @@ import psycopg2.extensions
 psycopg2.extensions.register_type(psycopg2.extensions.UNICODE)
 psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
 
-import opencensus_json
-import db
+source_dsn = 'dbname=opencensus_dev user=opencensus_dev password=opencensus_dev host=localhost'
 
 class Indicator(object):
     def __init__(self, name, value_type):
@@ -30,7 +30,7 @@ class Indicator(object):
 if __name__ == '__main__':
     import sys
 
-    read_db = db.connect()
+    read_db = psycopg2.connect(source_dsn)
 
     read_cursor = read_db.cursor()
 
@@ -102,7 +102,7 @@ if __name__ == '__main__':
         sys.stderr.write('r'); sys.stderr.flush()
 
         for region_id, statistics in region_statistics.items():
-            json_statistics = opencensus_json.encode(statistics)
+            json_statistics = json.dumps(statistics, ensure_ascii=False, check_circular=False, separators=(',', ':'))
             json_statistics_z = zlib.compress(json_statistics.encode('utf-8'))
             print "INSERT INTO region_statistics (region_id, statistics) VALUES (%d, X'%s');" % (region_id, json_statistics_z.encode('hex'))
 
