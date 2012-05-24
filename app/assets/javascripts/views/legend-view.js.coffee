@@ -1,7 +1,7 @@
 #= require app
 #= require globals
 #= require state
-#= require helpers/format-numbers
+#= require helpers/bucket-helpers
 
 globals = window.OpenCensus.globals
 state = window.OpenCensus.state
@@ -22,27 +22,14 @@ class LegendView
     $div = $(@div)
     $div.empty()
 
-    all_bucket_values = []
-    for bucket in mapIndicator.buckets()
-      all_bucket_values.push(bucket.min) if bucket.min?
-      all_bucket_values.push(bucket.max) if bucket.max?
-
-    format_number = h.get_formatter_for_numbers(all_bucket_values)
-
     $ul = $('<ul class="swatches"></ul>')
-    for bucket, i in mapIndicator.buckets()
-      fill = mapIndicator.bucket_colors[i]
+    for bucket in mapIndicator.buckets
+      label = h.bucket_to_label(bucket)
 
-      $li = $('<li><span class="swatch">&nbsp;</span><span class="range">up to</span> <span class="number"></span></li>')
-      $li.find('.swatch').css('background', fill)
+      $li = $('<li><span class="swatch">&nbsp;</span><span class="label"></span></li>')
+      $li.find('.swatch').css('background', bucket.color)
 
-      if bucket.max?
-        number = bucket.max
-      else
-        number = bucket.min
-        $li.find('.range').text('over')
-
-      $li.find('.number').text(format_number(number))
+      $li.find('.label').text(label)
 
       $ul.append($li)
 

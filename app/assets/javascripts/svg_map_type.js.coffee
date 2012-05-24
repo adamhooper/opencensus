@@ -176,7 +176,7 @@ class MapTile
     return undefined unless datum?.value?
     return undefined if datum.z <= @zoom
     bucket = @mapIndicator.bucketForValue(datum.value)
-    bucket? && @mapIndicator.bucket_colors?[bucket]
+    bucket?.color
 
   handleData: (data) ->
     delete this.dataRequest

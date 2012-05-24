@@ -17,24 +17,55 @@ CREATE TABLE indicators (
   unit VARCHAR NOT NULL,
   description VARCHAR NOT NULL,
   value_type VARCHAR NOT NULL,
-  buckets VARCHAR, -- NULL when it isn't a mappable stat
-  bucket_colors VARCHAR
+  buckets VARCHAR -- NULL when it isn't a mappable stat
 );
 INSERT INTO indicators (key, name, unit, description, value_type, buckets, bucket_colors)
 VALUES
 ('pop', 'Population', '', '', 'integer', NULL, NULL),
 ('dwe', 'Dwellings', '', '', 'integer', NULL, NULL),
 ('occdwe', 'Occupied dwellings', '', '', 'integer', NULL, NULL),
-('popdens', 'Population density', 'people per km²', '', 'float', 'less than 5, 5 to 20, 20 to 100, 100 to 500, 500 to 2000, more than 2000', '#edf8fb,#ccece6,#99d8c9,#66c2a4,#2ca25f,#006d2c'),
-('dwedens', 'Dwelling density', 'dwellings per km²', '', 'float', 'less than 5, 5 to 10, 10 to 50, 50 to 250, 250 to 1000, more than 1000', '#f2f0f7,#dadaeb,#bcbddc,#9e9ac8,#756bb1,#54278f'),
-('popdwe', 'People per dwelling', '', '', 'float', 'less than 1, 1 to 2, 2 to 2.5, 2.5 to 3, more than 3', '#edf8fb,#b3cde3,#8c96c6,#8856a7,#810f7c'),
+('popdens', 'Population density', 'people per km²', '', 'float',
+  '[{"max":5,"color":"#edf8fb"},' ||
+  '{"max":20,"color":"#ccece6"},' ||
+  '{"max":100,"color":"#99d8c9"},' ||
+  '{"max":500,"color":"#66c2a4"},' ||
+  '{"max":1000,"color":"#2ca25f"},' ||
+  '{"color":"#006d2c"}]'),
+('dwedens', 'Dwelling density', 'dwellings per km²', '', 'float',
+  '[{"max":5,"color":"#f2f0f7"},' ||
+  '{"max":10,"color":"#dadaeb"},' ||
+  '{"max":50,"color":"#bcbddc"},' ||
+  '{"max":250,"color":"#9e9ac8"},' ||
+  '{"max":1000,"color":"#756bb1"},' ||
+  '{"color":"#810f7c"}]'),
+('popdwe', 'People per dwelling', '', '', 'float',
+  '[{"max":1,"color":"#edf8fb"},' ||
+  '{"max":2,"color":"#b3cde3"},' ||
+  '{"max":2.5,"color":"#8c96c6","label":"up to 2½"},' ||
+  '{"max":3,"color":"#8856a7"},' ||
+  '{"color":"#810f7c"}]'),
 ('pop2006', 'Population, 2006', '', '', 'integer', NULL, NULL),
-('gro', 'Population growth', '%', 'How many more or fewer people are in this region', 'float', 'less than -5, -5 to 0, 0 to 3, 3 to 10, more than 10', '#d7191c,#fdae61,#ffffbf,#a6d96a,#1a9641'),
+('gro', 'Population growth', '%', 'How many more or fewer people are in this region', 'float',
+  '[{"max":-5,"color":"#d7191c","label":"shrank over 5%"},' ||
+  '{"max":0,"color":"#fdae61","label":"shrank"},' ||
+  '{"max":4.9999,"color":"#ffffbf","label":"grew under 5%"},' ||
+  '{"max":9.9999,"color":"#a6d96a","label":"grew under 10%"},' ||
+  '{"color":"#1a9641","label":"grew at least 10%"}]'),
 ('agem', 'Population by age, male', '', '', 'string', NULL, NULL),
 ('agef', 'Population by age, female', '', '', 'string', NULL, NULL),
 ('age', 'Population by age', '', '', 'string', NULL, NULL),
-('agemedian', 'Median age', '', '', 'float', 'less than 35, 35 to 40, 40 to 45, 45 to 50, more than 50', '#ffffb2,#fecc5c,#fd8d3c,#f03b20,#bd0026'),
-('sexm', 'Male percentage', '%', 'How many people are male', 'float', 'less than 48, 48 to 49.5, 49.5 to 50.5, 50.5 to 52, more than 52', '#d7191c,#fdae61,#ffffbf,#abd9e9,#2c7bb6');
+('agemedian', 'Median age', '', '', 'float',
+  '[{"max":34.999,"color":"#ffffb2","label":"median under 35"},' ||
+  '{"max":39.999,"color":"#fecc5c","label":"under 40"},' ||
+  '{"max":44.999,"color":"#fd8d3c","label":"under 45"},' ||
+  '{"max":49.999,"color":"#f03b20","label":"under 50"},' ||
+  '{"color":"#bd0026","label":"50 and over"}]'),
+('sexm', 'Male percentage', '%', 'How many people are male', 'float',
+  '[{"max":46.99999,"color":"#d7191c","label":"over 53% female"},' ||
+  '{"max":48.99999,"color":"#fdae61","label":"over 51% female"},' ||
+  '{"max":51,"color":"#ffffbf","label":"about even"},' ||
+  '{"max":53,"color":"#abd9e9","label":"over 51% male"},' ||
+  '{"color":"#2c7bb6","label":"over 53% male"}]'),
 
 dROP TABLE IF EXISTS indicator_region_values;
 CREATE TABLE indicator_region_values (
