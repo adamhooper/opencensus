@@ -17,28 +17,15 @@ class IndicatorDb
   findByKey: (key) ->
     @indicators_by_key[key]
 
-  findTextAndMapIndicators: () ->
-    return @text_and_map_indicators if @text_and_map_indicators
-
-    raw = [
-      [ 'Population', 'Population density' ],
-      [ 'Population growth', 'Population growth' ],
-      [ 'Dwellings', 'Dwelling density' ],
-      [ 'People per dwelling', 'People per dwelling' ],
-      [ 'Male percentage', 'Male percentage' ],
-      [ 'Median age', 'Median age' ],
-    ]
-
-    @text_and_map_indicators = ({ indicator: this.findByName(r[0]), map_indicator: this.findByName(r[1]) } for r in raw)
-
   findMapIndicatorForTextIndicator: (text_indicator) ->
-    for pair in this.findTextAndMapIndicators()
-      return pair.map_indicator if pair.indicator.equals(text_indicator)
-    return undefined
+    key = {
+      pop: 'popdens',
+      gro: 'gro',
+      dwe: 'dwedens',
+      agemedian: 'agemedian',
+      sexm: 'sexm',
+    }[text_indicator.key]
 
-  findTextIndicatorForMapIndicator: (map_indicator) ->
-    for pair in this.findTextAndMapIndicators()
-      return pair.indicator if pair.map_indicator.equals(map_indicator)
-    return undefined
+    key? && @indicators_by_key[key] || undefined
 
 window.OpenCensus.models.IndicatorDb = IndicatorDb

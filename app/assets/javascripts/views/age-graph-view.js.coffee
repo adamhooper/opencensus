@@ -12,8 +12,8 @@ class AgeGraphView extends window.OpenCensus.views.GraphView
     "opencensus-age-graph-view-#{id_counter += 1}"
 
   getFragment: () ->
-    agem = @region?.statistics?['Population by age, male']
-    agef = @region?.statistics?['Population by age, female']
+    agem = @region?.statistics?.agem
+    agef = @region?.statistics?.agef
 
     return undefined if !agem?.value || !agef.value?
 

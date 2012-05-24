@@ -11,8 +11,8 @@ psycopg2.extensions.register_type(psycopg2.extensions.UNICODEARRAY)
 source_dsn = 'dbname=opencensus_dev user=opencensus_dev password=opencensus_dev host=localhost'
 
 class Indicator(object):
-    def __init__(self, name, value_type):
-        self.name = name
+    def __init__(self, key, value_type):
+        self.key = key
         self.value_type = value_type
 
     def row_to_data(self, value_integer, value_float, value_string, note, child_zoom_level):
@@ -41,10 +41,10 @@ if __name__ == '__main__':
 
     print >> sys.stderr, 'Loading indicators...'
 
-    read_cursor.execute('SELECT id, name, value_type FROM indicators')
+    read_cursor.execute('SELECT id, key, value_type FROM indicators')
     indicators = {}
-    for (id, name, value_type) in read_cursor:
-        indicators[id] = Indicator(name, value_type)
+    for (id, key, value_type) in read_cursor:
+        indicators[id] = Indicator(key, value_type)
 
     print >> sys.stderr, 'Loading list of region IDs...'
     read_cursor.execute('SELECT DISTINCT id FROM regions ORDER BY id')
@@ -97,7 +97,7 @@ if __name__ == '__main__':
             statistics = region_statistics[region_id]
             indicator = indicators[indicator_id]
             data = indicator.row_to_data(value_integer, value_float, value_string, note, child_zoom_level)
-            statistics[indicator.name] = data
+            statistics[indicator.key] = data
 
         sys.stderr.write('r'); sys.stderr.flush()
 

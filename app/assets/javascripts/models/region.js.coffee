@@ -8,6 +8,7 @@ class Region
     @type == rhs.type && @uid == rhs.uid
 
   getDatum: (indicator) ->
-    @statistics?[indicator.name]
+    indicator_key = typeof(indicator) == 'String' && indicator || indicator.key
+    @statistics?[indicator_key]
 
 window.OpenCensus.models.Region = Region

@@ -8,13 +8,14 @@ defaults = globals.defaults
 
 class State
   constructor: ->
-    @indicator = globals.indicators.findByName(defaults.indicator_name)
+    @indicator = globals.indicators.findByKey(defaults.indicator_key)
     @region = undefined
     @hover_region = undefined
     @position = $.extend({}, defaults.position)
 
   setIndicator: (indicator) ->
-    return if indicator.equals(@indicator)
+    indicator = globals.indicators.findByKey(indicator) if typeof(indicator) == 'String'
+    return if indicator?.key == @indicator?.key
     @indicator = indicator
     $(document).trigger('opencensus:state:indicator_changed', @indicator)
 

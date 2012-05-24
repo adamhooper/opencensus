@@ -56,11 +56,11 @@ class RegionInfoView
       }
 
     ret = {
-      pop: region.statistics?['Population'],
-      gro: region.statistics?['Population growth'],
-      dwe: region.statistics?['Dwellings'],
-      popdwe: region.statistics?['People per dwelling'],
-      sexm: region.statistics?['Male percentage'],
+      pop: region.statistics?.pop
+      gro: region.statistics?.gro,
+      dwe: region.statistics?.dwe,
+      popdwe: region.statistics?.popdwe,
+      sexm: region.statistics?.sexm,
     }
     ret.sexf = ret.sexm? && { value: 100.0 - ret.sexm.value, note: ret.sexm.note } || undefined
     ret
