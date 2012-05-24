@@ -1,10 +1,10 @@
 #opencensus-wrapper
+  %form.search
+    %p
+      %label{:for => 'opencensus-address-input'} Postal code
+      %input.text#opencensus-address-input{:type => 'text', :name => 'q'}
+      %input.submit{:type => 'submit', :value => 'Go'}
   .nav
-    %form.search
-      %p
-        %label{:for => 'opencensus-address-input'} Postal code
-        %input.text#opencensus-address-input{:type => 'text', :name => 'q'}
-        %input.submit{:type => 'submit', :value => 'Go'}
 
     %ul.indicators
       %li.pop.selected

@@ -33,38 +33,40 @@ body {
     font-weight: bold;
   }
 
+  form.search {
+    margin: 0;
+    padding: .5em;
+    text-transform: uppercase;
+
+    p {
+      position: relative;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      display: inline-block;
+      width: 20em;
+    }
+
+    input.text {
+      border: 2px solid $color_strong;
+      border-right: none;
+      padding-right: 20px;
+      margin: 0;
+    }
+
+    input.submit {
+      position: absolute;
+      right: 2px;
+      bottom: 2px;
+      border: none;
+      width: 1px;
+      padding-left: 20%;
+      background: $color_strong_background;
+    }
+  }
+
   .nav {
     background: $color_alt_background;
-
-    form.search {
-      margin: 0;
-      padding: .5em;
-      text-transform: uppercase;
-      display: inline-block;
-
-      p {
-        position: relative;
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-      }
-
-      input.text {
-        border: 2px solid $color_strong;
-        border-right: none;
-        display: block;
-      }
-
-      input.submit {
-        position: absolute;
-        right: 2px;
-        bottom: 2px;
-        border: none;
-        width: 1px;
-        padding-left: 20%;
-        background: $color_strong_background;
-      }
-    }
 
     ul {
       margin: 0;
@@ -77,9 +79,9 @@ body {
       margin: 0;
       padding: .7em .5em;
       display: inline-block;
+      vertical-align: top;
       height: 1.55em;
       line-height: 1;
-      border-top: 3px solid $color_alt_background2;
       cursor: pointer;
 
       &.selected {
