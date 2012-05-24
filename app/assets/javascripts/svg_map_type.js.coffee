@@ -315,7 +315,11 @@ class MapTile
 
     if region_list?
       for region in region_list
-        if region1? && region.getDatum(@mapIndicator)?
+        # Compare populations because we don't want to select a ConsolidatedSubdivision
+        # as parent of a Division when they're actually the same exact area.
+        # This can introduce error if, say, a Subdivision and an ElectoralDistrict happen
+        # to have the same population. Oh well.
+        if region1? && region.getDatum(@mapIndicator)? && region.statistics?.pop?.value != region1.statistics?.pop?.value
           region2 = region
           break
         if this.getFillForRegion(region)
