@@ -8,9 +8,8 @@ $color_main: #212121;
 $color_border: #d5d6d5;
 
 $width_page: 960px;
-$width_map: 70%;
+$width_map: 65%;
 $height_map: 600px;
-$map_percentage: 80;
 
 html {
   margin: 0;
@@ -147,6 +146,15 @@ body {
         span.value {
           font-size: 1.25em;
           color: $color_strong;
+        }
+      }
+
+      tr.ages td {
+        font-size: 1em;
+
+        div.graph div {
+          font-size: .7em;
+          font-weight: normal;
         }
       }
     }
