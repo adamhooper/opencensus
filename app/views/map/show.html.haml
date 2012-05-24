@@ -1,6 +1,89 @@
 #opencensus-wrapper
-  = render('map')
-  = render('legend')
-  = render('search')
-  = render('info')
-  = render('year_selector')
+  .nav
+    %form.search
+      %p
+        %label{:for => 'opencensus-address-input'} Postal code
+        %input.text#opencensus-address-input{:type => 'text', :name => 'q'}
+        %input.submit{:type => 'submit', :value => 'Go'}
+
+    %ul.indicators
+      %li.pop.selected
+        %a{:href => '#pop'} Population
+        %span.unit shown in people per km²
+      %li.dwe
+        %a{:href => '#dwe'} Dwellings
+      %li.gro
+        %a{:href => '#gro'} Growth
+        %span.unit shown in %
+      %li.agemedian
+        %a{:href => '#agemedian'} Age distribution
+      %li.sexm
+        %a{:href => '#sexm'} Sex distribution
+  .map-and-info
+    .map
+    .region-info
+      %h2 Compare yourself
+      %table
+        %thead
+          %tr
+            %th/
+            %th You
+            %th
+              %a.compare-region Canada
+        %tbody
+          %tr.pop
+            %th Population
+            %td.region
+              %span.pop.value
+              %div.gro
+                %span.gro.value<
+                %span.unit> %
+            %td.compare-region
+              %span.pop.value
+              %div.gro
+                %span.gro.value<
+                %span.unit> %
+          %tr.dwe
+            %th Dwellings
+            %td.region
+              %span.dwe.value
+              %div.popdwe
+                %span.popdwe.value
+                people per dwelling
+            %td.compare-region
+              %span.dwe.value
+              %div.popdwe
+                %span.popdwe.value
+                people per dwelling
+        %thead.sub.sexm
+          %tr
+            %th{:colspan => 3} Sex profile
+        %tbody.sexm
+          %tr.sexm
+            %th Female
+            %td.region
+              %div.sexf
+                %span.sexf.value<
+                %span.unit> %
+            %td.compare-region
+              %div.sexf
+                %span.sexf.value<
+                %span.unit> %
+          %tr.sexf
+            %th Male
+            %td.region
+              %div.sexm
+                %span.sexm.value<
+                %span.unit> %
+            %td.compare-region
+              %div.sexm
+                %span.sexm.value<
+                %span.unit> %
+        %thead.sub
+          %tr
+            %th{:colspan => 3} Age distribution
+        %tbody
+          %tr.ages
+            %td{:colspan => 3}
+              %div.age-chart
+  .legend

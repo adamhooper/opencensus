@@ -123,5 +123,5 @@ class MapView
     @handlingPositionChange = false
 
 $ ->
-  div = document.getElementById('map')
-  new MapView(div)
+  $div = $('#opencensus-wrapper div.map')
+  new MapView($div[0])

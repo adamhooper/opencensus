@@ -2,6 +2,7 @@
 
 class Indicator
   constructor: (attributes) ->
+    @key = attributes.key
     @name = attributes.name
     @value_type = attributes.value_type
     @unit = attributes.unit

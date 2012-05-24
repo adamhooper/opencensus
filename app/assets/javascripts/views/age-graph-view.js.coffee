@@ -36,8 +36,8 @@ class AgeGraphView extends window.OpenCensus.views.GraphView
     ticks = ([i, c] for c, i in categories)
 
     $.jqplot(id, [values], {
-      #highlighter: { show: true, sizeAdjust: 12 },
-      #cursor: { show: false },
+      highlighter: { show: true, sizeAdjust: 12 },
+      cursor: { show: false },
       seriesDefaults: {
         renderer: $.jqplot.BarRenderer,
         rendererOptions: {

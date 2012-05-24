@@ -22,54 +22,32 @@ class LegendView
     $div = $(@div)
     $div.empty()
 
-    format_number = h["format_#{mapIndicator.value_type}"]
+    all_bucket_values = []
+    for bucket in mapIndicator.buckets()
+      all_bucket_values.push(bucket.min) if bucket.min?
+      all_bucket_values.push(bucket.max) if bucket.max?
 
-    $heading = $('<h2></h2>')
-    $heading.text(indicator.name)
-    $div.append($heading)
-
-    if mapIndicator.unit
-      $unit = $('<div class="unit">shown in <strong></strong></div>')
-      $unit.find('strong').text(mapIndicator.unit)
-      $div.append($unit)
-
-    $others = $('<div class="others">or show:<ul></ul></div>')
-    $ul = $others.find('ul')
-    for obj in globals.indicators.findTextAndMapIndicators()
-      continue if obj.map_indicator.name == mapIndicator.name
-      $li = $('<li><a href="#"></a></li>')
-      $li.find('a').text(obj.indicator.name)
-      $li.data('indicator', obj.indicator)
-      $li.on 'click', (e) ->
-        e.preventDefault()
-        indicator = $(e.target).closest('li').data('indicator')
-        state.setIndicator(indicator)
-      $ul.append($li)
-    $div.append($others)
+    format_number = h.get_formatter_for_numbers(all_bucket_values)
 
     $ul = $('<ul class="swatches"></ul>')
     for bucket, i in mapIndicator.buckets()
       fill = mapIndicator.bucket_colors[i]
 
-      $li = $('<li><span class="sample">&nbsp;</span><span class="min"></span><span class="range"> to </span><span class="max"></span></li>')
-      $li.find('.sample').css('background', fill)
-      if bucket.min?
-        $li.find('.min').text(format_number(bucket.min))
+      $li = $('<li><span class="swatch">&nbsp;</span><span class="range">up to</span> <span class="number"></span></li>')
+      $li.find('.swatch').css('background', fill)
+
       if bucket.max?
-        $li.find('.max').text(format_number(bucket.max))
-      if !bucket.min?
-        $li.find('.min').remove()
-        $li.find('.range').remove()
-        $li.find('.max').prepend('up to ')
-      if !bucket.max?
-        $li.find('.max').remove()
-        $li.find('.range').remove()
-        $li.find('.min').prepend('over ')
+        number = bucket.max
+      else
+        number = bucket.min
+        $li.find('.range').text('over')
+
+      $li.find('.number').text(format_number(number))
 
       $ul.append($li)
 
     $div.append($ul)
 
 $ ->
-  div = document.getElementById('legend')
-  new LegendView(div)
+  $div = $('#opencensus-wrapper>div.legend')
+  new LegendView($div[0])
