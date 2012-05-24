@@ -21,8 +21,6 @@ class RegionInfoView
     regionData = this.regionToData(region)
     compareRegionData = this.regionToData(compareRegion)
 
-    console.log(region, regionData)
-
     this.fillTableColumnData('region', regionData)
     this.fillTableColumnData('compare-region', compareRegionData)
 
