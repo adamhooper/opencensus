@@ -39,26 +39,14 @@ class InteractionGridArray
   constructor: (@tileSize, utfgrids) ->
     @interaction_grids = (new InteractionGrid(@tileSize, utfgrid) for utfgrid in utfgrids)
 
-  pointToRegionIds: (column, row) ->
-    region_ids = (grid.pointToRegionId(column, row) for grid in @interaction_grids)
-    $.unique(region_ids)
+  pointToRegionList: (column, row) ->
+    child_region_ids = (grid.pointToRegionId(column, row) for grid in @interaction_grids)
+    region_store.getRegionListFromChildRegionIds(child_region_ids)
 
   # Returns the "best" Region--using region_types ordering
   pointToRegionWithDatum: (column, row, indicator) ->
-    region_ids = this.pointToRegionIds(column, row)
-
-    best_region = undefined
-    best_index = -1
-
-    for region_id in region_ids
-      region = region_store.getNearestRegionWithDatum(region_id, indicator)
-      if region
-        index = region_types.indexOfName(region.type)
-        if index > best_index
-          best_region = region
-          best_index = index
-
-    best_region
+    region_list = this.pointToRegionList(column, row)
+    region_store.getBestRegionWithDatumInRegionList(region_list, indicator)
 
 # Save some object creation
 polygon_style_base = {
@@ -67,7 +55,8 @@ polygon_style_base = {
 }
 overlay_polygon_styles = {
   hover: $.extend({}, polygon_style_base, globals.hover_style),
-  selected: $.extend({}, polygon_style_base, globals.selected_style),
+  region1: $.extend({}, polygon_style_base, globals.selected_style),
+  region2: $.extend({}, polygon_style_base, globals.selected_style),
 }
 
 class MapTile
@@ -84,6 +73,7 @@ class MapTile
 
     @interaction_grids = undefined
     @regions = {} # json_id => { region: region, geometry: GeoJSON geometry, element: Paper element }
+    @regionIds = [] # json IDs, used to sort @regions
     @overlayElements = {}
     @mapIndicator = globals.indicators.findMapIndicatorForTextIndicator(state.indicator)
 
@@ -122,7 +112,8 @@ class MapTile
     $(document).on("opencensus:mousemove.#{event_class}", (e, params) => this.onMouseMove(params))
     $(document).on("opencensus:mouseout.#{event_class}", (e, params) => this.onMouseOut(params))
     state.onHoverRegionChanged(event_class, this.onHoverRegionChanged, this)
-    state.onRegionChanged(event_class, this.onRegionChanged, this)
+    state.onRegion1Changed(event_class, this.onRegion1Changed, this)
+    state.onRegion2Changed(event_class, this.onRegion2Changed, this)
     state.onIndicatorChanged(event_class, this.onIndicatorChanged, this)
 
   requestData: () ->
@@ -188,6 +179,10 @@ class MapTile
       region = new Region(feature.id, properties.name, properties.parents, properties.statistics)
       region_store.add(region)
       @regions[region.id] = { region: region, geometry: feature.geometry }
+      @regionIds.push(region.id)
+
+    regions = @regions
+    @regionIds.sort((a, b) -> -(regions[a].region.compareTo(regions[b].region)))
 
     @interaction_grids = new InteractionGridArray(@tileSize, data.utfgrids)
 
@@ -196,7 +191,8 @@ class MapTile
   drawRegions: () ->
     style = $.extend({}, polygon_style_base)
 
-    for regionId, regionData of @regions
+    for regionId in @regionIds
+      regionData = @regions[regionId]
       fill = this.getFillForRegion(regionData.region)
       style.fill = fill || 'none'
 
@@ -208,7 +204,8 @@ class MapTile
       element.hide() if !fill?
 
     this.onHoverRegionChanged(state.hover_region)
-    this.onRegionChanged(state.region)
+    this.onRegion1Changed(state.region)
+    this.onRegion2Changed(state.region)
 
   restyle: () ->
     for regionId, regionData of @regions
@@ -242,20 +239,29 @@ class MapTile
     else
       ret
 
-  tilePixelToRegion: (tilePixel) ->
+  tilePixelToRegionList: (tilePixel) ->
     [ column, row ] = tilePixel
 
     return undefined unless @interaction_grids?
-    @interaction_grids.pointToRegionWithDatum(column, row, @mapIndicator)
+    @interaction_grids.pointToRegionList(column, row, @mapIndicator)
 
-  onMouseMove: (globalMeter) ->
+  onMouseMove: (point) ->
+    globalMeter = point.world_xy
     tilePixel = this.globalMeterToTilePixelOrUndefined(globalMeter)
 
     if tilePixel?
       @lastMouseMoveWasOnThisTile = true
 
-      region = this.tilePixelToRegion(tilePixel) # may be undefined
-      state.setHoverRegion(region) # Will only set if it's different
+      hover_region = undefined
+
+      region_list = this.tilePixelToRegionList(tilePixel) # may be undefined
+      if region_list?
+        for region in region_list
+          if this.getFillForRegion(region)
+            hover_region = region
+            break
+
+      state.setHoverRegion(hover_region) # Will only set if it's different
     else
       @lastMouseMoveWasOnThisTile = false
 
@@ -268,10 +274,10 @@ class MapTile
 
     true
 
-  setOverlayElement: (name, region) ->
-    if @overlayElements[name]?
-      @overlayElements[name].remove()
-      @overlayElements[name] = undefined
+  _setOverlayElement: (key, region) ->
+    if @overlayElements[key]?
+      @overlayElements[key].remove()
+      @overlayElements[key] = undefined
 
     if region?
       geometry = @regions[region.id]?.geometry
@@ -279,27 +285,45 @@ class MapTile
       if geometry?
         @overlayPaper.setStart()
         # We can't use region.geometry.clone() because it's in a different document
-        this.drawGeometry(@overlayPaper, geometry, overlay_polygon_styles[name])
-        @overlayElements[name] = @overlayPaper.setFinish()
+        this.drawGeometry(@overlayPaper, geometry, overlay_polygon_styles[key])
+        @overlayElements[key] = @overlayPaper.setFinish()
+
+    @overlayElements.region2?.toFront()
+    @overlayElements.region1?.toFront()
 
   onHoverRegionChanged: (hover_region) ->
-    this.setOverlayElement('hover', hover_region)
-    @overlayElements.selected?.toFront()
+    this._setOverlayElement('hover', hover_region)
 
-  onRegionChanged: (selected_region) ->
-    this.setOverlayElement('selected', selected_region)
-    @overlayElements.selected?.toFront()
+  onRegion1Changed: (region1) ->
+    this._setOverlayElement('region1', region1)
+
+  onRegion2Changed: (region2) ->
+    this._setOverlayElement('region2', region2)
 
   onIndicatorChanged: (indicator) ->
     @mapIndicator = globals.indicators.findMapIndicatorForTextIndicator(indicator)
     this.restyle()
 
-  onClick: (globalMeter) ->
+  onClick: (point) ->
+    globalMeter = point.world_xy
     tilePixel = this.globalMeterToTilePixelOrUndefined(globalMeter)
     return if !tilePixel?
 
-    region = this.tilePixelToRegion(tilePixel)
-    state.setRegion(region)
+    region1 = undefined
+    region2 = undefined
+    region_list = this.tilePixelToRegionList(tilePixel)
+
+    if region_list?
+      for region in region_list
+        if region1?
+          region2 = region
+          break
+        if this.getFillForRegion(region)
+          region1 = region
+
+    state.setRegionList(region_list)
+    state.setRegion1(region1)
+    state.setRegion2(region2)
 
   destroy: () ->
     this.dataRequest.abort() if this.dataRequest?

@@ -11,12 +11,12 @@ AgeGraphView = window.OpenCensus.views.AgeGraphView
 class RegionInfoView
   constructor: (@div) ->
     this.refresh()
-    state.onRegionChanged 'region-info-view', () => this.refresh()
+    state.onRegion1Changed 'region-info-view', () => this.refresh()
+    state.onRegion2Changed 'region-info-view', () => this.refresh()
 
   refresh: () ->
-    region = state.region
-    #compareRegion = state.compare_region
-    compareRegion = state.region # for now
+    region = state.region1
+    compareRegion = state.region2
 
     regionData = this.regionToData(region)
     compareRegionData = this.regionToData(compareRegion)
@@ -78,6 +78,7 @@ class RegionInfoView
         $div.show()
         $tbodies.show()
       else
+        $span.empty()
         $div.hide()
         $tbodies.hide()
 

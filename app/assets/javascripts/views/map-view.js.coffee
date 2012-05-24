@@ -72,10 +72,10 @@ class MapView
       google.maps.event.addListener @map, event_type, (e) =>
         projection = @map.getProjection()
         zoomLevel = @map.getZoom()
-        latLng = e.latLng
-        xy = projection.fromLatLngToPoint(latLng)
+        xy = projection.fromLatLngToPoint(e.latLng)
         world_xy = [ (xy.x - 128) / 256 * 20037508.342789244 * 2, -(xy.y - 128) / 256 * 20037508.342789244 * 2 ]
-        $(document).trigger('opencensus:' + event_type, [world_xy])
+        latlng = { latitude: e.latLng.lat(), longitude: e.latLng.lng() }
+        $(document).trigger('opencensus:' + event_type, [{ world_xy: world_xy, latlng: latlng }])
 
     register_event(event_type) for event_type in [ 'mousemove', 'click' ]
 

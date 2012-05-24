@@ -32,57 +32,37 @@ class RegionStore
     regionData = @regions[region_id]
     regionData && regionData.region || undefined
 
-  # Returns all ancestors, as a list from Province down to (possibly) DisseminationArea
-  getAncestors: (region_id) ->
-    region = this.get(region_id)
-    return [] if region is undefined
+  getRegionListFromChildRegionIds: (region_ids) ->
+    return undefined if !region_ids?
 
-    all_parent_ids = {}
+    all_ids = {}
 
-    parent_ids = region.parent_ids
+    next_wave = region_ids
+    while next_wave.length > 0
+      this_wave = next_wave
+      next_wave = []
 
-    while parent_ids.length > 0
-      old_parent_ids = parent_ids
-      parent_ids = []
+      for region_id in this_wave
+        continue if all_ids[region_id]?
 
-      for parent_id in old_parent_ids
-        parent_region = this.get(parent_id)
+        region = this.get(region_id)
+        continue if !region?
 
-        if parent_region
-          [region_type, uid] = parent_id.split('-')
-          all_parent_ids[region_type] = parent_id
+        all_ids[region_id] = true
 
-          parent_ids.push(grandparent_id) for grandparent_id in parent_region.parent_ids
+        for parent_id in region.parent_ids
+          next_wave.push(parent_id) # don't mind duplicates
 
-    ret = []
-    for region_type in @region_types.region_types
-      id = all_parent_ids[region_type.name]
-      if id
-        region = this.get(id)
-        if region
-          ret.push(region)
+    ret = (this.get(region_id) for region_id, _ of all_ids)
+
+    ret.sort((a, b) => a.compareTo(b))
 
     ret
 
-  getNearestRegionWithDatum: (region_id, indicator) ->
-    region = this.get(region_id)
-    return undefined if region is undefined
-    return region if region.getDatum(indicator)?
-    return undefined if region.parent_ids is undefined
+  getBestRegionWithDatumInRegionList: (region_list, indicator) ->
+    indicator_key = typeof(indicator) == 'String' && indicator || indicator.key
 
-    best_candidate = undefined
-    best_index = -1
-
-    for parent_region_id in region.parent_ids
-      parent_region = this.getNearestRegionWithDatum(parent_region_id, indicator)
-      if parent_region
-        type = parent_region.type
-        index = @region_types.indexOfName(type)
-
-        if index > best_index
-          best_candidate = parent_region
-          best_index = index
-
-    return best_candidate
+    for region in region_list
+      return region if region.statistics?[indicator_key]
 
 window.OpenCensus.models.RegionStore = RegionStore
