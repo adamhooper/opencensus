@@ -315,7 +315,7 @@ class MapTile
 
     if region_list?
       for region in region_list
-        if region1?
+        if region1? && region.getDatum(@mapIndicator)?
           region2 = region
           break
         if this.getFillForRegion(region)
