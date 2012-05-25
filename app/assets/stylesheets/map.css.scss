@@ -189,6 +189,18 @@ body {
         a {
           font-weight: normal;
         }
+
+        span.region-type {
+          display: inline;
+          font-size: .8em;
+          line-height: 1.25;
+          font-weight: normal;
+        }
+
+        span.region-name {
+          display: inline;
+          line-height: 1;
+        }
       }
     }
   }

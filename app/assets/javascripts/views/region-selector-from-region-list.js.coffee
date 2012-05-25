@@ -1,9 +1,11 @@
 #= require app
 #= require state
 #= require globals
+#= require helpers/region-helpers
 
 state = window.OpenCensus.state
 globals = window.OpenCensus.globals
+h = window.OpenCensus.helpers
 
 class RegionSelectorFromRegionList
   constructor: (@div, @key) ->
@@ -32,7 +34,7 @@ class RegionSelectorFromRegionList
       human_name = region.human_name()
       $option = $('<option></option>')
       $option.attr('value', region.id)
-      $option.text(human_name)
+      $option.text(region.id)
       $option.attr('selected', 'selected') if region.id == selected_region?.id
       $select.append($option)
 
@@ -40,8 +42,9 @@ class RegionSelectorFromRegionList
     $select.selectmenu({
       style: 'dropdown',
       width: '100%',
-      maxHeight: 500,
-      appendTo: $form
+      maxHeight: 600,
+      appendTo: $form,
+      format: (region_id) -> h.region_to_human_html(globals.region_store.get(region_id))
     })
 
     $select.on 'change', () ->
