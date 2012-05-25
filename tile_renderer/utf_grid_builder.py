@@ -43,6 +43,7 @@ class UTFGridBuilder:
         self.image = cairo.ImageSurface(cairo.FORMAT_RGB24, self.width, self.height)
         self.image_context = cairo.Context(self.image)
         self.image_context.set_antialias(cairo.ANTIALIAS_NONE)
+        self.image_context.set_line_width(4.0)
 
         self.reset_to_new_tile(tile)
 
@@ -93,6 +94,7 @@ class UTFGridBuilder:
                 func(x_coord, y_coord)
                 x_coord = None # but leave "func" alone
 
+        self.image_context.stroke_preserve()
         self.image_context.fill()
 
     def add(self, svg_path, key):

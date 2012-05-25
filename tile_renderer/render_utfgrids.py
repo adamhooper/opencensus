@@ -36,15 +36,6 @@ def _dump_json(obj):
 
 def create_worker(db, tile_size):
     cursor = db.cursor()
-    # We don't need to render parents, because of the way we chose our zoom
-    # levels when rendering polygons. In a given tile:
-    #
-    # 1. For any shown polygon, all polygons in that region are shown.
-    # 2. For any shown region, all sibling regions are shown.
-    # 3. Sibling regions cover parent regions.
-    #
-    # Therefore, if we draw a parent region on a grid, we know its children
-    # will overwrite it. So why bother?
     cursor.execute('''
         PREPARE select_data (INT, INT, INT) AS
         SELECT r.type, r.uid, ST_AsSVG(ST_Collect(rpt.geometry_srid3857)) AS svg
@@ -52,14 +43,6 @@ def create_worker(db, tile_size):
         INNER JOIN region_polygons_metadata rpm ON rpt.region_polygon_id = rpm.region_polygon_id
         INNER JOIN regions r ON rpm.region_id = r.id
         WHERE rpt.zoom_level = $1 AND rpt.tile_row = $2 AND rpt.tile_column = $3
-          AND r.id NOT IN (
-            SELECT rp2.parent_region_id
-            FROM region_polygon_tiles rpt2
-            INNER JOIN region_polygons_metadata rpm2 ON rpt2.region_polygon_id = rpm2.region_polygon_id
-            INNER JOIN regions r2 ON rpm2.region_id = r2.id
-            INNER JOIN region_parents rp2 ON r2.id = rp2.region_id
-            WHERE rpt2.zoom_level = $1 AND rpt2.tile_row = $2 AND rpt2.tile_column = $3
-            )
         GROUP BY r.type, r.uid, r.position
         ORDER BY r.position
         ''')
