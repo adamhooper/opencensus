@@ -6,7 +6,6 @@
 #= require state
 #= require models/region
 #= require paper
-#= require image_path
 #= require parse_opencensus_geojson
 
 globals = window.OpenCensus.globals
@@ -52,12 +51,13 @@ class InteractionGridArray
 # Save some object creation
 polygon_style_base = {
   stroke: globals.style.stroke,
-  'stroke-width': globals.style['stroke-width']
+  'stroke-width': globals.style['stroke-width'],
+  #'fill-opacity': globals.style['fill-opacity'],
 }
 overlay_polygon_styles = {
-  hover: $.extend({fill: 'none'}, polygon_style_base, globals.hover_style),
-  region1: $.extend({pattern: image_path('pattern1.png')}, polygon_style_base, globals.selected_style),
-  region2: $.extend({pattern: image_path('pattern2.png')}, polygon_style_base, globals.selected_style),
+  hover: $.extend({}, polygon_style_base, globals.hover_style),
+  region1: $.extend({}, polygon_style_base, globals.selected_style1, { 'fill-opacity': 1.0 }),
+  region2: $.extend({}, polygon_style_base, globals.selected_style2, { 'fill-opacity': 1.0 }),
 }
 
 class MapTile
@@ -85,6 +85,7 @@ class MapTile
     childDiv.style.left = 0
     childDiv.style.right = 0
     @div.appendChild(childDiv)
+    $(childDiv).css('opacity', globals.style['fill-opacity'])
     @paper = new Paper(childDiv, {
       width: @tileSize.width,
       height: @tileSize.height,
@@ -355,7 +356,6 @@ window.SvgMapType.prototype.getTile = (coord, zoom, ownerDocument) ->
   div.style.width = "#{@tileSize.width}px"
   div.style.height = "#{@tileSize.height}px"
   div.style.position = 'relative'
-  $(div).css('opacity', globals.style.opacity)
 
   tile = new MapTile(@tileSize, coord, zoom, div)
   div.id = tile.id()
