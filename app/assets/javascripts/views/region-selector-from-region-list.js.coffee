@@ -30,7 +30,14 @@ class RegionSelectorFromRegionList
 
     selected_region = state[@key]
 
+    populations = {}
+
     for region in state.region_list
+      if region.statistics?.pop?.value?
+        # Ignore parent regions which are duplicates
+        key = "#{region.statistics.pop.value}"
+        continue if populations[key]?
+        populations[key] = true
       human_name = region.human_name()
       $option = $('<option></option>')
       $option.attr('value', region.id)
