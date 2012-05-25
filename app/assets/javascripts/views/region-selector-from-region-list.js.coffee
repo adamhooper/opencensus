@@ -51,7 +51,9 @@ class RegionSelectorFromRegionList
 
   refreshSelected: () ->
     $select = $(@div).find('select')
-    $select.val(state[@key]?.id)
-    $select.trigger('change')
+
+    region = state[@key]
+
+    $select.selectmenu('value', region?.id)
 
 window.OpenCensus.views.RegionSelectorFromRegionList = RegionSelectorFromRegionList
