@@ -20,4 +20,7 @@ class Region
     indicator_key = typeof(indicator) == 'String' && indicator || indicator.key
     @statistics?[indicator_key]
 
+  human_name: () ->
+    @id
+
 window.OpenCensus.models.Region = Region
