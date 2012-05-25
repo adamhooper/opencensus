@@ -90,7 +90,7 @@ class State
 
   onRegionListChanged: (callerNamespace, func, oThis = undefined) ->
     $(document).on "opencensus:state:region_list_changed.#{callerNamespace}", (e, region_list) ->
-      func.call(oThis || window, indicator)
+      func.call(oThis || window, region_list)
 
   onRegion1Changed: (callerNamespace, func, oThis = undefined) ->
     $(document).on "opencensus:state:region1_changed.#{callerNamespace}", (e, region) ->
