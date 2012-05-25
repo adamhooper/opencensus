@@ -67,26 +67,11 @@ body {
   .nav {
     background: $color_alt_background;
 
-    ul {
-      margin: 0;
-      padding: 0;
-      list-style: none;
-      display: inline;
+    a.ui-selectmenu {
+      height: 3.5em;
     }
 
-    li {
-      margin: 0;
-      padding: .7em .5em;
-      display: inline-block;
-      vertical-align: top;
-      height: 1.55em;
-      line-height: 1;
-      cursor: pointer;
-
-      &.selected {
-        background: $color_highlight_background;
-      }
-
+    span.ui-selectmenu-status {
       a {
         font-size: .9em;
         display: block;
@@ -98,6 +83,42 @@ body {
       span {
         display: block;
         font-size: .65em;
+      }
+    }
+
+    div.ui-selectmenu-menu {
+      margin: 0;
+      padding: 0;
+      background: $color_alt_background;
+
+      li {
+        margin: 0;
+        padding: .7em .5em;
+        vertical-align: top;
+        height: 1.55em;
+        line-height: 1;
+        cursor: pointer;
+
+        &.selected {
+          background: $color_highlight_background;
+        }
+
+        a {
+          padding: 0;
+        }
+
+        a a {
+          font-size: .9em;
+          display: block;
+          text-transform: uppercase;
+          text-decoration: none;
+          color: $color_main;
+        }
+
+        a span {
+          display: block;
+          font-size: .65em;
+        }
       }
     }
   }

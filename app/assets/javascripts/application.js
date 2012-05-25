@@ -8,4 +8,5 @@
 //= require jquery_ujs
 //= require excanvas
 //= require jqplot-manifest
+//= require jquery-ui-manifest
 //= require_tree .

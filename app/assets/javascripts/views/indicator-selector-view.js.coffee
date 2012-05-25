@@ -7,31 +7,43 @@ state = window.OpenCensus.state
 
 class IndicatorSelectorView
   constructor: (@ul) ->
-    state.onIndicatorChanged('indicator-selector-view', this.onIndicatorChanged, this)
-    this.addListener()
-    this.refresh()
+    $ul = $(@ul)
+    $ul.hide()
 
-  addListener: () ->
-    $(@ul).on 'click', 'li', (e) ->
-      e.preventDefault()
+    $select = $('<select></select>')
+    bodies = {}
 
-      $a = $(e.target).closest('li').children('a')
-      href = $a.attr('href')
-      key = href.split(/#/)[1]
+    $ul.find('li').each () ->
+      key = $(this).find('a').attr('href').split(/#/)[1]
+      body = $(this).html()
+      bodies[key] = body
+      $option = $('<option></option>')
+      $option.text(key)
+      $option.attr('value', key)
+      $select.append($option)
 
+    $select.val(state.indicator.key)
+
+    @$form = $('<form></form>')
+    @$form.append($select)
+
+    $ul.after(@$form)
+
+    $select.selectmenu({
+      style: 'dropdown',
+      width: '12em',
+      maxHeight: 500,
+      format: (key) -> bodies[key],
+      appendTo: @$form
+    })
+
+    $select.on 'change', (e) ->
+      key = $select.val()
       indicator = globals.indicators.findByKey(key)
       state.setIndicator(indicator)
 
-  onIndicatorChanged: (indicator) ->
-    this.refresh()
-
-  refresh: () ->
-    indicator = state.indicator
-
-    $ul = $(@ul)
-    $ul.find('li').removeClass('selected')
-    $li = $ul.find("li.#{indicator.key}")
-    $li.addClass('selected')
+    state.onIndicatorChanged 'indicator-selector-view', () ->
+      $select.val(state.indicator.key)
 
 $ ->
   $ul = $('#opencensus-wrapper ul.indicators')
