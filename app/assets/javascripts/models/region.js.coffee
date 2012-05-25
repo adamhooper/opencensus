@@ -21,6 +21,15 @@ class Region
     @statistics?[indicator_key]
 
   human_name: () ->
-    @id
+    region_type = region_types.findByName(@type)
+
+    if region_type == 'DisseminationBlock' || region_type == 'DisseminationArea'
+      region_type.human_name()
+    else
+      human_type = region_type.human_name()
+      if human_type?
+        "#{human_type} #{@name}"
+      else
+        @name
 
 window.OpenCensus.models.Region = Region
