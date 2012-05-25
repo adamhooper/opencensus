@@ -42,14 +42,21 @@ class PaperElement
 
 class SvgEngine
   constructor: (div, attrs) ->
+    @svgns = 'http://www.w3.org/2000/svg'
+    @xlinkns = 'http://www.w3.org/1999/xlink'
+
     @svg = this._createEngineElement('svg')
+    @last_pattern_id = 0
     this.updateElementStyle(@svg, {
-      width: attrs.width || '100%',
-      height: attrs.height || '100%',
+      width: @width = attrs.width,
+      height: @height = attrs.height,
       version: '1.1',
-      xmlns: 'http://www.w3.org/2000/svg',
+      xmlns: @svgns
     })
-    @svg.setAttribute('viewBox', attrs.viewBox) if attrs.viewBox?
+
+    if attrs.viewBox?
+      @viewBox = (parseFloat(a) for a in attrs.viewBox.split(/\s/))
+      @svg.setAttribute('viewBox', attrs.viewBox)
     if attrs.scaleX? || attrs.scaleY?
       @g = this._createEngineElement('g')
       @g.setAttribute('transform', "scale(#{attrs.scaleX || 1} #{attrs.scaleY || 1})")
@@ -60,16 +67,41 @@ class SvgEngine
     div.appendChild(@svg)
 
   _createEngineElement: (tagName) ->
-    engineElement = document.createElementNS('http://www.w3.org/2000/svg', tagName)
+    engineElement = document.createElementNS(@svgns, tagName)
     engineElement.style?.webkitTapHighlightColor = 'rgba(0,0,0,0)'
     engineElement
 
+  _defs: () ->
+    if !@defs?
+      @defs = document.createElementNS(@svgns, 'defs')
+      @svg.insertBefore(@defs, @g)
+    @defs
+
+  _createPattern: (url) ->
+    pattern = document.createElementNS(@svgns, 'pattern')
+    pattern.setAttribute('patternUnits', 'userSpaceOnUse')
+    pattern.setAttribute('id', "pattern-#{@last_pattern_id += 1}")
+    if @viewBox?
+      pattern.setAttribute('x', @viewBox[0])
+      pattern.setAttribute('y', @viewBox[1])
+      pattern.setAttribute('width', @viewBox[2])
+      pattern.setAttribute('height', @viewBox[3])
+    else
+      pattern.setAttribute('width', @svg.getAttribute('width'))
+      pattern.setAttribute('height', @svg.getAttribute('height'))
+
+    image = document.createElementNS(@svgns, 'image')
+    image.setAttributeNS(@xlinkns, 'href', url)
+    image.setAttribute('width', '100%')
+    image.setAttribute('height', '100%')
+    pattern.appendChild(image)
+
+    pattern
+
   path: (pathString, attrs) ->
     engineElement = this._createEngineElement('path')
+    engineElement.setAttribute('fill-rule', 'evenodd')
     this.updateElementStyle(engineElement, attrs)
-    engineElement.setAttribute('stroke', attrs.stroke || '#000000')
-    engineElement.setAttribute('stroke-width', attrs['stroke-width'] || '1')
-    engineElement.setAttribute('fill', attrs.fill || 'none')
     engineElement.setAttribute('d', pathString)
     @g.appendChild(engineElement)
 
@@ -77,7 +109,17 @@ class SvgEngine
 
   updateElementStyle: (engineElement, attrs) ->
     for key, val of attrs
-      engineElement.setAttribute(key, val)
+      if key == 'pattern'
+        fill = engineElement.getAttribute('fill')
+        if fill? && m = /url(#(.*))/.match(fill)
+          oldPattern = @svg.document.getElementById(m[1])
+          oldPattern.parentNode.removeChild(oldParent)
+
+        pattern = this._createPattern(val)
+        this._defs().appendChild(pattern)
+        engineElement.setAttribute('fill', "url(##{pattern.getAttribute('id')})")
+      else
+        engineElement.setAttribute(key, val)
 
   removeElement: (engineElement) ->
     engineElement.parentNode?.removeChild(engineElement)

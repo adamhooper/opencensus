@@ -6,6 +6,7 @@
 #= require state
 #= require models/region
 #= require paper
+#= require image_path
 #= require parse_opencensus_geojson
 
 globals = window.OpenCensus.globals
@@ -54,9 +55,9 @@ polygon_style_base = {
   'stroke-width': globals.style['stroke-width']
 }
 overlay_polygon_styles = {
-  hover: $.extend({}, polygon_style_base, globals.hover_style),
-  region1: $.extend({}, polygon_style_base, globals.selected_style),
-  region2: $.extend({}, polygon_style_base, globals.selected_style),
+  hover: $.extend({fill: 'none'}, polygon_style_base, globals.hover_style),
+  region1: $.extend({pattern: image_path('pattern1.png')}, polygon_style_base, globals.selected_style),
+  region2: $.extend({pattern: image_path('pattern2.png')}, polygon_style_base, globals.selected_style),
 }
 
 class MapTile
