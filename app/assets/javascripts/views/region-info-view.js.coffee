@@ -2,14 +2,24 @@
 #= require state
 #= require helpers/format-numbers
 #= require views/age-graph-view
+#= require views/region-selector-from-region-list
 
 h = window.OpenCensus.helpers
 state = window.OpenCensus.state
 
 AgeGraphView = window.OpenCensus.views.AgeGraphView
+RegionSelectorFromRegionList = window.OpenCensus.views.RegionSelectorFromRegionList
 
 class RegionInfoView
   constructor: (@div) ->
+    $regionTh = $(@div).find('th.region:eq(0)')
+    $regionTh.append('<div></div>')
+    new RegionSelectorFromRegionList($regionTh.find('div'), 'region1')
+
+    $regionCompareTh = $(@div).find('th.compare-region:eq(0)')
+    $regionCompareTh.append('<div></div>')
+    new RegionSelectorFromRegionList($regionCompareTh.find('div'), 'region2')
+
     this.refresh()
     state.onRegion1Changed 'region-info-view', () => this.refresh()
     state.onRegion2Changed 'region-info-view', () => this.refresh()
