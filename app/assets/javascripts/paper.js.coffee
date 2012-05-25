@@ -46,7 +46,6 @@ class SvgEngine
     @xlinkns = 'http://www.w3.org/1999/xlink'
 
     @svg = this._createEngineElement('svg')
-    @last_pattern_id = 0
     this.updateElementStyle(@svg, {
       width: @width = attrs.width,
       height: @height = attrs.height,
@@ -80,7 +79,7 @@ class SvgEngine
   _createPattern: (url) ->
     pattern = document.createElementNS(@svgns, 'pattern')
     pattern.setAttribute('patternUnits', 'userSpaceOnUse')
-    pattern.setAttribute('id', "pattern-#{@last_pattern_id += 1}")
+    pattern.setAttribute('id', "pattern-#{SvgEngine.last_pattern_id += 1}")
     if @viewBox?
       pattern.setAttribute('x', @viewBox[0])
       pattern.setAttribute('y', @viewBox[1])
@@ -100,9 +99,9 @@ class SvgEngine
 
   path: (pathString, attrs) ->
     engineElement = this._createEngineElement('path')
-    engineElement.setAttribute('fill-rule', 'evenodd')
-    this.updateElementStyle(engineElement, attrs)
+    #engineElement.setAttribute('fill-rule', 'evenodd')
     engineElement.setAttribute('d', pathString)
+    this.updateElementStyle(engineElement, attrs)
     @g.appendChild(engineElement)
 
     new PaperElement(this, engineElement)
@@ -137,6 +136,7 @@ class SvgEngine
     @svg.parentNode?.removeChild(@svg)
     @svg = undefined
     @g = undefined
+SvgEngine.last_pattern_id = 0
 SvgEngine.PathInstructions = {
   moveto: 'M',
   lineto: 'L',
