@@ -205,8 +205,8 @@ class MapTile
       element.hide() if !fill?
 
     this.onHoverRegionChanged(state.hover_region)
-    this.onRegion1Changed(state.region)
-    this.onRegion2Changed(state.region)
+    this.onRegion1Changed(state.region1)
+    this.onRegion2Changed(state.region2)
 
   restyle: () ->
     for regionId, regionData of @regions
