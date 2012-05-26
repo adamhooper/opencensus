@@ -34,9 +34,9 @@ if __name__ == '__main__':
     read_cursor = connection.cursor('on_server')
     read_cursor.execute('SELECT * FROM tiles ORDER BY zoom_level, tile_row, tile_column')
 
-    print >> sys.stderr, 'Dumping tiles... ("." = 1,000 tiles)',
+    print >> sys.stderr, 'Dumping tiles... ("." = 10,000 tiles)',
     while True:
-        rows = read_cursor.fetchmany(1000)
+        rows = read_cursor.fetchmany(10000)
         if len(rows) == 0: break
 
         for (zoom_level, tile_row, tile_column, json_data) in rows:
