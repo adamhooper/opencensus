@@ -276,12 +276,6 @@
 /* Misc visuals
 ----------------------------------*/
 
-/* Corner radius */
-#opencensus-wrapper .ui-corner-all, #opencensus-wrapper .ui-corner-top, #opencensus-wrapper .ui-corner-left, #opencensus-wrapper .ui-corner-tl { -moz-border-radius-topleft: 0; -webkit-border-top-left-radius: 0; -khtml-border-top-left-radius: 0; border-top-left-radius: 0; }
-#opencensus-wrapper .ui-corner-all, #opencensus-wrapper .ui-corner-top, #opencensus-wrapper .ui-corner-right, #opencensus-wrapper .ui-corner-tr { -moz-border-radius-topright: 0; -webkit-border-top-right-radius: 0; -khtml-border-top-right-radius: 0; border-top-right-radius: 0; }
-#opencensus-wrapper .ui-corner-all, #opencensus-wrapper .ui-corner-bottom, #opencensus-wrapper .ui-corner-left, #opencensus-wrapper .ui-corner-bl { -moz-border-radius-bottomleft: 0; -webkit-border-bottom-left-radius: 0; -khtml-border-bottom-left-radius: 0; border-bottom-left-radius: 0; }
-#opencensus-wrapper .ui-corner-all, #opencensus-wrapper .ui-corner-bottom, #opencensus-wrapper .ui-corner-right, #opencensus-wrapper .ui-corner-br { -moz-border-radius-bottomright: 0; -webkit-border-bottom-right-radius: 0; -khtml-border-bottom-right-radius: 0; border-bottom-right-radius: 0; }
-
 /* Overlays */
 #opencensus-wrapper .ui-widget-overlay { background: #ededee url(images/ui-bg_flat_100_ededee_40x100.png) 50% 50% repeat-x; opacity: .70;filter:Alpha(Opacity=70); }
 #opencensus-wrapper .ui-widget-shadow { margin: -4px 0 0 -4px; padding: 4px; background: #aaaaaa url(images/ui-bg_flat_0_aaaaaa_40x100.png) 50% 50% repeat-x; opacity: .70;filter:Alpha(Opacity=70); -moz-border-radius: 0; -khtml-border-radius: 0; -webkit-border-radius: 0; border-radius: 0; }/*!
