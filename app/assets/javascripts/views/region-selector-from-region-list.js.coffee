@@ -14,10 +14,6 @@ class RegionSelectorFromRegionList
     state.onRegionListChanged(listenerKey, () => this.refreshList())
     state[onChange](listenerKey, () => this.refreshSelected())
 
-    otherListenerKey = "region-selector-from-region-list-#{@otherKey}"
-    onOtherChange = "on#{@otherKey.charAt(0).toUpperCase()}#{@otherKey.slice(1)}Changed"
-    state[onOtherChange](otherListenerKey, () => this.refreshList())
-
     this.refreshList()
     this.refreshSelected()
 
@@ -35,22 +31,24 @@ class RegionSelectorFromRegionList
     selected_region = state[@key]
 
     populations = {}
-    afterMin = @maxKey? # Applies on the smaller-region selector
-    beforeMax = true # Applies on the larger-region selector
 
     for region in state.region_list
-      continue if region.id == state[@otherKey]?.id
-
       if region.statistics?.pop?.value?
         # Ignore parent regions which are duplicates
         key = "#{region.statistics.pop.value}"
         continue if populations[key]?
         populations[key] = true
+
       human_name = region.human_name()
       $option = $('<option></option>')
       $option.attr('value', region.id)
       $option.text(region.id)
       $option.attr('selected', 'selected') if region.id == selected_region?.id
+      $select.append($option)
+
+    if @key == 'region2'
+      $option = $('<option value="">(stop comparing)</option>')
+      $option.attr('selected', 'selected') if !selected_region?.id
       $select.append($option)
 
     $div.append($form)
@@ -59,7 +57,9 @@ class RegionSelectorFromRegionList
       width: '100%',
       maxHeight: 600,
       appendTo: $form,
-      format: (region_id) -> h.region_to_human_html(globals.region_store.get(region_id))
+      format: (region_id) ->
+        region = globals.region_store.get(region_id)
+        region && h.region_to_human_html(region) || region_id
     })
 
     $select.on 'change', () ->
@@ -73,5 +73,12 @@ class RegionSelectorFromRegionList
     region = state[@key]
 
     $select.selectmenu('value', region?.id)
+
+    if region?.id == state[@otherKey]?.id && @oldValue?
+      otherSetter = "set#{@otherKey.charAt(0).toUpperCase()}#{@otherKey.slice(1)}"
+      otherRegion = globals.region_store.get(@oldValue)
+      state[otherSetter](otherRegion)
+
+    @oldValue = region?.id
 
 window.OpenCensus.views.RegionSelectorFromRegionList = RegionSelectorFromRegionList
