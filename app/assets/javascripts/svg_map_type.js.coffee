@@ -328,6 +328,7 @@ class MapTile
           break
         if this.getFillForRegion(region)
           region1 = region
+          break if !state.region2?
 
     state.setRegionList(region_list)
     state.setRegion1(region1)
