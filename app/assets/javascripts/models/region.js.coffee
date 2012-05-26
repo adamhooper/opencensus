@@ -32,4 +32,8 @@ class Region
       else
         @name
 
+  url: () ->
+    region_type = region_types.findByName(@type)
+    region_type.url_for_region(this)
+
 window.OpenCensus.models.Region = Region
