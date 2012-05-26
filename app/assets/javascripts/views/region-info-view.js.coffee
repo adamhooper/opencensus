@@ -34,7 +34,24 @@ class RegionInfoView
     this.fillTableColumnData('region', regionData)
     this.fillTableColumnData('compare-region', compareRegionData)
 
+    this.refreshUrls(region, compareRegion)
     this.refreshAgeGraphView(region, compareRegion)
+
+  _fillThUrl: ($th, url) ->
+    $th.empty()
+
+    if url
+      $a = $('<a target="_blank" title="opens in new window">StatsCan Profile</a>')
+      $a.attr('href', url)
+      $th.append($a)
+
+  refreshUrls: (region, compareRegion) ->
+    $tr = $(@div).find('thead.links tr')
+    $th1 = $tr.find('th.region')
+    $th2 = $tr.find('th.compare-region')
+
+    this._fillThUrl($th1, region?.url())
+    this._fillThUrl($th2, compareRegion?.url())
 
   refreshAgeGraphView: (region, compareRegion) ->
     $chart_div = $(@div).find('.age-chart')
