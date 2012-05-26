@@ -8,11 +8,15 @@ globals = window.OpenCensus.globals
 h = window.OpenCensus.helpers
 
 class RegionSelectorFromRegionList
-  constructor: (@div, @key) ->
+  constructor: (@div, @key, @otherKey) ->
     listenerKey = "region-selector-from-region-list-#{@key}"
     onChange = "on#{@key.charAt(0).toUpperCase()}#{@key.slice(1)}Changed"
     state.onRegionListChanged(listenerKey, () => this.refreshList())
     state[onChange](listenerKey, () => this.refreshSelected())
+
+    otherListenerKey = "region-selector-from-region-list-#{@otherKey}"
+    onOtherChange = "on#{@otherKey.charAt(0).toUpperCase()}#{@otherKey.slice(1)}Changed"
+    state[onOtherChange](otherListenerKey, () => this.refreshList())
 
     this.refreshList()
     this.refreshSelected()
@@ -31,8 +35,12 @@ class RegionSelectorFromRegionList
     selected_region = state[@key]
 
     populations = {}
+    afterMin = @maxKey? # Applies on the smaller-region selector
+    beforeMax = true # Applies on the larger-region selector
 
     for region in state.region_list
+      continue if region.id == state[@otherKey]?.id
+
       if region.statistics?.pop?.value?
         # Ignore parent regions which are duplicates
         key = "#{region.statistics.pop.value}"
