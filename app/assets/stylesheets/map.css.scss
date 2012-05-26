@@ -8,7 +8,11 @@ $color_main: #212121;
 $color_border: #d5d6d5;
 
 $width_page: 960px;
-$width_map: 65%;
+$padding_page: 17px;
+$width_map: 650px;
+$width_compare_prompt: 30px;
+$width_region_info: $width_page - $width_map - (2 * $padding_page);
+$width_region_info_heading: $width_region_info * 0.6;
 $height_map: 600px;
 
 html {
@@ -24,7 +28,7 @@ body {
 
 #opencensus-wrapper {
   position: relative;
-  padding: 0 17px;
+  padding: 0 $padding_page;
   color: $color_main;
 
   * {
@@ -128,18 +132,45 @@ body {
     height: $height_map;
 
     .map {
+      position: absolute;
       height: $height_map;
       width: $width_map;
     }
 
     .region-info {
       position: absolute;
-      width: (100% - $width_map);
+      width: (2 * $width_region_info);
       height: $height_map;
       background: $color_alt_background;
-      padding: .25em;
-      right: 0;
+      left: $width_map;
       top: 0;
+
+      .compare-prompt {
+        position: absolute;
+        height: $width_compare_prompt;
+        top: 50%;
+        margin-top: -($width_compare_prompt / 2);
+        width: $height_map;
+        left: -($height_map + $width_compare_prompt) / 2;;
+
+        -webkit-transform: rotate(-90deg); 
+        -moz-transform: rotate(-90deg); 
+        transform: rotate(-90deg);
+        filter: progid:DXImageTransform.Microsoft.BasicImage(rotation=3);
+        background: $color_main;
+        color: $color_alt_background;
+
+        a {
+          display: block;
+          height: $width_compare_prompt;
+          text-align: center;
+          color: $color_alt_background;
+          line-height: $width_compare_prompt;
+          text-decoration: none;
+          font-weight: normal;
+          font-size: .8em;
+        }
+      }
 
       h2 {
         margin: 0 0 .25em;
@@ -149,6 +180,7 @@ body {
 
       table {
         border-collapse: collapse;
+        width: 2 * $width_region_info;
       }
 
       th {
@@ -156,8 +188,33 @@ body {
         vertical-align: top;
       }
 
+      thead th.region, thead th.compare-region {
+        width: $width_region_info;
+        overflow: hidden;
+        padding: 0;
+
+        a.ui-selectmenu {
+          display: block;
+          // there's a 1px border
+          width: ($width_region_info - 2px) !important;
+          overflow: hidden;
+        }
+      }
+
       tbody th, thead.sub th {
         text-align: left;
+      }
+
+      tbody th {
+        width: $width_region_info_heading;
+      }
+
+      td.region {
+        width: $width_region_info - $width_region_info_heading;
+      }
+
+      td.compare-region {
+        width: $width_region_info;
       }
 
       td {
