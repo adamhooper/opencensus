@@ -54,7 +54,7 @@ class RegionSelectorFromRegionList
     $div.append($form)
     $select.selectmenu({
       style: 'dropdown',
-      width: '100%',
+      width: $div.width(),
       maxHeight: 600,
       appendTo: $form,
       format: (region_id) ->
