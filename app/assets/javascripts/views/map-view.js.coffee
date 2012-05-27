@@ -83,7 +83,7 @@ class MapView
     else
       google_point = new google.maps.LatLng(point.latlng.latitude, point.latlng.longitude)
       if !@map.getBounds().contains(google_point)
-        @map.setCenter(point)
+        @map.setCenter(google_point)
       @marker.setPosition(google_point)
       @marker.setVisible(true)
 

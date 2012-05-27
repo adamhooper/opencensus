@@ -6,6 +6,8 @@ $color_strong2_background: #72a492;
 $color_strong: #a49a00;
 $color_main: #212121;
 $color_border: #d5d6d5;
+$color_notice: #999;
+$color_error: #933;
 
 $width_page: 960px;
 $padding_page: 17px;
@@ -36,35 +38,58 @@ body {
     font-weight: bold;
   }
 
-  form.search {
+  form.location {
+    position: relative;
     margin: 0;
-    padding: .5em;
-    text-transform: uppercase;
+    padding: 0;
 
     p {
       position: relative;
       margin: 0;
       padding: 0;
       overflow: hidden;
-      display: inline-block;
-      width: 20em;
     }
 
     input.text {
       border: 2px solid $color_strong;
-      border-right: none;
-      padding-right: 20px;
-      margin: 0;
+      width: 30em;
+      line-height: 2.0;
+      padding: 0 .5em;
+      margin: 2px; // Google Chrome default
+      font-size: .8em;
+      font-weight: normal;
     }
 
     input.submit {
-      position: absolute;
-      right: 2px;
-      bottom: 2px;
-      border: none;
-      width: 1px;
-      padding-left: 20%;
+      border: 2px solid $color_strong;
+      margin: 2px;
+      line-height: 1.6;
       background: $color_strong_background;
+      color: $color_strong;
+      font-size: 1em;
+    }
+
+    div.status {
+      position: absolute;
+      top: 2px;
+      margin-top: 2px;
+      line-height: 2;
+      left: 38em;
+      margin-left: -10em;
+      width: 10em;
+      text-align: right;
+      white-space: nowrap;
+      text-transform: none;
+      font-weight: normal;
+      font-size: .8em;
+    }
+
+    div.notice {
+      color: $color_notice;
+    }
+
+    div.error {
+      color: $color_error;
     }
   }
 
