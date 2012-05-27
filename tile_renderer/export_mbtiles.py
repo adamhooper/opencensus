@@ -32,12 +32,15 @@ if __name__ == '__main__':
     connection = psycopg2.connect(source_dsn)
     connection.set_client_encoding('UTF-8')
     read_cursor = connection.cursor('on_server')
+    read_cursor.itersize = 500
     read_cursor.execute('SELECT * FROM tiles ORDER BY zoom_level, tile_row, tile_column')
 
-    print >> sys.stderr, 'Dumping tiles... ("." = 10,000 tiles)',
+    print >> sys.stderr, 'Dumping tiles...',
+    count = 0
     while True:
-        rows = read_cursor.fetchmany(10000)
+        rows = read_cursor.fetchmany(500)
         if len(rows) == 0: break
+        count += len(rows)
 
         for (zoom_level, tile_row, tile_column, json_data) in rows:
             tile_data = zlib.compress(json_data)
@@ -45,8 +48,6 @@ if __name__ == '__main__':
 
             print "INSERT INTO tiles (zoom_level, tile_row, tile_column, tile_data) VALUES (%d, %d, %d, X'%s');" % (zoom_level, tile_row, tile_column, tile_data_hex)
 
-        sys.stderr.write('.')
-        sys.stderr.flush()
-    print >> sys.stderr
+        print >> sys.stderr, "  ... dumped %d tiles" % (count,)
 
     print >> sys.stderr, 'Done!'
