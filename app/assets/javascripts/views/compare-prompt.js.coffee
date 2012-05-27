@@ -11,8 +11,10 @@ class ComparePrompt
 
     @widthCollapsed = $div.find('th:eq(0)').outerWidth()
 
+    state.onRegion1Changed('compare-prompt', () => this.delayedRefresh())
     state.onRegion2Changed('compare-prompt', () => this.delayedRefresh())
-    @expanded = (state.region2?)
+    @promptVisible = $a.parent().height() > 0
+    @expanded = false
     this.refresh()
 
     $a.on 'click', (e) =>
@@ -26,7 +28,19 @@ class ComparePrompt
     , 50)
 
   refresh: () ->
+    shouldPromptBeVisible = state.region1?
+
+    $prompt = $(@a).parent()
+    if shouldPromptBeVisible && !@promptVisible
+      $prompt.stop(true)
+      $prompt.fadeIn()
+    if !shouldPromptBeVisible && @promptVisible
+      $prompt.stop(true)
+      $prompt.fadeOut()
+    @promptVisible = shouldPromptBeVisible
+
     shouldBeExpanded = state.region2?
+
     $div = $(@div)
     if shouldBeExpanded && !@expanded
       $div.stop(true)
