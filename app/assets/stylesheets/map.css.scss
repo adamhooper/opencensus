@@ -155,6 +155,7 @@ body {
   .map-and-info {
     position: relative;
     height: $height_map;
+    overflow: hidden;
 
     .map {
       position: absolute;
