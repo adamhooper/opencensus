@@ -6,6 +6,26 @@
 globals = window.OpenCensus.globals
 defaults = globals.defaults
 
+# State variables:
+# * indicator: the Indicator (object) we're dealing with. (For instance, the
+#   'pop' indicator is set in State we're showing the 'popdens' number on the
+#   map.)
+# * point: A { world_xy: [x,y], latlng: { longitude, latitude }}
+#   object that is the focus of everything
+# * region_list: A list of all Regions underneath the point. If the point
+#   remains constant this link will never lose items; however, it may gain
+#   items if the user zooms in.
+# * region1: A region--presumably one of the 11 possible regions at @point.
+# * region2: A region we're comparing with @region1--again, presumably from
+#   @region_list.
+# * @hover_region: The region under the user's mouse pointer.
+#
+# Each of the above regions has a setter and a corresponding event: for
+# instance, "onPointChanged()". (Use the property itself as a getter.)
+#
+# The following properties do not fire events, and they do not have setters.
+#
+# * @map_bounds: edges of the map (used as a geocoding hint)
 class State
   constructor: ->
     @indicator = globals.indicators.findByKey(defaults.indicator_key)
@@ -14,7 +34,7 @@ class State
     @region2 = undefined
     @hover_region = undefined
     @point = undefined
-    @position = $.extend({}, defaults.position)
+    @map_bounds = undefined
 
   setIndicator: (indicator) ->
     indicator = globals.indicators.findByKey(indicator) if typeof(indicator) == 'String'
@@ -23,9 +43,17 @@ class State
     $(document).trigger('opencensus:state:indicator_changed', @indicator)
 
   setPoint: (point) ->
-    return if !point? && !@point?
-    return if point?.latitude == @point?.latitude && point.longitude == @point?.longitude
-    @point = point
+    return if point?.world_xy?[0] == @point?.world_xy?[0] &&
+      point?.world_xy?[1] == @point?.world_xy?[1] &&
+      point?.latlng?.latitude == @point?.latlng?.latitude &&
+      point?.latlnt?.longitude == @point?.latlng?.longitude
+    if point?
+      @point = {
+        world_xy: [ point.world_xy[0], point.world_xy[1] ],
+        latlng: { latitude: point.latlng.latitude, longitude: point.latlng.longitude },
+      }
+    else
+      @point = undefined
     $(document).trigger('opencensus:state:point_changed', @point)
 
   setRegionList: (region_list) ->
@@ -69,17 +97,6 @@ class State
     globals.region_store.incrementCount(@hover_region.id) if @hover_region?
     $(document).trigger('opencensus:state:hover_region_changed', @hover_region)
 
-  # Sets the position
-  #
-  # Required properties: "longitude", "latitude"
-  # Optional properties: "bounds", a [ nw-longitude, nw-latitude, se-longitude, se-latitude ] array
-  #                                which interested listeners can use to set the zoom
-  # Optional properties: "zoom", an integer
-  setPosition: (position) ->
-    return if position.latitude = @position.latitude && position.longitude == @position.longitude && position.zoom == @position.zoom
-    @position = $.extend({}, position)
-    $(document).trigger('opencensus:state:position_changed', @position)
-
   onIndicatorChanged: (callerNamespace, func, oThis = undefined) ->
     $(document).on "opencensus:state:indicator_changed.#{callerNamespace}", (e, indicator) ->
       func.call(oThis || window, indicator)
@@ -103,10 +120,6 @@ class State
   onHoverRegionChanged: (callerNamespace, func, oThis = undefined) ->
     $(document).on "opencensus:state:hover_region_changed.#{callerNamespace}", (e, hover_region) ->
       func.call(oThis || window, hover_region)
-
-  onPositionChanged: (callerNamespace, func, oThis = undefined) ->
-    $(document).on "opencensus:state:position_changed.#{callerNamespace}", (e, position) ->
-      func.call(oThis || window, position)
 
   removeHandlers: (callerNamespace) ->
     $(document).off(".#{callerNamespace}")

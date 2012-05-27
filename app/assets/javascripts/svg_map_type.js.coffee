@@ -110,13 +110,13 @@ class MapTile
     this.requestData()
 
     event_class = this.id()
-    $(document).on("opencensus:click.#{event_class}", (e, params) => this.onClick(params))
     $(document).on("opencensus:mousemove.#{event_class}", (e, params) => this.onMouseMove(params))
     $(document).on("opencensus:mouseout.#{event_class}", (e, params) => this.onMouseOut(params))
     state.onHoverRegionChanged(event_class, this.onHoverRegionChanged, this)
     state.onRegion1Changed(event_class, this.onRegion1Changed, this)
     state.onRegion2Changed(event_class, this.onRegion2Changed, this)
     state.onIndicatorChanged(event_class, this.onIndicatorChanged, this)
+    state.onPointChanged(event_class, this.onPointChanged, this)
 
   requestData: () ->
     this.dataRequest = jQuery.ajax({
@@ -306,14 +306,17 @@ class MapTile
     @mapIndicator = globals.indicators.findMapIndicatorForTextIndicator(indicator)
     this.restyle()
 
-  onClick: (point) ->
-    globalMeter = point.world_xy
-    tilePixel = this.globalMeterToTilePixelOrUndefined(globalMeter)
-    return if !tilePixel?
-
+  onPointChanged: (point) ->
     region1 = undefined
     region2 = undefined
-    region_list = this.tilePixelToRegionList(tilePixel)
+    region_list = undefined
+
+    if point?
+      globalMeter = point.world_xy
+      tilePixel = this.globalMeterToTilePixelOrUndefined(globalMeter)
+      return if !tilePixel? # This point is on a different tile; ignore it
+
+      region_list = this.tilePixelToRegionList(tilePixel)
 
     if region_list?
       for region in region_list
