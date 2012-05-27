@@ -11,7 +11,7 @@ $color_error: #933;
 
 $width_page: 960px;
 $padding_page: 17px;
-$width_map: 650px;
+$width_map: 680px;
 $width_compare_prompt: 30px;
 $width_region_info: $width_page - $width_map - (2 * $padding_page);
 $width_region_info_heading: $width_region_info * 0.6;
@@ -219,13 +219,6 @@ body {
         width: $width_region_info;
         overflow: hidden;
         padding: 0;
-
-        a.ui-selectmenu {
-          display: block;
-          // there's a 1px border
-          width: ($width_region_info - 2px) !important;
-          overflow: hidden;
-        }
       }
 
       tbody th, thead.sub th {
@@ -265,24 +258,41 @@ body {
 
       form { // region-select
         white-space: nowrap;
+        margin-bottom: .2em;
 
         li {
           text-align: left;
+        }
+
+        a.ui-selectmenu {
+          display: block;
+          // there's a 1px border
+          width: ($width_region_info - 2px) !important;
+          overflow: hidden;
+          height: 2.2em;
         }
 
         a {
           font-weight: normal;
         }
 
+        span.ui-selectmenu-status {
+          padding-top: .3em;
+          padding-bottom: .3em;
+        }
+
         span.region-type {
-          display: inline;
-          font-size: .8em;
-          line-height: 1.25;
+          display: block;
+          text-align: center;
+          font-size: .75em;
+          line-height: 1;
           font-weight: normal;
         }
 
         span.region-name {
-          display: inline;
+          display: block;
+          text-align: center;
+          font-size: .85em;
           line-height: 1;
         }
       }
