@@ -107,16 +107,21 @@ class SvgEngine
     new PaperElement(this, engineElement)
 
   updateElementStyle: (engineElement, attrs) ->
+    skip_fill = false
+
     for key, val of attrs
       if key == 'pattern'
+        skip_fill = true
         fill = engineElement.getAttribute('fill')
-        if fill? && m = /url(#(.*))/.match(fill)
+        if fill? && m = /url(#(.*))/.exec(fill)
           oldPattern = @svg.document.getElementById(m[1])
           oldPattern.parentNode.removeChild(oldParent)
 
         pattern = this._createPattern(val)
         this._defs().appendChild(pattern)
         engineElement.setAttribute('fill', "url(##{pattern.getAttribute('id')})")
+      else if key == 'fill' && skip_fill
+        # do nothing
       else
         engineElement.setAttribute(key, val)
 

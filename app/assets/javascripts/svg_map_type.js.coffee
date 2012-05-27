@@ -52,12 +52,11 @@ class InteractionGridArray
 polygon_style_base = {
   stroke: globals.style.stroke,
   'stroke-width': globals.style['stroke-width'],
-  #'fill-opacity': globals.style['fill-opacity'],
 }
 overlay_polygon_styles = {
   hover: $.extend({}, polygon_style_base, globals.hover_style),
-  region1: $.extend({}, polygon_style_base, globals.selected_style1, { 'fill-opacity': 1.0 }),
-  region2: $.extend({}, polygon_style_base, globals.selected_style2, { 'fill-opacity': 1.0 }),
+  region1: $.extend({}, polygon_style_base, globals.selected_style1, {}),
+  region2: $.extend({}, polygon_style_base, globals.selected_style2, {}),
 }
 
 class MapTile
@@ -85,7 +84,6 @@ class MapTile
     childDiv.style.left = 0
     childDiv.style.right = 0
     @div.appendChild(childDiv)
-    $(childDiv).css('opacity', globals.style['fill-opacity'])
     @paper = new Paper(childDiv, {
       width: @tileSize.width,
       height: @tileSize.height,
@@ -117,6 +115,8 @@ class MapTile
     state.onRegion2Changed(event_class, this.onRegion2Changed, this)
     state.onIndicatorChanged(event_class, this.onIndicatorChanged, this)
     state.onPointChanged(event_class, this.onPointChanged, this)
+
+    this._refreshOpacity()
 
   requestData: () ->
     this.dataRequest = jQuery.ajax({
@@ -262,6 +262,18 @@ class MapTile
     return undefined unless @interaction_grids?
     @interaction_grids.pointToRegionList(column, row, @mapIndicator)
 
+  _refreshOpacity: () ->
+    hovering = state.hover_region?
+
+    if !@hovering? || hovering != @hovering
+      opacity = globals.style[hovering && 'opacity_faded' || 'opacity_full']
+
+      $childDiv = $(@div).children(':eq(0)')
+      $childDiv.stop(true)
+      $childDiv.animate({ opacity: opacity }, { duration: 'fast' })
+
+    @hovering = hovering
+
   onMouseMove: (point) ->
     globalMeter = point.world_xy
     tilePixel = this.globalMeterToTilePixelOrUndefined(globalMeter)
@@ -302,13 +314,15 @@ class MapTile
       if geometry?
         @overlayPaper.setStart()
         # We can't use region.geometry.clone() because it's in a different document
-        this.drawGeometry(@overlayPaper, geometry, overlay_polygon_styles[key])
+        style = $.extend({ fill: this.getFillForRegion(region) }, overlay_polygon_styles[key])
+        this.drawGeometry(@overlayPaper, geometry, style)
         @overlayElements[key] = @overlayPaper.setFinish()
 
     @overlayElements.region2?.toFront()
     @overlayElements.region1?.toFront()
 
   onHoverRegionChanged: (hover_region) ->
+    this._refreshOpacity()
     this._setOverlayElement('hover', hover_region)
 
   onRegion1Changed: (region1) ->

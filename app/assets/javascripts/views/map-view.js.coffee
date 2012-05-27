@@ -58,7 +58,7 @@ class MapView
       mapTypeId: google.maps.MapTypeId.ROADMAP,
       mapTypeControl: false,
       streetViewControl: false,
-      styles: mapTypeStyle,
+      #styles: mapTypeStyle,
     }
 
     @map = new google.maps.Map(@div, options)

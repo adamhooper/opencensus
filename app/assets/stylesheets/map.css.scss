@@ -177,6 +177,7 @@ body {
         margin-top: -($width_compare_prompt / 2);
         width: $height_map;
         left: -($height_map + $width_compare_prompt) / 2;;
+        overflow: hidden;
 
         -webkit-transform: rotate(-90deg); 
         -moz-transform: rotate(-90deg); 
