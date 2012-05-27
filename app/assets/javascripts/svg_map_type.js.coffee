@@ -189,6 +189,21 @@ class MapTile
     @interaction_grids = new InteractionGridArray(@tileSize, data.utfgrids)
 
     this.drawRegions()
+    this.maybeUpdateRegionList()
+
+  maybeUpdateRegionList: () ->
+    point = state.point
+    return if !point?
+    
+    globalMeter = point.world_xy
+    tilePixel = this.globalMeterToTilePixelOrUndefined(globalMeter)
+    return if !tilePixel?
+
+    region_list = this.tilePixelToRegionList(tilePixel)
+    return if !region_list?
+
+    if region_list.length > (state.region_list?.length || 0)
+      state.setRegionList(region_list)
 
   drawRegions: () ->
     style = $.extend({}, polygon_style_base)
