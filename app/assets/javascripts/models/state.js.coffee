@@ -76,8 +76,8 @@ class State
   _setRegionN: (n, region) ->
     key = "region#{n}"
 
-    return if !region && !this[key]
-    return if region && this[key] && region.equals(this[key])
+    return if !region? && !this[key]?
+    return if region? && this[key]? && region.equals(this[key])
     globals.region_store.decrementCount(this[key].id) if this[key]?
     this[key] = region
     globals.region_store.incrementCount(this[key].id) if this[key]?
