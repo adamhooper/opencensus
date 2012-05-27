@@ -19,6 +19,10 @@ map_controller = (map_view) ->
     point = google_latlng_to_point(e.latLng)
     state.setPoint(point)
 
+  map_view.onMarkerPositionChanged (latlng) ->
+    point = google_latlng_to_point(latlng)
+    state.setPoint(point)
+
   $(document).on 'opencensus:choose_latlng.map_controller', (e, latlng) ->
     point = google_latlng_to_point(latlng)
     state.setPoint(point)

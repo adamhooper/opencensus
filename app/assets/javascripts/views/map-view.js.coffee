@@ -90,4 +90,8 @@ class MapView
   onMapEvent: (event_type, callback) ->
     google.maps.event.addListener(@map, event_type, callback)
 
+  onMarkerPositionChanged: (callback) ->
+    google.maps.event.addListener @marker, 'dragend', () =>
+      callback(@marker.getPosition())
+
 window.OpenCensus.views.MapView = MapView
