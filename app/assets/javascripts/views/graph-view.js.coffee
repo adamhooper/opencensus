@@ -2,6 +2,6 @@
 #= require state
 
 class GraphView
-  constructor: (@region, @title) ->
+  constructor: (@region) ->
 
 window.OpenCensus.views.GraphView = GraphView

@@ -31,6 +31,10 @@ class RegionInfoView
     regionData = this.regionToData(region)
     compareRegionData = this.regionToData(compareRegion)
 
+    visibleStatistics = this.visibleStatistics(regionData, compareRegionData)
+
+    this.refreshVisibleRows(visibleStatistics)
+
     this.fillTableColumnData('region', regionData)
     this.fillTableColumnData('compare-region', compareRegionData)
 
@@ -46,9 +50,9 @@ class RegionInfoView
       $th.append($a)
 
   refreshUrls: (region, compareRegion) ->
-    $tr = $(@div).find('thead.links tr')
-    $th1 = $tr.find('th.region')
-    $th2 = $tr.find('th.compare-region')
+    $tr = $(@div).find('tbody.links tr')
+    $th1 = $tr.find('td.region')
+    $th2 = $tr.find('td.compare-region')
 
     this._fillThUrl($th1, region?.url())
     this._fillThUrl($th2, compareRegion?.url())
@@ -80,6 +84,7 @@ class RegionInfoView
         popdwe: undefined,
         sexm: undefined,
         sexf: undefined,
+        ages: undefined,
       }
 
     ret = {
@@ -90,7 +95,23 @@ class RegionInfoView
       sexm: region.statistics?.sexm,
     }
     ret.sexf = ret.sexm? && { value: 100.0 - ret.sexm.value, note: ret.sexm.note } || undefined
+    ret.ages = ret.sexm? && true || undefined # just to make the heading appear/disappear
     ret
+
+  visibleStatistics: (region1Data, region2Data) ->
+    ret = {}
+    for key in [ 'pop', 'gro', 'dwe', 'popdwe', 'sexm', 'sexf', 'ages' ]
+      ret[key] = (region1Data?[key]? || region2Data?[key]?)
+    ret.regions = (region1Data? || region2Data?)
+    ret
+
+  refreshVisibleRows: (visibleRows) ->
+    for key, visible of visibleRows
+      $tbodies = $(@div).find("thead.#{key}, tbody.#{key}")
+      if visible
+        $tbodies.show()
+      else
+        $tbodies.hide()
 
   fillTableColumnData: (columnClass, data) ->
     $tds = $(@div).find("td.#{columnClass}")
@@ -98,16 +119,13 @@ class RegionInfoView
     for key, datum of data
       $span = $tds.find("span.#{key}")
       $div = $tds.find("div.#{key}")
-      $tbodies = $(@div).find("thead.#{key}, tbody.#{key}")
 
       if datum?.value?
         $span.text(this.formatValue(key, datum.value))
         $div.show()
-        $tbodies.show()
       else
         $span.empty()
         $div.hide()
-        $tbodies.hide()
 
 $ ->
   $div = $('#opencensus-wrapper div.region-info')

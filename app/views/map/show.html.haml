@@ -27,65 +27,76 @@
       .compare-prompt
         %a{:href => '#'} Compare
       %table
-        %thead.region
+        %thead.regions
           %tr
-            %th.region{:colspan => 2}
+            %th.region
             %th.compare-region
-        %thead.links
+        %thead.sub.pop
           %tr
-            %th.region{:colspan => 2}
-            %th.compare-region
-        %tbody
-          %tr.pop
-            %th Population
+            %th{:colspan => 2} Population
+        %tbody.pop
+          %tr
             %td.region
-              %span.pop.value
+              %div.pop
+                %span.bar
+                %span.pop.value
               %div.gro
                 %span.gro.value<
                 %span.unit> %
             %td.compare-region
-              %span.pop.value
+              %div.pop
+                %span.bar
+                %span.pop.value
               %div.gro
                 %span.gro.value<
                 %span.unit> %
-          %tr.dwe
-            %th Dwellings
+        %thead.sub.dwe
+          %tr
+            %th{:colspan => 2} Dwellings
+        %tbody.dwe
+          %tr
             %td.region
-              %span.dwe.value
+              %div.dwe
+                %span.dwe.bar
+                %span.dwe.value
               %div.popdwe
                 %span.popdwe.value
-                people per dwelling
+                %span.unit people per dwelling
             %td.compare-region
-              %span.dwe.value
+              %div.dwe
+                %span.dwe.bar
+                %span.dwe.value
               %div.popdwe
                 %span.popdwe.value
-                people per dwelling
+                %span.unit people per dwelling
         %thead.sub.sexm
           %tr
-            %th{:colspan => 3} Sex profile
+            %th{:colspan => 2} Sex profile
         %tbody.sexm
           %tr.sexm
-            %th Female
             %td.region
               %div.sexf
                 %span.sexf.value<
                 %span.unit> %
+              %div.sexm
+                %span.sexm.value<
+                %span.unit> %
             %td.compare-region
               %div.sexf
                 %span.sexf.value<
                 %span.unit> %
-          %tr.sexf
-            %th Male
-            %td.region
               %div.sexm
                 %span.sexm.value<
                 %span.unit> %
-            %td.compare-region
-              %div.sexm
-                %span.sexm.value<
-                %span.unit> %
-        %tbody
+        %thead.sub.ages
+          %tr
+            %th{:colspan => 2} Age profile
+        %tbody.ages
           %tr.ages
-            %td{:colspan => 3}
+            %td{:colspan => 2}
               %div.age-chart
+        %tbody.links
+          %tr
+            %td.region
+            %td.compare-region
   .legend

@@ -6,6 +6,7 @@ $color_strong2_background: #72a492;
 $color_strong: #a49a00;
 $color_main: #212121;
 $color_border: #d5d6d5;
+$color_border_visible: #666;
 $color_notice: #999;
 $color_error: #933;
 
@@ -221,19 +222,15 @@ body {
         padding: 0;
       }
 
-      tbody th, thead.sub th {
+      thead.sub th {
         text-align: left;
+        font-weight: normal;
+        font-size: .75em;
+        border-bottom: 1px solid $color_border_visible;
       }
 
-      tbody th {
-        width: $width_region_info_heading;
-      }
-
-      td.region {
-        width: $width_region_info - $width_region_info_heading;
-      }
-
-      td.compare-region {
+      td.region, td.compare-region {
+        text-align: center;
         width: $width_region_info;
       }
 
