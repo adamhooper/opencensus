@@ -38,6 +38,8 @@ class RegionInfoView
     this.fillTableColumnData('region', regionData)
     this.fillTableColumnData('compare-region', compareRegionData)
 
+    this.refreshBarWidths(regionData, compareRegionData)
+
     this.refreshUrls(region, compareRegion)
     this.refreshAgeGraphView(region, compareRegion)
 
@@ -117,7 +119,7 @@ class RegionInfoView
     $tds = $(@div).find("td.#{columnClass}")
 
     for key, datum of data
-      $span = $tds.find("span.#{key}")
+      $span = $tds.find("span.#{key}.value")
       $div = $tds.find("div.#{key}")
 
       if datum?.value?
@@ -126,6 +128,56 @@ class RegionInfoView
       else
         $span.empty()
         $div.hide()
+
+  refreshBarWidths: (region1Data, region2Data) ->
+    for key, value1 of region1Data
+      value2 = region2Data[key]
+      this.refreshIndicatorBarWidths(key, value1?.value || 0, value2?.value || 0)
+
+  refreshIndicatorBarWidths: (key, value1, value2) ->
+    width1 = 0
+    width2 = 0
+
+    if (value2 && !value1) || (value1 && value2 && value1 > value2)
+      swap = true
+      [value1, value2] = [value2, value1]
+    else
+      swap = false
+
+    if value1
+      if value2
+        if value1 * 10 >= value2
+          console.log(key, value1, value2)
+          width1 = 10
+          width2 = 10 * (value2 / value1)
+        else
+          console.log('less', key, value1, value2)
+          width2 = 100
+          width1 = 100 * (value1 / value2)
+      else
+        console.log('No value2', key, value1, value2)
+        width1 = 10
+        width2 = 0
+
+    if swap
+      [width1, width2] = [width2, width1]
+
+    console.log(key, width1, width2)
+
+    $bar1 = $(@div).find("td.region span.bar.#{key}")
+    $bar2 = $(@div).find("td.compare-region span.bar.#{key}")
+
+    if width1
+      $bar1.show()
+      $bar1.width(width1)
+    else
+      $bar1.hide()
+
+    if width2
+      $bar2.show()
+      $bar2.width(width2)
+    else
+      $bar2.hide()
 
 $ ->
   $div = $('#opencensus-wrapper div.region-info')

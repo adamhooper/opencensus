@@ -216,6 +216,13 @@ body {
         vertical-align: top;
       }
 
+      tbody.pop span.bar {
+        display: inline-block;
+        height: 25px;
+        width: 0;
+        background: url(image_path('population-repeated.png'));
+      }
+
       thead th.region, thead th.compare-region {
         width: $width_region_info;
         overflow: hidden;
