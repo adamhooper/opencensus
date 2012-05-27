@@ -74,7 +74,7 @@ class RegionSelectorFromRegionList
 
     $select.selectmenu('value', region?.id)
 
-    if region?.id == state[@otherKey]?.id && @oldValue?
+    if region? && region.id == state[@otherKey]?.id && @oldValue?
       otherSetter = "set#{@otherKey.charAt(0).toUpperCase()}#{@otherKey.slice(1)}"
       otherRegion = globals.region_store.get(@oldValue)
       state[otherSetter](otherRegion)
