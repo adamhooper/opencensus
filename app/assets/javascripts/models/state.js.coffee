@@ -10,30 +10,31 @@ defaults = globals.defaults
 # * indicator: the Indicator (object) we're dealing with. (For instance, the
 #   'pop' indicator is set in State we're showing the 'popdens' number on the
 #   map.)
-# * point: A { world_xy: [x,y], latlng: { longitude, latitude }}
+# * point1: A { world_xy: [x,y], latlng: { longitude, latitude }}
 #   object that is the focus of everything
-# * region_list: A list of all Regions underneath the point. If the point
+# * region_list1: A list of all Regions underneath the point. If the point
 #   remains constant this link will never lose items; however, it may gain
 #   items if the user zooms in.
 # * region1: A region--presumably one of the 11 possible regions at @point.
-# * region2: A region we're comparing with @region1--again, presumably from
-#   @region_list.
-# * @hover_region: The region under the user's mouse pointer.
+# * point2, region_list2, region2: What we're comparing with the "1" stuff
+# * hover_region: The region under the user's mouse pointer.
 #
 # Each of the above regions has a setter and a corresponding event: for
 # instance, "onPointChanged()". (Use the property itself as a getter.)
 #
 # The following properties do not fire events, and they do not have setters.
 #
-# * @map_bounds: edges of the map (used as a geocoding hint)
+# * map_bounds: edges of the map (used as a geocoding hint)
 class State
   constructor: ->
     @indicator = globals.indicators.findByKey(defaults.indicator_key)
-    @region_list = undefined
+    @point1 = undefined
     @region1 = undefined
+    @region_list1 = undefined
+    @point2 = undefined
     @region2 = undefined
+    @region_list2 = undefined
     @hover_region = undefined
-    @point = undefined
     @map_bounds = undefined
 
   setIndicator: (indicator) ->
@@ -42,36 +43,54 @@ class State
     @indicator = indicator
     $(document).trigger('opencensus:state:indicator_changed', @indicator)
 
-  setPoint: (point) ->
-    return if point?.world_xy?[0] == @point?.world_xy?[0] &&
-      point?.world_xy?[1] == @point?.world_xy?[1] &&
-      point?.latlng?.latitude == @point?.latlng?.latitude &&
-      point?.latlnt?.longitude == @point?.latlng?.longitude
-    if point?
-      @point = {
-        world_xy: [ point.world_xy[0], point.world_xy[1] ],
-        latlng: { latitude: point.latlng.latitude, longitude: point.latlng.longitude },
-      }
-    else
-      @point = undefined
-    $(document).trigger('opencensus:state:point_changed', @point)
+  _setPointN: (n, point) ->
+    current = this["point#{n}"]
 
-  setRegionList: (region_list) ->
-    return if !region_list? && !@region_list?
+    return if point?.world_xy?[0] == current?.world_xy?[0] &&
+      point?.world_xy?[1] == current?.world_xy?[1] &&
+      point?.latlng?.latitude == current?.latlng?.latitude &&
+      point?.latlnt?.longitude == current?.latlng?.longitude
+
+    if point?
+      this["point#{n}"] = {
+          world_xy: [ point.world_xy[0], point.world_xy[1] ],
+          latlng: { latitude: point.latlng.latitude, longitude: point.latlng.longitude },
+        }
+    else
+      this["point#{n}"] = undefined
+
+    $(document).trigger("opencensus:state:point#{n}_changed", this["point#{n}"])
+
+  setPoint1: (point1) ->
+    this._setPointN(1, point1)
+
+  setPoint2: (point2) ->
+    this._setPointN(2, point2)
+
+  _setRegionListN: (n, region_list) ->
+    old_region_list = this["region_list#{n}"]
+
+    return if !region_list? && !old_region_list?
+
     equal = false
-    if region_list? && @region_list? && region_list.length == @region_list.length
+    if region_list? && old_region_list? && region_list.length == old_region_list.length
       equal = true
       for region, i in region_list
-        if !region.equals(@region_list[i])
+        if !region.equals(old_region_list[i])
           equal = false
           break
     return if equal
 
     (globals.region_store.incrementCount(region.id) for region in region_list) if region_list?
-    old_region_list = @region_list
-    @region_list = region_list
+    this["region_list#{n}"] = region_list
     (globals.region_store.decrementCount(region.id) for region in old_region_list) if old_region_list?
-    $(document).trigger('opencensus:state:region_list_changed', @region_list)
+    $(document).trigger("opencensus:state:region_list#{n}_changed", region_list)
+
+  setRegionList1: (region_list1) ->
+    this._setRegionListN(1, region_list1)
+
+  setRegionList2: (region_list2) ->
+    this._setRegionListN(2, region_list2)
 
   _setRegionN: (n, region) ->
     key = "region#{n}"
@@ -101,12 +120,20 @@ class State
     $(document).on "opencensus:state:indicator_changed.#{callerNamespace}", (e, indicator) ->
       func.call(oThis || window, indicator)
 
-  onPointChanged: (callerNamespace, func, oThis = undefined) ->
-    $(document).on "opencensus:state:point_changed.#{callerNamespace}", (e, point) ->
+  onPoint1Changed: (callerNamespace, func, oThis = undefined) ->
+    $(document).on "opencensus:state:point1_changed.#{callerNamespace}", (e, point) ->
       func.call(oThis || window, point)
 
-  onRegionListChanged: (callerNamespace, func, oThis = undefined) ->
-    $(document).on "opencensus:state:region_list_changed.#{callerNamespace}", (e, region_list) ->
+  onPoint2Changed: (callerNamespace, func, oThis = undefined) ->
+    $(document).on "opencensus:state:point2_changed.#{callerNamespace}", (e, point) ->
+      func.call(oThis || window, point)
+
+  onRegionList1Changed: (callerNamespace, func, oThis = undefined) ->
+    $(document).on "opencensus:state:region_list1_changed.#{callerNamespace}", (e, region_list) ->
+      func.call(oThis || window, region_list)
+
+  onRegionList2Changed: (callerNamespace, func, oThis = undefined) ->
+    $(document).on "opencensus:state:region_list2_changed.#{callerNamespace}", (e, region_list) ->
       func.call(oThis || window, region_list)
 
   onRegion1Changed: (callerNamespace, func, oThis = undefined) ->

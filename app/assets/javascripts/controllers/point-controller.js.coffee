@@ -71,9 +71,9 @@ point_controller = (location_view) ->
     new_point_description = location_view.getPointDescription()
     set_point_description(new_point_description)
 
-  state.onPointChanged 'point_controller', () ->
+  state.onPoint1Changed 'point_controller', () ->
     return if freeze_listeners
-    set_point(state.point)
+    set_point(state.point1)
 
 $ ->
   $location_form = $('#opencensus-wrapper form.location')

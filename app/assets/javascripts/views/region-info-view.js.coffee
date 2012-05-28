@@ -14,11 +14,11 @@ class RegionInfoView
   constructor: (@div) ->
     $regionTh = $(@div).find('th.region:eq(0)')
     $regionTh.append('<div></div>')
-    new RegionSelectorFromRegionList($regionTh.find('div'), 'region1', 'region2')
+    new RegionSelectorFromRegionList($regionTh.find('div'), 1)
 
     $regionCompareTh = $(@div).find('th.compare-region:eq(0)')
     $regionCompareTh.append('<div></div>')
-    new RegionSelectorFromRegionList($regionCompareTh.find('div'), 'region2', 'region1')
+    new RegionSelectorFromRegionList($regionCompareTh.find('div'), 2)
 
     this.refresh()
     state.onRegion1Changed 'region-info-view', () => this.refresh()

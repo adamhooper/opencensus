@@ -17,15 +17,19 @@ map_controller = (map_view) ->
 
   map_view.onMapEvent 'click', (e) ->
     point = google_latlng_to_point(e.latLng)
-    state.setPoint(point)
+    state.setPoint1(point)
 
-  map_view.onMarkerPositionChanged (latlng) ->
+  map_view.onMarker1PositionChanged (latlng) ->
     point = google_latlng_to_point(latlng)
-    state.setPoint(point)
+    state.setPoint1(point)
+
+  map_view.onMarker2PositionChanged (latlng) ->
+    point = google_latlng_to_point(latlng)
+    state.setPoint2(point)
 
   $(document).on 'opencensus:choose_latlng.map_controller', (e, latlng) ->
     point = google_latlng_to_point(latlng)
-    state.setPoint(point)
+    state.setPoint1(point)
 
   map_view.onMapEvent 'mousemove', (e) ->
     point = google_latlng_to_point(e.latLng)

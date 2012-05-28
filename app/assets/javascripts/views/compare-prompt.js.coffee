@@ -51,28 +51,33 @@ class ComparePrompt
     @expanded = shouldBeExpanded
 
   toggle: () ->
-    if state.region2?
-      state.setRegion2(undefined)
-    else if state.region1? && state.region_list?
-      region2 = undefined
+    if state.region_list2?
+      state.setPoint2(undefined)
+      #state.setRegion2(undefined)
+      #state.setRegionList2(undefined)
+    else if state.region1? && state.region_list1?
+      state.setPoint2(state.point1)
+      #region2 = undefined
 
-      # Default to the smallest region larger than this one
-      region1_pop = state.region1.statistics?.pop?.value || 0
-      for region in state.region_list
-        continue if region.equals(state.region1)
-        continue if (region.statistics?.pop?.value || 0) <= region1_pop
+      #state.setRegionList2(state.region_list1)
 
-        region2 = region
-        break
+      ## Default to the smallest region larger than this one
+      #region1_pop = state.region1.statistics?.pop?.value || 0
+      #for region in state.region_list2
+      #  continue if region.equals(state.region1)
+      #  continue if (region.statistics?.pop?.value || 0) <= region1_pop
 
-      # If that fails, pick the smallest one possible
-      if !region2?
-        for region in state.region_list
-          continue if region.equals(state.region1)
-          region2 = region
-          break
+      #  region2 = region
+      #  break
 
-      state.setRegion2(region2) # may--theoretically--be undefined
+      ## If that fails, pick the smallest one possible
+      #if !region2?
+      #  for region in state.region_list2
+      #    continue if region.equals(state.region1)
+      #    region2 = region
+      #    break
+
+      #state.setRegion2(region2) # may--theoretically--be undefined
 
 $ ->
   $a = $('#opencensus-wrapper div.region-info div.compare-prompt a')

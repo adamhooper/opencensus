@@ -114,7 +114,8 @@ class MapTile
     state.onRegion1Changed(event_class, this.onRegion1Changed, this)
     state.onRegion2Changed(event_class, this.onRegion2Changed, this)
     state.onIndicatorChanged(event_class, this.onIndicatorChanged, this)
-    state.onPointChanged(event_class, this.onPointChanged, this)
+    state.onPoint1Changed(event_class, this.onPoint1Changed, this)
+    state.onPoint2Changed(event_class, this.onPoint2Changed, this)
 
     this._refreshOpacity()
 
@@ -189,10 +190,10 @@ class MapTile
     @interaction_grids = new InteractionGridArray(@tileSize, data.utfgrids)
 
     this.drawRegions()
-    this.maybeUpdateRegionList()
+    this.maybeUpdateRegionLists()
 
-  maybeUpdateRegionList: () ->
-    point = state.point
+  _maybeUpdateRegionListN: (n) ->
+    point = state["point#{n}"]
     return if !point?
     
     globalMeter = point.world_xy
@@ -202,8 +203,13 @@ class MapTile
     region_list = this.tilePixelToRegionList(tilePixel)
     return if !region_list?
 
-    if region_list.length > (state.region_list?.length || 0)
-      state.setRegionList(region_list)
+    current_region_list = state["region_list#{n}"]
+    if region_list.length > (current_region_list?.length || 0)
+      state["setRegionList#{n}"](region_list)
+
+  maybeUpdateRegionLists: () ->
+    this._maybeUpdateRegionListN(1)
+    this._maybeUpdateRegionListN(2)
 
   drawRegions: () ->
     style = $.extend({}, polygon_style_base)
@@ -335,9 +341,8 @@ class MapTile
     @mapIndicator = globals.indicators.findMapIndicatorForTextIndicator(indicator)
     this.restyle()
 
-  onPointChanged: (point) ->
-    region1 = undefined
-    region2 = undefined
+  _onPointNChanged: (n, point) ->
+    region = undefined
     region_list = undefined
 
     if point?
@@ -347,24 +352,31 @@ class MapTile
 
       region_list = this.tilePixelToRegionList(tilePixel)
 
+    new_region = undefined
+
     if region_list?
       for region in region_list
-        # If somebody's already in comparison mode, keep him/her there.
-        #
-        # Compare populations because we don't want to select a ConsolidatedSubdivision
-        # as parent of a Division when they're actually the same exact area.
-        # This can introduce error if, say, a Subdivision and an ElectoralDistrict happen
-        # to have the same population. Oh well.
-        if region1? && state.region2? && region.getDatum(@mapIndicator)? && region.statistics?.pop?.value != region1.statistics?.pop?.value
-          region2 = region
-          break
+        ## If somebody's already in comparison mode, keep him/her there.
+        ##
+        ## Compare populations because we don't want to select a ConsolidatedSubdivision
+        ## as parent of a Division when they're actually the same exact area.
+        ## This can introduce error if, say, a Subdivision and an ElectoralDistrict happen
+        ## to have the same population. Oh well.
+        #if region1? && state.region2? && region.getDatum(@mapIndicator)? && region.statistics?.pop?.value != region1.statistics?.pop?.value
+        #  region2 = region
+        #  break
         if this.getFillForRegion(region)
-          region1 = region
-          break if !state.region2?
+          new_region = region
+          break
 
-    state.setRegionList(region_list)
-    state.setRegion1(region1)
-    state.setRegion2(region2)
+    state["setRegionList#{n}"](region_list)
+    state["setRegion#{n}"](new_region)
+
+  onPoint1Changed: (point1) ->
+    this._onPointNChanged(1, point1)
+
+  onPoint2Changed: (point2) ->
+    this._onPointNChanged(2, point2)
 
   destroy: () ->
     this.dataRequest.abort() if this.dataRequest?

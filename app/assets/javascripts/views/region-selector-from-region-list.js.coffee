@@ -8,11 +8,12 @@ globals = window.OpenCensus.globals
 h = window.OpenCensus.helpers
 
 class RegionSelectorFromRegionList
-  constructor: (@div, @key, @otherKey) ->
-    listenerKey = "region-selector-from-region-list-#{@key}"
-    onChange = "on#{@key.charAt(0).toUpperCase()}#{@key.slice(1)}Changed"
-    state.onRegionListChanged(listenerKey, () => this.refreshList())
-    state[onChange](listenerKey, () => this.refreshSelected())
+  constructor: (@div, @n) ->
+    listenerKey = "region-selector-from-region-list-#{@n}"
+    onRegionListChanged = "onRegionList#{@n}Changed"
+    onRegionChanged = "onRegion#{@n}Changed"
+    state[onRegionListChanged](listenerKey, () => this.refreshList())
+    state[onRegionChanged](listenerKey, () => this.refreshSelected())
 
     this.refreshList()
     this.refreshSelected()
@@ -21,32 +22,31 @@ class RegionSelectorFromRegionList
     $div = $(@div)
     $div.empty()
 
-    return if !state.region_list?
-
-    setter = "set#{@key.charAt(0).toUpperCase()}#{@key.slice(1)}"
+    region_list = state["region_list#{@n}"]
+    setter = "setRegion#{@n}"
+    selected_region = state["region#{@n}"]
 
     $form = $('<form><select></select></form>')
     $select = $form.children()
 
-    selected_region = state[@key]
-
     populations = {}
 
-    for region in state.region_list
-      if region.statistics?.pop?.value?
-        # Ignore parent regions which are duplicates
-        key = "#{region.statistics.pop.value}"
-        continue if populations[key]?
-        populations[key] = true
+    if region_list?
+      for region in region_list
+        if region.statistics?.pop?.value?
+          # Ignore parent regions which are duplicates
+          key = "#{region.statistics?.pop?.value || 0}"
+          continue if populations[key]?
+          populations[key] = true
 
-      human_name = region.human_name()
-      $option = $('<option></option>')
-      $option.attr('value', region.id)
-      $option.text(region.id)
-      $option.attr('selected', 'selected') if region.id == selected_region?.id
-      $select.append($option)
+        human_name = region.human_name()
+        $option = $('<option></option>')
+        $option.attr('value', region.id)
+        $option.text(region.id)
+        $option.attr('selected', 'selected') if region.id == selected_region?.id
+        $select.append($option)
 
-    if @key == 'region2'
+    if @n == 2
       $option = $('<option value="">(stop comparing)</option>')
       $option.attr('selected', 'selected') if !selected_region?.id
       $select.append($option)
@@ -70,12 +70,14 @@ class RegionSelectorFromRegionList
   refreshSelected: () ->
     $select = $(@div).find('select')
 
-    region = state[@key]
+    region = state["region#{@n}"]
+    other_region = state["region#{3 - @n}"]
 
     $select.selectmenu('value', region?.id)
 
-    if region? && region.id == state[@otherKey]?.id && @oldValue?
-      otherSetter = "set#{@otherKey.charAt(0).toUpperCase()}#{@otherKey.slice(1)}"
+    if region? && region.id == other_region?.id && @oldValue?
+      otherSetter = "setRegion#{3 - @n}"
+      otherRegion = globals.
       otherRegion = globals.region_store.get(@oldValue)
       state[otherSetter](otherRegion)
 

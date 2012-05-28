@@ -66,32 +66,58 @@ class MapView
     svgMapType = new SvgMapType(new google.maps.Size(256, 256))
     @map.overlayMapTypes.insertAt(0, svgMapType)
 
-    state.onPointChanged('map_view', this.onPointChanged, this)
+    state.onPoint1Changed('map_view', this.onPoint1Changed, this)
+    state.onPoint2Changed('map_view', this.onPoint2Changed, this)
 
-    @marker = new google.maps.Marker({
-      clickable: false,
-      draggable: true,
-      flat: true,
-      map: @map,
-      position: new google.maps.LatLng(0, 0),
-      visible: false,
-    })
+    @markers = {
+      '1': new google.maps.Marker({
+        clickable: false,
+        draggable: true,
+        flat: true,
+        map: @map,
+        position: new google.maps.LatLng(0, 0),
+        visible: false,
+      }),
+      '2': new google.maps.Marker({
+        clickable: false,
+        draggable: true,
+        flat: true,
+        map: @map,
+        position: new google.maps.LatLng(0, 0),
+        visible: false,
+      })
+    }
 
-  onPointChanged: (point) ->
+  _onPointNChanged: (n, point) ->
+    marker = @markers["#{n}"]
+
     if !point?
-      @marker.setVisible(false)
+      marker.setVisible(false)
     else
       google_point = new google.maps.LatLng(point.latlng.latitude, point.latlng.longitude)
+
+      marker.setPosition(google_point)
+      marker.setVisible(true)
+
       if !@map.getBounds().contains(google_point)
-        @map.setCenter(google_point)
-      @marker.setPosition(google_point)
-      @marker.setVisible(true)
+        newBounds = @map.getBounds().extend(google_point)
+        @map.setBounds(newBounds)
+
+  onPoint1Changed: (point) ->
+    this._onPointNChanged(1, point)
+
+  onPoint2Changed: (point) ->
+    this._onPointNChanged(2, point)
 
   onMapEvent: (event_type, callback) ->
     google.maps.event.addListener(@map, event_type, callback)
 
-  onMarkerPositionChanged: (callback) ->
-    google.maps.event.addListener @marker, 'dragend', () =>
-      callback(@marker.getPosition())
+  onMarker1PositionChanged: (callback) ->
+    google.maps.event.addListener @markers['1'], 'dragend', () =>
+      callback(@markers['1'].getPosition())
+
+  onMarker2PositionChanged: (callback) ->
+    google.maps.event.addListener @markers['2'], 'dragend', () =>
+      callback(@markers['2'].getPosition())
 
 window.OpenCensus.views.MapView = MapView
