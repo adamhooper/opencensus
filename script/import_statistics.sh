@@ -12,7 +12,7 @@ PGHOST=localhost
 PGUSER=opencensus_dev
 PGPASS=opencensus_dev
 
-rm -qf $PGPASSFILE
+rm -f $PGPASSFILE
 
 ## Set up login (for remainder of the script)
 echo "$PGHOST:*:$PGDATABASE:$PGUSER:$PGPASS" > $PGPASSFILE
@@ -29,4 +29,4 @@ psql -f `dirname $0`/create-statistics-schema.sql
 `dirname $0`/../statistics_importer/import_2006_agesex.py `dirname $0`/../db/statistics/94-575-XCB2006005.ZIP
 
 psql -f `dirname $0`/../statistics_importer/calculate-2011-popdwe-rates.sql
-`dirname $0`/../statistics_importer/calculate_agesex_agerages.py
+`dirname $0`/../statistics_importer/calculate_agesex_averages.py
