@@ -11,7 +11,7 @@ class AgeGraphView extends window.OpenCensus.views.GraphView
   _getNextDivId: () ->
     "opencensus-age-graph-view-#{id_counter += 1}"
 
-  getFragment: () ->
+  getFragment: (width) ->
     agem = @region?.statistics?.agem
     agef = @region?.statistics?.agef
 
@@ -31,7 +31,7 @@ class AgeGraphView extends window.OpenCensus.views.GraphView
     $div.find('div.inner').attr('id', id)
 
     $('body').append($div) # so jqplot will work; we'll move it later
-    $div.width(300)
+    $div.width(width)
 
     values = ([ a, i ] for a, i in age_ints)
     ticks = ([i, c] for c, i in categories)

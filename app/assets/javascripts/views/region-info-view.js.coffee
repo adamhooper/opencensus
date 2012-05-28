@@ -59,13 +59,16 @@ class RegionInfoView
     this._fillThUrl($th1, region?.url())
     this._fillThUrl($th2, compareRegion?.url())
 
-  refreshAgeGraphView: (region, compareRegion) ->
-    $chart_div = $(@div).find('.age-chart')
-    $chart_div.empty()
-
+  _refreshOneAgeGraphView: ($div, region) ->
+    $div.empty()
     chart = new AgeGraphView(region)
-    fragment = chart.getFragment()
-    $chart_div.append(fragment) if fragment?
+    fragment = chart.getFragment($div.width())
+    $div.append(fragment) if fragment?
+
+  refreshAgeGraphView: (region, compareRegion) ->
+    $tr = $(@div).find('tr.ages')
+    this._refreshOneAgeGraphView($tr.find('td.region .age-chart'), region)
+    this._refreshOneAgeGraphView($tr.find('td.compare-region .age-chart'), compareRegion)
 
   formatValue: (key, value) ->
     switch key
