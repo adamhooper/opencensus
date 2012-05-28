@@ -7,27 +7,25 @@
       %a{:href => 'http://getfirefox.com'} Mozilla Firefox
       and then return to this page.
 
+  .nav
+    %ul.indicators
+      %li.pop.selected
+        %a{:href => '#pop'} Population
+      %li.popdwe
+        %a{:href => '#popdwe'} People per dwelling
+      %li.gro
+        %a{:href => '#gro'} Growth
+      %li.agemedian
+        %a{:href => '#agemedian'} Age distribution
+      %li.sexm
+        %a{:href => '#sexm'} Sex distribution
+
   %form.location
     %p
       %label{:for => 'opencensus-address-input'} Location
       %input.text#opencensus-address-input{:type => 'text', :name => 'q'}
       %input.submit{:type => 'submit', :value => 'Go'}
     %div.status
-
-  .nav
-    %ul.indicators
-      %li.pop.selected
-        %a{:href => '#pop'} Population
-        %span.unit shown in people per km²
-      %li.popdwe
-        %a{:href => '#popdwe'} People per dwelling
-      %li.gro
-        %a{:href => '#gro'} Growth
-        %span.unit shown in %
-      %li.agemedian
-        %a{:href => '#agemedian'} Age distribution
-      %li.sexm
-        %a{:href => '#sexm'} Sex distribution
 
   .map-and-info
     .map

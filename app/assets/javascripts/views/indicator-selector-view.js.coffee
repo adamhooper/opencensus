@@ -14,27 +14,26 @@ class IndicatorSelectorView
     bodies = {}
 
     $ul.find('li').each () ->
-      key = $(this).find('a').attr('href').split(/#/)[1]
-      body = $(this).html()
-      bodies[key] = body
+      $a = $(this).find('a')
+      key = $a.attr('href').split(/#/)[1]
+      text = $a.text()
       $option = $('<option></option>')
-      $option.text(key)
       $option.attr('value', key)
+      $option.text(text)
       $select.append($option)
 
     $select.val(state.indicator.key)
 
-    @$form = $('<form></form>')
-    @$form.append($select)
+    $form = $('<form></form>')
+    $form.append($select)
 
-    $ul.after(@$form)
+    $ul.after($form)
 
     $select.selectmenu({
       style: 'dropdown',
-      width: '12em',
+      width: '13em',
       maxHeight: 500,
-      format: (key) -> bodies[key],
-      appendTo: @$form
+      appendTo: $form
     })
 
     $select.on 'change', (e) ->

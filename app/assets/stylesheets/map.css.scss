@@ -40,6 +40,7 @@ body {
   }
 
   form.location {
+    float: left;
     position: relative;
     margin: 0;
     padding: 0;
@@ -53,7 +54,7 @@ body {
 
     input.text {
       border: 2px solid $color_strong;
-      width: 30em;
+      width: 28em;
       line-height: 2.0;
       padding: 0 .5em;
       margin: 2px; // Google Chrome default
@@ -95,25 +96,19 @@ body {
   }
 
   .nav {
+    float: left;
     background: $color_alt_background;
+    margin-right: .5em;
 
     a.ui-selectmenu {
-      height: 3.5em;
+      height: 2em;
+      line-height: 1;
     }
 
     span.ui-selectmenu-status {
-      a {
-        font-size: .9em;
-        display: block;
-        text-transform: uppercase;
-        text-decoration: none;
-        color: $color_main;
-      }
-
-      span {
-        display: block;
-        font-size: .65em;
-      }
+      font-size: .9em;
+      text-transform: uppercase;
+      color: $color_main;
     }
 
     div.ui-selectmenu-menu {
@@ -135,25 +130,18 @@ body {
 
         a {
           padding: 0;
-        }
-
-        a a {
           font-size: .9em;
           display: block;
           text-transform: uppercase;
           text-decoration: none;
           color: $color_main;
         }
-
-        a span {
-          display: block;
-          font-size: .65em;
-        }
       }
     }
   }
 
   .map-and-info {
+    clear: both;
     position: relative;
     height: $height_map;
     overflow: hidden;

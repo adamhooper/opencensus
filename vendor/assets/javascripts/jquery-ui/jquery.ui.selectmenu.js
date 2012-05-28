@@ -50,7 +50,7 @@ $.widget("ui.selectmenu", {
 			'class': this.widgetBaseClass + ' ui-widget ui-state-default ui-corner-all',
 			'id' : this.ids[ 1 ],
 			'role': 'button',
-			'href': '#nogo',
+			'href': '#',
 			'tabindex': this.element.attr( 'disabled' ) ? 1 : 0,
 			'aria-haspopup': true,
 			'aria-owns': this.ids[ 2 ]
