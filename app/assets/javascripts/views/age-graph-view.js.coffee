@@ -22,7 +22,9 @@ class AgeGraphView extends window.OpenCensus.views.GraphView
     agef_ints = (parseInt("0#{a}", 10) for a in agef.value.split(/,/))
 
     age_ints = (agem_ints[i] + agef_ints[i] for i in [0...agem_ints.length])
-    categories = [ '0-4', '5-9', '10-14', '15-19', '20-24', '25-29', '30-34', '35-39', '40-44', '45-49', '50-54', '55-59', '60-64', '65-69', '70-74', '75-79', '80-84', '85+' ]
+    age_ints.push(0)
+    age_ints.unshift(0)
+    categories = [ '', '0-4', '5-9', '10-14', '15-19', '20-24', '25-29', '30-34', '35-39', '40-44', '45-49', '50-54', '55-59', '60-64', '65-69', '70-74', '75-79', '80-84', '85+', '' ]
 
     $div = $('<div class="graph"><div class="inner"></div></div>')
     id = this._getNextDivId()
@@ -35,7 +37,11 @@ class AgeGraphView extends window.OpenCensus.views.GraphView
     ticks = ([i, c] for c, i in categories)
 
     $.jqplot(id, [values], {
-      highlighter: { show: true, sizeAdjust: 12 },
+      highlighter: {
+        show: true,
+        sizeAdjust: 12,
+        tooltipAxes: 'x',
+      },
       cursor: { show: false },
       seriesDefaults: {
         renderer: $.jqplot.BarRenderer,
