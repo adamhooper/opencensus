@@ -147,22 +147,17 @@ class RegionInfoView
     if value1
       if value2
         if value1 * 10 >= value2
-          console.log(key, value1, value2)
           width1 = 10
           width2 = 10 * (value2 / value1)
         else
-          console.log('less', key, value1, value2)
           width2 = 100
           width1 = 100 * (value1 / value2)
       else
-        console.log('No value2', key, value1, value2)
         width1 = 10
         width2 = 0
 
     if swap
       [width1, width2] = [width2, width1]
-
-    console.log(key, width1, width2)
 
     $bar1 = $(@div).find("td.region span.bar.#{key}")
     $bar2 = $(@div).find("td.compare-region span.bar.#{key}")
