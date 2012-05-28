@@ -1,5 +1,7 @@
 <?php
 
+// Requirements: PHP >=5.2
+
 $TILES_FILENAME = '/var/www/tiles.sqlite3';
 $STATISTICS_FILENAME = '/var/www/statistics.sqlite3';
 
@@ -39,14 +41,20 @@ function get_tile_json($tiles_db, $statistics_db, $zoom_level, $tile_row, $tile_
     if (preg_match_all('/"region_id":(\d+),/', $raw_json, $m)) {
         $region_ids = array_map('intval', $m[1]);
         $statistics_jsons = region_ids_to_statistics_json($statistics_db, $region_ids);
-        $json = preg_replace_callback('/"region_id":(\d+)/', function($match) use ($statistics_jsons) {
-            $region_id = intval($match[1]);
+
+        $patterns = array();
+        $replacements = array();
+
+        foreach ($region_ids as $region_id) {
+            array_push($patterns, "\"region_id\":$region_id,");
             if (isset($statistics_jsons[$region_id])) {
-                return '"statistics":' . $statistics_jsons[$region_id] . ',';
+                array_push($replacements, '"statistics":' . $statistics_jsons[$region_id] . ',');
             } else {
-                return '';
+                array_push($replacements, '');
             }
-        }, $raw_json);
+        }
+
+        $json = str_replace($patterns, $replacements, $raw_json);
     } else {
         $json = $raw_json;
     }
