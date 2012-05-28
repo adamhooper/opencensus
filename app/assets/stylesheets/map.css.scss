@@ -233,12 +233,18 @@ body {
         text-align: left;
         font-weight: normal;
         font-size: .75em;
-        border-bottom: 1px solid $color_border_visible;
+        border-top: 1px solid $color_border_visible;
+        padding: 0 .5em;
       }
 
       td.region, td.compare-region {
         text-align: center;
         width: $width_region_info;
+      }
+
+      span.unit {
+        font-size: .9em;
+        font-weight: normal;
       }
 
       td {
