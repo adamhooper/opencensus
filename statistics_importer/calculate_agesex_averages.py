@@ -16,13 +16,9 @@ class RegionStatistics:
         count = sum(sums)
 
         if count == 0:
-            self.mean = None
             self.median = None
             self.male_percentage = None
             return
-
-        mean_sums = [ sums[i] * RegionStatistics.MeanAges[i] for i in xrange(0, len(sums)) ]
-        self.mean = sum(mean_sums) / count
 
         median_array = _array('f')
         for i, bucket_count in enumerate(sums):
@@ -83,25 +79,22 @@ class RecordDb:
         connection = db.connect()
         c = connection.cursor()
 
-        c.execute("SELECT id FROM indicators WHERE key = 'agemean'")
-        agemean_id = int(c.fetchone()[0])
         c.execute("SELECT id FROM indicators WHERE key = 'agemedian'")
         agemedian_id = int(c.fetchone()[0])
         c.execute("SELECT id FROM indicators WHERE key = 'sexm'")
         sexm_id = int(c.fetchone()[0])
 
         c.execute("""
-            PREPARE insert_statistics (INT, FLOAT, FLOAT, FLOAT) AS
+            PREPARE insert_statistics (INT, FLOAT, FLOAT) AS
             INSERT INTO indicator_region_values (region_id, indicator_id, value_float)
             VALUES
             ($1, %d, $2),
-            ($1, %d, $3),
-            ($1, %d, $4)""" % (agemean_id, agemedian_id, sexm_id))
+            ($1, %d, $3)""" % (agemedian_id, sexm_id))
 
         for region_id, stats in self._region_statistics.items():
-            if stats.mean is None: continue
-            c.execute('EXECUTE insert_statistics (%s, %s, %s, %s)'
-                    % (region_id, stats.mean, stats.median, stats.male_percentage))
+            if stats.median is None: continue
+            c.execute('EXECUTE insert_statistics (%s, %s, %s)',
+                    (region_id, stats.median, stats.male_percentage))
 
         connection.commit()
 
