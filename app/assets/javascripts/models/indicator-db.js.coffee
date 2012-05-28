@@ -17,7 +17,7 @@ class IndicatorDb
     key = {
       pop: 'popdens',
       gro: 'gro',
-      dwe: 'dwedens',
+      popdwe: 'popdwe',
       agemedian: 'agemedian',
       sexm: 'sexm',
     }[text_indicator.key]
