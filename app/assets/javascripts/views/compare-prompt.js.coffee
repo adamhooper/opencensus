@@ -57,27 +57,25 @@ class ComparePrompt
       #state.setRegionList2(undefined)
     else if state.region1? && state.region_list1?
       state.setPoint2(state.point1)
-      #region2 = undefined
+      region2 = undefined
 
-      #state.setRegionList2(state.region_list1)
+      # Default to the smallest region larger than this one
+      region1_pop = state.region1.statistics?.pop?.value || 0
+      for region in state.region_list2
+        continue if region.equals(state.region1)
+        continue if (region.statistics?.pop?.value || 0) <= region1_pop
 
-      ## Default to the smallest region larger than this one
-      #region1_pop = state.region1.statistics?.pop?.value || 0
-      #for region in state.region_list2
-      #  continue if region.equals(state.region1)
-      #  continue if (region.statistics?.pop?.value || 0) <= region1_pop
+        region2 = region
+        break
 
-      #  region2 = region
-      #  break
+      # If that fails, pick the smallest one possible
+      if !region2?
+        for region in state.region_list2
+          continue if region.equals(state.region1)
+          region2 = region
+          break
 
-      ## If that fails, pick the smallest one possible
-      #if !region2?
-      #  for region in state.region_list2
-      #    continue if region.equals(state.region1)
-      #    region2 = region
-      #    break
-
-      #state.setRegion2(region2) # may--theoretically--be undefined
+      state.setRegion2(region2) if region2?
 
 $ ->
   $a = $('#opencensus-wrapper div.region-info div.compare-prompt a')
