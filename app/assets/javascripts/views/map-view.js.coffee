@@ -3,6 +3,7 @@
 #= require state
 #= require globals
 #= require svg_map_type
+#= require image_path
 
 state = window.OpenCensus.state
 globals = window.OpenCensus.globals
@@ -77,6 +78,12 @@ class MapView
         map: @map,
         position: new google.maps.LatLng(0, 0),
         visible: false,
+        icon: new google.maps.MarkerImage(
+          image_path('marker1.png'),
+          new google.maps.Size(18, 42), # size
+          undefined, # origin
+          new google.maps.Point(13, 41) # anchor
+        ),
       }),
       '2': new google.maps.Marker({
         clickable: false,
@@ -85,6 +92,12 @@ class MapView
         map: @map,
         position: new google.maps.LatLng(0, 0),
         visible: false,
+        icon: new google.maps.MarkerImage(
+          image_path('marker2.png'),
+          new google.maps.Size(18, 42), # size
+          undefined, # origin
+          new google.maps.Point(6, 41) # anchor
+        ),
       })
     }
 
