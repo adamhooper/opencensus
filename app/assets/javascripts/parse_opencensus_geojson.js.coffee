@@ -1,4 +1,5 @@
-#= require jquery
+$ = jQuery
+
 #= require paper
 
 GEOJSON_REGEXP = /\{"crs".*?\}\},.*"features":\[(.*)\],"utfgrids":(.*)\}/

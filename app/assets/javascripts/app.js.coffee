@@ -1,3 +1,5 @@
+$ = jQuery
+
 window.OpenCensus = {
   helpers: {},
   views: {},

@@ -1,3 +1,5 @@
+$ = jQuery
+
 #= require app
 
 window.OpenCensus.helpers.format_float = (n, decimals = 2) ->

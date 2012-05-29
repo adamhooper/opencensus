@@ -1,3 +1,5 @@
+$ = jQuery
+
 class PaperElementSet
   constructor: (@elements) ->
 

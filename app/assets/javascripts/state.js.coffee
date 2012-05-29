@@ -1,3 +1,5 @@
+$ = jQuery
+
 #= require app
 #= require models/state
 

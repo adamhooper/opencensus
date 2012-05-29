@@ -1,3 +1,5 @@
+$ = jQuery
+
 #= requie app
 #= require models/indicator
 

@@ -1,4 +1,4 @@
-#= require jquery
+$ = jQuery
 
 #= require state
 #= require globals

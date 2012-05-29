@@ -1,3 +1,5 @@
+$ = jQuery
+
 #= require app
 
 class LocationView

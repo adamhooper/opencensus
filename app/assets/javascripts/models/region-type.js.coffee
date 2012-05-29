@@ -1,3 +1,5 @@
+$ = jQuery
+
 #= require app
 
 URL_FORMAT = 'http://www12.statcan.gc.ca/census-recensement/2011/dp-pd/prof/details/page.cfm?Lang=E&Geo1=$type1&Code1=$uid1&Geo2=$type2&Code2=$uid2&Data=Count&SearchText=Canada&SearchType=Begins&SearchPR=01&B1=All&Custom=&TABID=1'

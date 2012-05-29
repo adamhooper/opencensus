@@ -1,3 +1,5 @@
+$ = jQuery
+
 #= require jquery
 #= require json2
 
