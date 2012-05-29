@@ -101,6 +101,16 @@ class MapView
       })
     }
 
+    @dragging = undefined
+    google.maps.event.addListener @markers['1'], 'dragstart', () =>
+      @dragging = '1'
+    google.maps.event.addListener @markers['1'], 'dragend', () =>
+      @dragging = undefined
+    google.maps.event.addListener @markers['2'], 'dragstart', () =>
+      @dragging = '2'
+    google.maps.event.addListener @markers['2'], 'dragend', () =>
+      @dragging = undefined
+
   _onPointNChanged: (n, point) ->
     marker = @markers["#{n}"]
 
@@ -122,6 +132,14 @@ class MapView
 
   onPoint2Changed: (point) ->
     this._onPointNChanged(2, point)
+
+  onMouseMove: (callback) ->
+    google.maps.event.addListener @map, 'mousemove', (e) =>
+      callback(e.latLng) if !@dragging?
+    google.maps.event.addListener @markers['1'], 'position_changed', () =>
+      callback(@markers['1'].getPosition()) if @dragging == '1'
+    google.maps.event.addListener @markers['2'], 'position_changed', () =>
+      callback(@markers['2'].getPosition()) if @dragging == '2'
 
   onMapEvent: (event_type, callback) ->
     google.maps.event.addListener(@map, event_type, callback)

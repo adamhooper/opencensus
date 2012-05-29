@@ -31,8 +31,8 @@ map_controller = (map_view) ->
     point = google_latlng_to_point(latlng)
     state.setPoint1(point)
 
-  map_view.onMapEvent 'mousemove', (e) ->
-    point = google_latlng_to_point(e.latLng)
+  map_view.onMouseMove (latlng) ->
+    point = google_latlng_to_point(latlng)
     $(document).trigger('opencensus:mousemove', [point])
 
   map_view.onMapEvent 'mouseout', () ->
