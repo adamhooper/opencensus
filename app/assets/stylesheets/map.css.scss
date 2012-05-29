@@ -201,7 +201,7 @@ body {
       .compare-prompt {
         position: absolute;
         height: $width_compare_prompt;
-        top: (200px + $width_compare_prompt) / 2;
+        top: (200px - $width_compare_prompt) / 2;
         width: 200px;
         left: -(200px + $width_compare_prompt) / 2;
         overflow: hidden;
