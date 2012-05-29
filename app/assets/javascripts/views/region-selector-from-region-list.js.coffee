@@ -70,7 +70,7 @@ class RegionSelectorFromRegionList
       state[setter](region)
 
     if region_list?
-      $div.append("<div class=\"prompt\">Drag <img src=\"#{@markerImageUrl}\" alt=\"marker\" width=\"9\" height=\"21\" /> to change</div>")
+      $div.append("<div class=\"prompt\">Drag <img src=\"#{@markerImageUrl}\" alt=\"marker\" width=\"9\" height=\"21\" /> to move</div>")
     else
       $div.append("<div class=\"prompt\">Click the map to drop a <img src=\"#{@markerImageUrl}\" alt=\"marker\" width=\"9\" height=\"21\" /></div>")
 

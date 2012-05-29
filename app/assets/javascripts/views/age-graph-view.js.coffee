@@ -40,10 +40,8 @@ class AgeGraphView extends window.OpenCensus.views.GraphView
       max_int = int if int > max_int
     interval = max_int * .3
     rounded_interval = interval.toFixed(0)
-    if rounded_interval.length > 2
-      rounded_interval = parseInt(rounded_interval.substring(0, 2) + rounded_interval.slice(2).replace(/\d/, '0'), 10)
-    else if rounded_interval.length > 1
-      rounded_interval = parseInt(rounded_interval.charAt(0) + '0', 10)
+    if rounded_interval.length > 1
+      rounded_interval = parseInt(rounded_interval.substring(0, 1) + rounded_interval.slice(1).replace(/\d/g, '0'), 10)
     else
       rounded_interval = parseInt(rounded_interval, 10)
 

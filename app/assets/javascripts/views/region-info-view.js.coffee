@@ -47,7 +47,7 @@ class RegionInfoView
     $th.empty()
 
     if url
-      $a = $('<a target="_blank" title="opens in new window">StatsCan Profile</a>')
+      $a = $('<a target="_blank" title="opens in new window">Statistics Canada profile</a>')
       $a.attr('href', url)
       $th.append($a)
 
