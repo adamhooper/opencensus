@@ -1,5 +1,6 @@
 $color_alt_background: #ededee;
 $color_alt_background2: #dce8e3;
+$color_alt_background3: #d8d7d5;
 $color_highlight_background: #edebca;
 $color_strong_background: #b8b308;
 $color_strong2_background: #72a492;
@@ -7,6 +8,7 @@ $color_strong: #a49a00;
 $color_main: #212121;
 $color_border: #d5d6d5;
 $color_border_visible: #666;
+$color_faded: #777;
 $color_notice: #999;
 $color_error: #933;
 
@@ -211,6 +213,10 @@ body {
         vertical-align: top;
       }
 
+      th.compare-region, td.compare-region {
+        background-color: $color_alt_background3;
+      }
+
       tbody span.bar {
         display: inline-block;
         height: 25px;
@@ -233,6 +239,18 @@ body {
         width: $width_region_info;
         overflow: hidden;
         padding: 0;
+
+        div.prompt {
+          font-size: .75em;
+          font-weight: normal;
+          color: $color_faded;
+          line-height: 21px;
+
+          img {
+            display: inline-block;
+            vertical-align: middle;
+          }
+        }
       }
 
       thead.sub th {

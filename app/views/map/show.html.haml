@@ -35,11 +35,12 @@
       %table
         %thead.regions
           %tr
-            %th.region
-            %th.compare-region
+            %th.region/
+            %th.compare-region/
         %thead.sub.pop
           %tr
-            %th{:colspan => 2} Population
+            %th.region Population
+            %th.compare-region/
         %tbody.pop
           %tr
             %td.region
@@ -58,7 +59,8 @@
                 %span.unit> %
         %thead.sub.dwe
           %tr
-            %th{:colspan => 2} Dwellings
+            %th.region Dwellings
+            %th.compare-region/
         %tbody.dwe
           %tr
             %td.region
@@ -79,7 +81,8 @@
                 %span.unit people per dwelling
         %thead.sub.sexm
           %tr
-            %th{:colspan => 2} Sex profile
+            %th.region Sex profile
+            %th.compare-region/
         %tbody.sexm
           %tr.sexm
             %td.region
@@ -98,7 +101,8 @@
                 %span.unit> %
         %thead.sub.ages
           %tr
-            %th{:colspan => 2} Age profile
+            %th.region Age profile
+            %th.compare-region/
         %tbody.ages
           %tr.ages
             %td.region

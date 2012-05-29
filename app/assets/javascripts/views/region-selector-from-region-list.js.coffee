@@ -2,6 +2,7 @@
 #= require state
 #= require globals
 #= require helpers/region-helpers
+#= require image_path
 
 state = window.OpenCensus.state
 globals = window.OpenCensus.globals
@@ -9,6 +10,7 @@ h = window.OpenCensus.helpers
 
 class RegionSelectorFromRegionList
   constructor: (@div, @n) ->
+    @markerImageUrl = image_path("marker#{@n}.png")
     listenerKey = "region-selector-from-region-list-#{@n}"
     onRegionListChanged = "onRegionList#{@n}Changed"
     onRegionChanged = "onRegion#{@n}Changed"
@@ -66,6 +68,11 @@ class RegionSelectorFromRegionList
       region_id = $select.val()
       region = globals.region_store.get(region_id)
       state[setter](region)
+
+    if region_list?
+      $div.append("<div class=\"prompt\">Drag <img src=\"#{@markerImageUrl}\" alt=\"marker\" width=\"9\" height=\"21\" /> to change</div>")
+    else
+      $div.append("<div class=\"prompt\">Click the map to drop a <img src=\"#{@markerImageUrl}\" alt=\"marker\" width=\"9\" height=\"21\" /></div>")
 
   refreshSelected: () ->
     $select = $(@div).find('select')
