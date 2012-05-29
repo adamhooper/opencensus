@@ -35,14 +35,23 @@ class IndicatorSelectorView
       maxHeight: 500,
       appendTo: $form
     })
+    this._refreshValue()
 
-    $select.on 'change', (e) ->
+    $select.on 'change', (e) =>
       key = $select.val()
       indicator = globals.indicators.findByKey(key)
       state.setIndicator(indicator)
+      this._refreshValue()
 
-    state.onIndicatorChanged 'indicator-selector-view', () ->
+    state.onIndicatorChanged 'indicator-selector-view', () =>
       $select.val(state.indicator.key)
+      this._refreshValue()
+
+  _refreshValue: () ->
+    $form = $(@ul).next()
+    $span = $form.find('span.ui-selectmenu-status')
+    if !$span.find('.prompt').length
+      $span.append('<span class="prompt">Click to change</span>')
 
 $ ->
   $ul = $('#opencensus-wrapper ul.indicators')
