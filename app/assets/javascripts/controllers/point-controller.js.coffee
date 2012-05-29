@@ -66,7 +66,9 @@ point_controller = (location_view) ->
   set_point = (new_point) ->
     maybe_lookup_point(new_point)
 
-  location_view.onSubmit 'point_controller', () ->
+  location_view.onSubmit 'point_controller', (e) ->
+    e.preventDefault()
+    return false if $.trim(location_view.getPointDescription() || '') == ''
     return if freeze_listeners
     new_point_description = location_view.getPointDescription()
     set_point_description(new_point_description)

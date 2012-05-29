@@ -24,11 +24,11 @@
     %p.startup-content Enter an address to find census data around it:
     %p
       %label{:for => 'opencensus-address-input'} Location
-      %input.text#opencensus-address-input{:type => 'text', :name => 'q'}
+      %input.text#opencensus-address-input{:type => 'text', :name => 'q', :placeholder => '99 Atlantic Ave., Toronto'}
       %input.submit{:type => 'submit', :value => 'Go'}
     %div.status
     %p.startup-content
-      %a.skip{:href => '#'} or click here, then click on the map
+      %a.skip{:href => '#'} or click here to enjoy the map
 
   .map-and-info
     .map

@@ -48,6 +48,10 @@ body {
     margin: 0;
     padding: 0;
 
+    label {
+      text-transform: uppercase;
+    }
+
     p.startup-content {
       display: none;
     }
@@ -74,7 +78,7 @@ body {
       margin: 2px;
       line-height: 1.6;
       background: $color_strong_background;
-      color: $color_strong;
+      color: $color_main;
       font-size: 1em;
     }
 
@@ -115,6 +119,13 @@ body {
 
     p.startup-content {
       display: block;
+      text-align: center;
+
+      a {
+        font-weight: normal;
+        text-decoration: none;
+        font-size: .7em;
+      }
     }
 
     p {
