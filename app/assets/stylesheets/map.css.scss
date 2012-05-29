@@ -273,6 +273,11 @@ body {
         width: $width_region_info - 18px;
         padding: 0 9px;
         line-height: 31px;
+
+        div.age-chart {
+          line-height: 1.8;
+          height: 250px;
+        }
       }
 
       span.unit {

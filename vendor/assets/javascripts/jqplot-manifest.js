@@ -1,2 +1,2 @@
-//= require ./jqplot/jqplot.core.js
+//= require ./jqplot/jquery.jqplot.js
 //= require_tree ./jqplot

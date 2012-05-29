@@ -2,8 +2,7 @@
  * jqPlot
  * Pure JavaScript plotting plugin using jQuery
  *
- * Version: @VERSION
- * Revision: @REVISION
+ * Version: 1.0.0b2_r1012
  *
  * Copyright (c) 2009-2011 Chris Leonello
  * jqPlot is currently available for use in all personal or commercial projects 
@@ -332,7 +331,7 @@
             
             if (this.barDirection == 'vertical') {
                 for (var i=0; i<gridData.length; i++) {
-                    if (!this._stack && this.data[i][1] == null) {
+                    if (this.data[i][1] == null) {
                         continue;
                     }
                     points = [];
@@ -342,10 +341,6 @@
                     // stacked
                     if (this._stack && this._prevGridData.length) {
                         ystart = this._prevGridData[i][1];
-
-                        if (ystart === null) {
-                            ystart = this._yaxis.series_u2p(0);
-                        }
                     }
                     // not stacked and first series in stack
                     else {
@@ -690,7 +685,6 @@
             plot.target.trigger(evt1, ins);
             if (plot.series[ins[0]].highlightMouseOver && !(ins[0] == plot.plugins.barRenderer.highlightedSeriesIndex && ins[1] == plot.series[ins[0]]._highlightedPoint)) {
                 var evt = jQuery.Event('jqplotDataHighlight');
-		evt.which = ev.which;
                 evt.pageX = ev.pageX;
                 evt.pageY = ev.pageY;
                 plot.target.trigger(evt, ins);
@@ -707,7 +701,6 @@
             var ins = [neighbor.seriesIndex, neighbor.pointIndex, neighbor.data];
             if (plot.series[ins[0]].highlightMouseDown && !(ins[0] == plot.plugins.barRenderer.highlightedSeriesIndex && ins[1] == plot.series[ins[0]]._highlightedPoint)) {
                 var evt = jQuery.Event('jqplotDataHighlight');
-		evt.which = ev.which;
                 evt.pageX = ev.pageX;
                 evt.pageY = ev.pageY;
                 plot.target.trigger(evt, ins);
@@ -730,7 +723,6 @@
         if (neighbor) {
             var ins = [neighbor.seriesIndex, neighbor.pointIndex, neighbor.data];
             var evt = jQuery.Event('jqplotDataClick');
-	    evt.which = ev.which;
             evt.pageX = ev.pageX;
             evt.pageY = ev.pageY;
             plot.target.trigger(evt, ins);
@@ -745,7 +737,6 @@
                 unhighlight(plot);
             }
             var evt = jQuery.Event('jqplotDataRightClick');
-	    evt.which = ev.which;
             evt.pageX = ev.pageX;
             evt.pageY = ev.pageY;
             plot.target.trigger(evt, ins);

@@ -2,8 +2,7 @@
  * jqPlot
  * Pure JavaScript plotting plugin using jQuery
  *
- * Version: @VERSION
- * Revision: @REVISION
+ * Version: 1.0.0b2_r1012
  *
  * Copyright (c) 2009-2011 Chris Leonello
  * jqPlot is currently available for use in all personal or commercial projects 
@@ -401,9 +400,6 @@
         var c = plot.plugins.cursor;
         if (hl.show) {
             if (neighbor == null && hl.isHighlighting) {
-                var evt = jQuery.Event('jqplotHighlighterUnhighlight');
-                plot.target.trigger(evt);
-
                 var ctx = hl.highlightCanvas._ctx;
                 ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
                 if (hl.fadeTooltip) {
@@ -420,13 +416,6 @@
                 ctx = null;
             }
             else if (neighbor != null && plot.series[neighbor.seriesIndex].showHighlight && !hl.isHighlighting) {
-                var evt = jQuery.Event('jqplotHighlighterHighlight');
-                evt.which = ev.which;
-                evt.pageX = ev.pageX;
-                evt.pageY = ev.pageY;
-                var ins = [neighbor.seriesIndex, neighbor.pointIndex, neighbor.data, plot];
-                plot.target.trigger(evt, ins);
-
                 hl.isHighlighting = true;
                 hl.currentNeighbor = neighbor;
                 if (hl.showMarker) {

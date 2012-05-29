@@ -11,7 +11,7 @@ class AgeGraphView extends window.OpenCensus.views.GraphView
   _getNextDivId: () ->
     "opencensus-age-graph-view-#{id_counter += 1}"
 
-  getFragment: (width) ->
+  getFragment: (width, height, background_color) ->
     agem = @region?.statistics?.agem
     agef = @region?.statistics?.agef
 
@@ -22,43 +22,64 @@ class AgeGraphView extends window.OpenCensus.views.GraphView
     agef_ints = (parseInt("0#{a}", 10) for a in agef.value.split(/,/))
 
     age_ints = (agem_ints[i] + agef_ints[i] for i in [0...agem_ints.length])
-    age_ints.push(0)
-    age_ints.unshift(0)
-    categories = [ '', '0-4', '5-9', '10-14', '15-19', '20-24', '25-29', '30-34', '35-39', '40-44', '45-49', '50-54', '55-59', '60-64', '65-69', '70-74', '75-79', '80-84', '85+', '' ]
+    categories = [ '0-4', '5-9', '10-14', '15-19', '20-24', '25-29', '30-34', '35-39', '40-44', '45-49', '50-54', '55-59', '60-64', '65-69', '70-74', '75-79', '80-84', '85+' ]
 
     $div = $('<div class="graph"><div class="inner"></div></div>')
     id = this._getNextDivId()
     $div.find('div.inner').attr('id', id)
 
     $('body').append($div) # so jqplot will work; we'll move it later
-    $div.width(width)
+    $div.children().width(width)
+    $div.children().height(height)
 
-    values = ([ a, i ] for a, i in age_ints)
-    ticks = ([i, c] for c, i in categories)
+    values = ([ a, categories[i] ] for a, i in age_ints)
+
+    # max 4 ticks
+    max_int = 0
+    for int in age_ints
+      max_int = int if int > max_int
+    interval = max_int * .3
+    rounded_interval = interval.toFixed(0)
+    if rounded_interval.length > 2
+      rounded_interval = parseInt(rounded_interval.substring(0, 2) + rounded_interval.slice(2).replace(/\d/, '0'), 10)
+    else if rounded_interval.length > 1
+      rounded_interval = parseInt(rounded_interval.charAt(0) + '0', 10)
+    else
+      rounded_interval = parseInt(rounded_interval, 10)
 
     $.jqplot(id, [values], {
       highlighter: {
         show: true,
-        sizeAdjust: 12,
         tooltipAxes: 'x',
+        tooltipLocation: 'e',
       },
       cursor: { show: false },
       seriesDefaults: {
         renderer: $.jqplot.BarRenderer,
         rendererOptions: {
           barDirection: 'horizontal',
-          barPadding: 2,
-          barMargin: 0,
-          barWidth: 10,
-          groups: 1,
+          fillToZero: true,
+          highlightMouseOver: true,
         },
         shadow: false,
       },
       axes: {
         yaxis: {
           renderer: $.jqplot.CategoryAxisRenderer,
-          ticks: ticks,
+          tickOptions: {
+            showGridline: false,
+          },
         },
+        xaxis: {
+          pad: 1.1,
+          min: 0,
+          tickInterval: rounded_interval
+        },
+      },
+      grid: {
+        background: background_color || 'white',
+        shadow: false,
+        borderWidth: 0,
       },
     })
 
