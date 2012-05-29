@@ -1,7 +1,7 @@
-$ = jQuery
-
 #= requie app
 #= require models/indicator
+
+$ = jQuery
 
 Indicator = window.OpenCensus.models.Indicator
 

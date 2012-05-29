@@ -1,7 +1,7 @@
-$ = jQuery
-
 #= require app
 #= require helpers/format-numbers.js.coffee
+
+$ = jQuery
 
 window.OpenCensus.helpers.bucket_to_label = (bucket) ->
   return bucket.label if bucket.label?

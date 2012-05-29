@@ -1,7 +1,7 @@
-$ = jQuery
-
 #= require app
 #= require state
+
+$ = jQuery
 
 startup = ($opencensus_div) ->
   $form = $opencensus_div.find('form.location')

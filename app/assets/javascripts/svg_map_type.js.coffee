@@ -1,6 +1,3 @@
-$ = jQuery
-
-#= require jquery
 #= require json2
 
 #= require app
@@ -9,6 +6,8 @@ $ = jQuery
 #= require models/region
 #= require paper
 #= require parse_opencensus_geojson
+
+$ = jQuery
 
 globals = window.OpenCensus.globals
 region_types = globals.region_types

@@ -1,9 +1,9 @@
-$ = jQuery
-
 #= require state
 #= require globals
 #= require svg_map_type
 #= require image_path
+
+$ = jQuery
 
 state = window.OpenCensus.state
 globals = window.OpenCensus.globals

@@ -1,9 +1,9 @@
-$ = jQuery
-
 #= require app
 #= require state
 #= require views/map-view
 #= require controllers/zoom-controller
+
+$ = jQuery
 
 state = window.OpenCensus.state
 MapView = window.OpenCensus.views.MapView

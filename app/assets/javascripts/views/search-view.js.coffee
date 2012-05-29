@@ -1,8 +1,6 @@
-$ = jQuery
-
-#= require jquery
-
 #= require state
+
+$ = jQuery
 
 state = window.OpenCensus.state
 

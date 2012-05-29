@@ -1,8 +1,8 @@
-$ = jQuery
-
 #= require app
 #= require state
 #= require views/location-view
+
+$ = jQuery
 
 REGION = 'CA'
 

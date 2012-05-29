@@ -1,10 +1,10 @@
-$ = jQuery
-
 #= require app
 #= require state
 #= require globals
 #= require helpers/region-helpers
 #= require image_path
+
+$ = jQuery
 
 state = window.OpenCensus.state
 globals = window.OpenCensus.globals

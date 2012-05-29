@@ -1,9 +1,9 @@
-$ = jQuery
-
 #= require app
 #= require globals
 #= require state
 #= require helpers/bucket-helpers
+
+$ = jQuery
 
 globals = window.OpenCensus.globals
 state = window.OpenCensus.state

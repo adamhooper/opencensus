@@ -1,8 +1,8 @@
-$ = jQuery
-
 #= require app
 #= require state
 #= require views/graph-view
+
+$ = jQuery
 
 id_counter = 0
 

@@ -1,7 +1,7 @@
-$ = jQuery
-
 #= require app
 #= require globals
+
+$ = jQuery
 
 globals = window.OpenCensus.globals
 

@@ -1,6 +1,6 @@
-$ = jQuery
-
 #= require app
+
+$ = jQuery
 
 class Indicator
   constructor: (attributes) ->
