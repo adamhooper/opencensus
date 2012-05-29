@@ -135,9 +135,56 @@ class RegionInfoView
   refreshBarWidths: (region1Data, region2Data) ->
     for key, value1 of region1Data
       value2 = region2Data[key]
-      this.refreshIndicatorBarWidths(key, value1?.value || 0, value2?.value || 0)
 
-  refreshIndicatorBarWidths: (key, value1, value2) ->
+      value1 = value1?.value
+      value2 = value2?.value
+
+      $bar1 = $(@div).find("td.region div.#{key} span.bar")
+      $bar2 = $(@div).find("td.compare-region div.#{key} span.bar")
+
+      continue if $bar1.length < 1 && $bar2.length < 1
+
+      $bars = [ $bar1, $bar2 ]
+
+      if key == 'popdwe'
+        widths = this._getIndicatorBarWidths(key, value1, value2)
+      else
+        widths = this._getComparedIndicatorBarWidths(key, value1, value2)
+
+      for i in [ 0, 1 ]
+        width = widths[i]
+        $bar = $bars[i]
+
+        continue if !width? || !$bar?
+
+        if width
+          $bar.width(width)
+          $bar.show()
+        else
+          $bar.hide()
+
+  _getIndicatorBarWidths: (key, value1, value2) ->
+    maxWidth = 100
+    unitWidth = {
+      popdwe: 10,
+    }[key]
+
+    width1 = value1? && (value1 * unitWidth) || 0
+    width1 = maxWidth if width1 > maxWidth
+
+    width2 = value1? && (value2 * unitWidth) || 0
+    width2 = maxWidth if width2 > maxWidth
+
+    [ width1, width2 ]
+
+  _getComparedIndicatorBarWidths: (key, value1, value2) ->
+    maxWidth = 100
+    unitWidth = {
+      pop: 10,
+      dwe: 20,
+    }[key]
+    maxMultiplier = maxWidth / unitWidth
+
     width1 = 0
     width2 = 0
 
@@ -149,33 +196,20 @@ class RegionInfoView
 
     if value1
       if value2
-        if value1 * 10 >= value2
-          width1 = 10
-          width2 = 10 * (value2 / value1)
+        if value1 * maxMultiplier >= value2
+          width1 = unitWidth
+          width2 = unitWidth * (value2 / value1)
         else
-          width2 = 100
-          width1 = 100 * (value1 / value2)
+          width2 = maxWidth
+          width1 = maxWidth * (value1 / value2)
       else
-        width1 = 10
+        width1 = unitWidth
         width2 = 0
 
     if swap
-      [width1, width2] = [width2, width1]
-
-    $bar1 = $(@div).find("td.region span.bar.#{key}")
-    $bar2 = $(@div).find("td.compare-region span.bar.#{key}")
-
-    if width1
-      $bar1.show()
-      $bar1.width(width1)
+      [ width2, width1 ]
     else
-      $bar1.hide()
-
-    if width2
-      $bar2.show()
-      $bar2.width(width2)
-    else
-      $bar2.hide()
+      [ width1, width2 ]
 
 $ ->
   $div = $('#opencensus-wrapper div.region-info')

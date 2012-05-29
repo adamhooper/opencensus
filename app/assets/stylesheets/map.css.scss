@@ -204,11 +204,22 @@ body {
         vertical-align: top;
       }
 
-      tbody.pop span.bar {
+      tbody span.bar {
         display: inline-block;
         height: 25px;
         width: 0;
+      }
+
+      tbody.pop span.bar {
         background: url(image_path('population-repeated.png'));
+      }
+
+      tbody.dwe div.dwe span.bar {
+        background: url(image_path('dwellings-repeated.png'));
+      }
+
+      tbody.dwe div.popdwe span.bar {
+        background: url(image_path('popdwe-bar.png'));
       }
 
       thead th.region, thead th.compare-region {
