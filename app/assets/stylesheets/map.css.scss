@@ -163,10 +163,9 @@ body {
       .compare-prompt {
         position: absolute;
         height: $width_compare_prompt;
-        top: 50%;
-        margin-top: -($width_compare_prompt / 2);
-        width: $height_map;
-        left: -($height_map + $width_compare_prompt) / 2;;
+        top: 80px;
+        width: 100px;
+        left: -(100px + $width_compare_prompt) / 2;
         overflow: hidden;
 
         -webkit-transform: rotate(-90deg); 
