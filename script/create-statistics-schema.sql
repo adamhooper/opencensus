@@ -26,24 +26,22 @@ VALUES
 ('occdwe', 'Occupied dwellings', '', '', 'integer', NULL),
 ('popdens', 'Population density', 'people per km²', '', 'float',
   '[{"max":5,"color":"#edf8fb","label":"up to 5 people per km²"},' ||
-  '{"max":20,"color":"#ccece6"},' ||
-  '{"max":100,"color":"#99d8c9"},' ||
-  '{"max":500,"color":"#66c2a4"},' ||
-  '{"max":1000,"color":"#2ca25f"},' ||
-  '{"color":"#006d2c"}]'),
+  '{"max":25,"color":"#b3cde3"},' ||
+  '{"max":200,"color":"#8c96c6"},' ||
+  '{"max":1000,"color":"#8856a7"},' ||
+  '{"color":"#810f7c"}]'),
 ('dwedens', 'Dwelling density', 'dwellings per km²', '', 'float',
-  '[{"max":5,"color":"#f2f0f7"},' ||
-  '{"max":10,"color":"#dadaeb"},' ||
-  '{"max":50,"color":"#bcbddc"},' ||
-  '{"max":250,"color":"#9e9ac8"},' ||
-  '{"max":1000,"color":"#756bb1"},' ||
+  '[{"max":5,"color":"#edf8fb","label":"up to 5 dwellings per km²"},' ||
+  '{"max":25,"color":"#b3cde3"},' ||
+  '{"max":200,"color":"#8c96c6"},' ||
+  '{"max":1000,"color":"#8856a7"},' ||
   '{"color":"#810f7c"}]'),
 ('popdwe', 'People per dwelling', '', '', 'float',
-  '[{"max":1,"color":"#edf8fb"},' ||
-  '{"max":2,"color":"#b3cde3"},' ||
-  '{"max":2.5,"color":"#8c96c6","label":"up to 2½"},' ||
-  '{"max":3,"color":"#8856a7"},' ||
-  '{"color":"#810f7c"}]'),
+  '[{"max":1,"color":"#ffffcc"},' ||
+  '{"max":2,"color":"#c2e699"},' ||
+  '{"max":2.5,"color":"#78c679","label":"up to 2½"},' ||
+  '{"max":3,"color":"#31a354"},' ||
+  '{"color":"#006837"}]'),
 ('pop2006', 'Population, 2006', '', '', 'integer', NULL),
 ('gro', 'Population growth', '%', 'How many more or fewer people are in this region', 'float',
   '[{"max":-5,"color":"#d7191c","label":"shrank over 5%"},' ||

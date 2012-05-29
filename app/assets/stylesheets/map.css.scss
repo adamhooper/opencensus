@@ -267,7 +267,7 @@ body {
         text-align: left;
         font-size: .7em;
         border-top: 1px solid $color_border_visible;
-        padding: 6px 9px 0;
+        padding: 5px 9px 0;
         line-height: 1.4;
       }
 
@@ -277,15 +277,15 @@ body {
 
       td.region, td.compare-region {
         width: $width_region_info - 18px;
-        padding: 0 9px 6px;
+        padding: 0 9px 5px;
         line-height: 31px;
 
         div.age-chart {
           line-height: 1.8;
-          height: 250px;
+          height: 230px;
 
           .jqplot-xaxis {
-            height: 18px;
+            height: 16px;
           }
         }
       }
