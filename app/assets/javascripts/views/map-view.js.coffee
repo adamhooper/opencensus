@@ -113,8 +113,9 @@ class MapView
       marker.setVisible(true)
 
       if !@map.getBounds().contains(google_point)
-        newBounds = @map.getBounds().extend(google_point)
-        @map.setBounds(newBounds)
+        newBounds = @map.getBounds()
+        newBounds.extend(google_point)
+        @map.fitBounds(newBounds)
 
   onPoint1Changed: (point) ->
     this._onPointNChanged(1, point)
