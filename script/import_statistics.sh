@@ -26,7 +26,11 @@ export PGPASSFILE
 psql -f `dirname $0`/create-statistics-schema.sql
 
 `dirname $0`/../statistics_importer/import_2011_popdwe.py `dirname $0`/../db/statistics/2011_92-151_XBB_txt.zip
+`dirname $0`/../statistics_importer/import_2006_pop.py `dirname $0`/../db/statistics/2006_92-151_XBB_txt.zip `dirname $0`/../db/statistics/2011_92-156_DB_ID_txt.zip `dirname $0`/../db/statistics/2011_92-156_DA_AD_txt.zip
 `dirname $0`/../statistics_importer/import_2006_agesex.py `dirname $0`/../db/statistics/94-575-XCB2006005.ZIP
 
+psql -f `dirname $0`/../statistics_importer/calculate-2011-growth.sql
 psql -f `dirname $0`/../statistics_importer/calculate-2011-popdwe-rates.sql
-`dirname $0`/../statistics_importer/calculate_agesex_averages.py
+psql -f `dirname $0`/../statistics_importer/calculate-srid4326-bounds.sql
+
+`dirname $0`/../statistics_importer/export_statistics.py | sqlite3 `dirname $0`/../db/statistics.sqlite3

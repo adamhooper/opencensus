@@ -65,7 +65,8 @@ VALUES
   '{"max":48.99999,"color":"#fdae61","label":"over 51% female"},' ||
   '{"max":51,"color":"#ffffbf","label":"about even"},' ||
   '{"max":53,"color":"#abd9e9","label":"over 51% male"},' ||
-  '{"color":"#2c7bb6","label":"over 53% male"}]')
+  '{"color":"#2c7bb6","label":"over 53% male"}]'),
+('bounds', 'SRID 4326 boundaries', '', '', 'string', NULL)
 ;
 
 DROP TABLE IF EXISTS indicator_region_values;
