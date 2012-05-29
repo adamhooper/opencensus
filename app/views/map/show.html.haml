@@ -21,11 +21,14 @@
         %a{:href => '#sexm'} Sex distribution
 
   %form.location
+    %p.startup-content Enter an address to find census data around it:
     %p
       %label{:for => 'opencensus-address-input'} Location
       %input.text#opencensus-address-input{:type => 'text', :name => 'q'}
       %input.submit{:type => 'submit', :value => 'Go'}
     %div.status
+    %p.startup-content
+      %a.skip{:href => '#'} or click here, then click on the map
 
   .map-and-info
     .map

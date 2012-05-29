@@ -48,6 +48,10 @@ body {
     margin: 0;
     padding: 0;
 
+    p.startup-content {
+      display: none;
+    }
+
     p {
       position: relative;
       margin: 0;
@@ -95,6 +99,29 @@ body {
 
     div.error {
       color: $color_error;
+    }
+  }
+
+  form.startup {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 5;
+    padding: 3em 7em;
+    background: $color_alt_background;
+    background: rgba($color_alt_background, 0.85);
+
+    p.startup-content {
+      display: block;
+    }
+
+    p {
+      margin: 0;
+      padding: 1em;
+      background: $color_alt_background;
+      background: rgba($color_alt_background, 0.85);
     }
   }
 
