@@ -25,7 +25,7 @@ VALUES
 ('dwe', 'Dwellings', '', '', 'integer', NULL),
 ('occdwe', 'Occupied dwellings', '', '', 'integer', NULL),
 ('popdens', 'Population density', 'people per km²', '', 'float',
-  '[{"max":5,"color":"#edf8fb"},' ||
+  '[{"max":5,"color":"#edf8fb","label":"up to 5 people per km²"},' ||
   '{"max":20,"color":"#ccece6"},' ||
   '{"max":100,"color":"#99d8c9"},' ||
   '{"max":500,"color":"#66c2a4"},' ||

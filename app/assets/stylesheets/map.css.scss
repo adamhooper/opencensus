@@ -376,20 +376,21 @@ body {
 
   .legend {
     background: $color_alt_background2;
-    height: 2em;
 
     ul {
       margin: 0;
-      padding: 0;
+      padding: .2em 0;
       list-style: none;
       position: relative;
     }
 
     li {
       display: inline;
+      margin: 0;
       padding: 0 .5em;
-      font-size: .9em;
-      line-height: 1.8em;
+      font-size: .8em;
+      line-height: 1.8;
+      vertical-align: middle;
 
       .swatch {
         display: inline-block;
