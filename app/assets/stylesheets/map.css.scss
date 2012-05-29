@@ -174,9 +174,9 @@ body {
       .compare-prompt {
         position: absolute;
         height: $width_compare_prompt;
-        top: 80px;
-        width: 100px;
-        left: -(100px + $width_compare_prompt) / 2;
+        top: (200px + $width_compare_prompt) / 2;
+        width: 200px;
+        left: -(200px + $width_compare_prompt) / 2;
         overflow: hidden;
 
         -webkit-transform: rotate(-90deg); 
@@ -195,6 +195,11 @@ body {
           text-decoration: none;
           font-weight: normal;
           font-size: .8em;
+          text-transform: uppercase;
+
+          span {
+            color: yellow;
+          }
         }
       }
 
