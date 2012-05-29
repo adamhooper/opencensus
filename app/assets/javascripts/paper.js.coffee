@@ -204,6 +204,8 @@ class VmlEngine
 
   updateElementStyle: (engineElement, attrs) ->
     for key, val of attrs
+      continue if key == 'pattern'
+
       key = VmlEngine.SvgAttrToVmlAttr[key]
       if key == 'fill'
         if val? && val != 'none'
