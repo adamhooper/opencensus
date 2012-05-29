@@ -23,7 +23,16 @@ window.OpenCensus.controllers.zoom_controller = (map_view) ->
     )
 
   refresh = () ->
-    return if !state.region1? && !state.region2?
+    if !state.region1? && !state.region2?
+      if state.point1? && !old_region1? && !old_region2?
+        map_view.map.setCenter(
+          new google.maps.LatLng(
+            state.point1.latlng.latitude,
+            state.point1.latlng.longitude
+          )
+        )
+        map_view.map.setZoom(15)
+      return
 
     may_zoom = !old_region1? && !old_region2?
 
@@ -52,6 +61,7 @@ window.OpenCensus.controllers.zoom_controller = (map_view) ->
 
   state.onRegion1Changed('zoom-controller', refresh)
   state.onRegion2Changed('zoom-controller', refresh)
+  state.onPoint1Changed('zoom-controller', refresh)
 
   $(document).on 'opencensus:zoom_region.zoom_controller', (e, region) ->
     return if !region?
