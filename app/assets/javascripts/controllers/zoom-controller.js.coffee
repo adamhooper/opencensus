@@ -52,3 +52,9 @@ window.OpenCensus.controllers.zoom_controller = (map_view) ->
 
   state.onRegion1Changed('zoom-controller', refresh)
   state.onRegion2Changed('zoom-controller', refresh)
+
+  $(document).on 'opencensus:zoom_region.zoom_controller', (e, region) ->
+    return if !region?
+    bounds = region_to_bounds(region)
+    return if !bounds?
+    map_view.map.fitBounds(bounds)

@@ -251,6 +251,11 @@ body {
           color: $color_faded;
           line-height: 21px;
 
+          a {
+            font-weight: normal;
+            text-decoration: none;
+          }
+
           img {
             display: inline-block;
             vertical-align: middle;
