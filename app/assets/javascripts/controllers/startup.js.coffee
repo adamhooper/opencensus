@@ -15,9 +15,9 @@ startup = ($opencensus_div) ->
       $form.fadeIn()
       $form = undefined
 
-  $form.on 'submit.startup)', (e) ->
+  $form.on 'submit.startup', (e) ->
     e.preventDefault()
-    return false if $.trim($form.find('input.text').val()) == ''
+    return false if $.trim($(e.target).closest('form').find('input.text').val()) == ''
     end()
 
   $form.find('a.skip').on 'click.startup', (e) ->
