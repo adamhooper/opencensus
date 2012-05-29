@@ -112,7 +112,8 @@ body {
       line-height: 1;
       font-size: .8em;
       text-transform: uppercase;
-      color: $color_main;
+      background: $color_main;
+      color: white;
 
       span.prompt {
         font-size: .8em;
