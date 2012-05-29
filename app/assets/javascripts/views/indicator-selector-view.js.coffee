@@ -43,6 +43,9 @@ class IndicatorSelectorView
       state.setIndicator(indicator)
       this._refreshValue()
 
+    $form.on 'selectmenuclose', (e) =>
+      this._refreshValue()
+
     state.onIndicatorChanged 'indicator-selector-view', () =>
       $select.val(state.indicator.key)
       this._refreshValue()
