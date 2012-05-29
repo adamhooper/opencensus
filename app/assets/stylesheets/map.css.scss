@@ -7,7 +7,7 @@ $color_strong2_background: #72a492;
 $color_strong: #a49a00;
 $color_main: #212121;
 $color_border: #d5d6d5;
-$color_border_visible: #666;
+$color_border_visible: #ccc;
 $color_faded: #777;
 $color_notice: #999;
 $color_error: #933;
@@ -217,6 +217,10 @@ body {
         background-color: $color_alt_background3;
       }
 
+      tbody span {
+        vertical-align: middle;
+      }
+
       tbody span.bar {
         display: inline-block;
         height: 25px;
@@ -255,15 +259,20 @@ body {
 
       thead.sub th {
         text-align: left;
-        font-weight: normal;
-        font-size: .75em;
+        font-size: .7em;
         border-top: 1px solid $color_border_visible;
-        padding: 0 .5em;
+        padding: 0 9px;
+        line-height: 1.4;
+      }
+
+      thead.pop th {
+        border-top: none;
       }
 
       td.region, td.compare-region {
-        text-align: center;
-        width: $width_region_info;
+        width: $width_region_info - 18px;
+        padding: 0 9px;
+        line-height: 31px;
       }
 
       span.unit {
@@ -278,6 +287,16 @@ body {
         span.value {
           font-size: 1.25em;
           color: $color_strong;
+        }
+      }
+
+      div.sexm, div.sexf {
+        display: inline;
+        vertical-align: middle;
+
+        img, span {
+          vertical-align: middle;
+          line-height: 25px;
         }
       }
 
@@ -328,6 +347,15 @@ body {
           text-align: center;
           font-size: .85em;
           line-height: 1;
+        }
+      }
+
+      tbody.links {
+        height: $height_map;
+        vertical-align: top;
+
+        a {
+          font-weight: normal;
         }
       }
     }
