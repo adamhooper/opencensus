@@ -178,7 +178,9 @@ class MapTile
 
     data = parse_opencensus_geojson(data)
 
-    for feature in (data?.features || [])
+    return if !data?
+
+    for feature in data.features
       properties = feature.properties
       region = new Region(feature.id, properties.name, properties.parents, properties.statistics)
       region_store.add(region)
