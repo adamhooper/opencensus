@@ -74,10 +74,10 @@ class MapTile
 
     childDiv = div.ownerDocument.createElement('div')
     childDiv.style.position = 'absolute'
-    childDiv.style.top = 0
-    childDiv.style.bottom = 0
-    childDiv.style.left = 0
-    childDiv.style.right = 0
+    childDiv.style.top = "0px"
+    childDiv.style.left = "0px"
+    childDiv.style.width = "#{@tileSize.width}px"
+    childDiv.style.height = "#{@tileSize.height}px"
     @div.appendChild(childDiv)
     @paper = new Paper(childDiv, {
       width: @tileSize.width,
@@ -88,10 +88,10 @@ class MapTile
 
     overlayDiv = div.ownerDocument.createElement('div')
     overlayDiv.style.position = 'absolute'
-    overlayDiv.style.top = 0
-    overlayDiv.style.bottom = 0
-    overlayDiv.style.left = 0
-    overlayDiv.style.right = 0
+    overlayDiv.style.top = "0px"
+    overlayDiv.style.left = "0px"
+    childDiv.style.width = "#{@tileSize.width}px"
+    childDiv.style.height = "#{@tileSize.height}px"
     @div.appendChild(overlayDiv)
     @overlayPaper = new Paper(overlayDiv, {
       width: @tileSize.width,
