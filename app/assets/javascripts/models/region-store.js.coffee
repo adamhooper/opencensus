@@ -57,14 +57,8 @@ class RegionStore
 
     ret = (this.get(region_id) for region_id, _ of all_ids)
 
-    ret.sort((a, b) => a.compareTo(b))
+    ret.sort((a, b) -> a.compareTo(b))
 
     ret
-
-  getBestRegionWithDatumInRegionList: (region_list, indicator) ->
-    indicator_key = typeof(indicator) == 'String' && indicator || indicator.key
-
-    for region in region_list
-      return region if region.statistics?[indicator_key]
 
 window.OpenCensus.models.RegionStore = RegionStore

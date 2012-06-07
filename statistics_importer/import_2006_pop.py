@@ -45,14 +45,6 @@ class RecordDb:
     RegionTypeToUidRangeInTextLine = {
         'DisseminationBlock': (0, 10),
         'DisseminationArea': (48, 56),
-        'Province': (114, 116),
-        'ElectoralDistrict': (237, 242),
-        'EconomicRegion': (325, 329),
-        'Division': (416, 420),
-        'Subdivision': (454, 461),
-        'ConsolidatedSubdivision': (519, 526),
-        'MetropolitanArea': (666, 671),
-        'Tract': (755, 765),
         'Country': (1, 0)
     }
 

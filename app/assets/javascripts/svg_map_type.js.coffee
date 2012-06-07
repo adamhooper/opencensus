@@ -44,11 +44,6 @@ class InteractionGridArray
     child_region_ids = (grid.pointToRegionId(column, row) for grid in @interaction_grids)
     region_store.getRegionListFromChildRegionIds(child_region_ids)
 
-  # Returns the "best" Region--using region_types ordering
-  pointToRegionWithDatum: (column, row, indicator) ->
-    region_list = this.pointToRegionList(column, row)
-    region_store.getBestRegionWithDatumInRegionList(region_list, indicator)
-
 # Save some object creation
 polygon_style_base = {
   stroke: globals.style.stroke,
@@ -80,10 +75,10 @@ class MapTile
 
     childDiv = div.ownerDocument.createElement('div')
     childDiv.style.position = 'absolute'
-    childDiv.style.top = 0
-    childDiv.style.bottom = 0
-    childDiv.style.left = 0
-    childDiv.style.right = 0
+    childDiv.style.top = "0px"
+    childDiv.style.left = "0px"
+    childDiv.style.width = "#{@tileSize.width}px"
+    childDiv.style.height = "#{@tileSize.height}px"
     @div.appendChild(childDiv)
     @paper = new Paper(childDiv, {
       width: @tileSize.width,
@@ -94,10 +89,10 @@ class MapTile
 
     overlayDiv = div.ownerDocument.createElement('div')
     overlayDiv.style.position = 'absolute'
-    overlayDiv.style.top = 0
-    overlayDiv.style.bottom = 0
-    overlayDiv.style.left = 0
-    overlayDiv.style.right = 0
+    overlayDiv.style.top = "0px"
+    overlayDiv.style.left = "0px"
+    childDiv.style.width = "#{@tileSize.width}px"
+    childDiv.style.height = "#{@tileSize.height}px"
     @div.appendChild(overlayDiv)
     @overlayPaper = new Paper(overlayDiv, {
       width: @tileSize.width,
@@ -166,10 +161,15 @@ class MapTile
         when 'Polygon'
           this.drawPolygon(paper, geometry.coordinates, style)
 
+  getRegionShouldBeVisible: (region) ->
+    datum = region.getDatum(@mapIndicator)
+    return false if !datum?.value?
+    return false if datum.z <= @zoom
+    return @mapIndicator.bucketForValue(datum.value) && true || false
+
   getFillForRegion: (region) ->
     datum = region.getDatum(@mapIndicator)
     return undefined unless datum?.value?
-    return undefined if datum.z <= @zoom
     bucket = @mapIndicator.bucketForValue(datum.value)
     bucket?.color
 
@@ -229,7 +229,8 @@ class MapTile
 
     for regionId in @regionIds
       regionData = @regions[regionId]
-      fill = this.getFillForRegion(regionData.region)
+      visible = this.getRegionShouldBeVisible(regionData.region)
+      fill = visible && this.getFillForRegion(regionData.region)
       style.fill = fill || 'none'
 
       @paper.setStart()
@@ -237,7 +238,7 @@ class MapTile
       element = @paper.setFinish()
       regionData.element = element
 
-      element.hide() if !fill?
+      element.hide() if !fill
 
     this.onHoverRegionChanged(state.hover_region)
     this.onRegion1Changed(state.region1)
@@ -248,8 +249,9 @@ class MapTile
       region = regionData.region
       element = regionData.element
 
-      fill = this.getFillForRegion(region)
-      if !fill?
+      visible = this.getRegionShouldBeVisible(regionData.region)
+      fill = visible && this.getFillForRegion(region)
+      if !fill
         element.hide()
       else
         element.updateStyle({ fill: fill })
@@ -305,7 +307,7 @@ class MapTile
       region_list = this.tilePixelToRegionList(tilePixel) # may be undefined
       if region_list?
         for region in region_list
-          if this.getFillForRegion(region)
+          if region.getDatum(@mapIndicator)?.value?
             hover_region = region
             break
 
@@ -378,7 +380,7 @@ class MapTile
         #if region1? && state.region2? && region.getDatum(@mapIndicator)? && region.statistics?.pop?.value != region1.statistics?.pop?.value
         #  region2 = region
         #  break
-        if this.getFillForRegion(region)
+        if region.getDatum(@mapIndicator)?.value?
           new_region = region
           break
 

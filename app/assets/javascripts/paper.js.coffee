@@ -47,6 +47,13 @@ class SvgEngine
     @svgns = 'http://www.w3.org/2000/svg'
     @xlinkns = 'http://www.w3.org/1999/xlink'
 
+    # Mozilla suffers from an integer overflow because it uses integers, not
+    # floats, to draw SVG. Divide by 100 to stay under the limit.
+    @overflowHack = false
+    if navigator.userAgent.indexOf('compatible') < 0 && (m = /(mozilla)(?:.*? rv:([\w.]+))?/i.exec(navigator.userAgent))
+      # TODO: when Mozilla fixes the bug (if ever), check version, m[2]
+      @overflowHack = true
+
     @svg = this._createEngineElement('svg')
     this.updateElementStyle(@svg, {
       width: @width = attrs.width,
@@ -56,8 +63,8 @@ class SvgEngine
     })
 
     if attrs.viewBox?
-      @viewBox = (parseFloat(a) for a in attrs.viewBox.split(/\s/))
-      @svg.setAttribute('viewBox', attrs.viewBox)
+      @viewBox = (parseFloat(a) * (@overflowHack && 0.01 || 1.0) for a in attrs.viewBox.split(/\s/))
+      @svg.setAttribute('viewBox', [ '' + f for f in @viewBox ].join(' '))
     if attrs.scaleX? || attrs.scaleY?
       @g = this._createEngineElement('g')
       @g.setAttribute('transform', "scale(#{attrs.scaleX || 1} #{attrs.scaleY || 1})")
@@ -102,6 +109,9 @@ class SvgEngine
   path: (pathString, attrs) ->
     engineElement = this._createEngineElement('path')
     #engineElement.setAttribute('fill-rule', 'evenodd')
+    if @overflowHack
+      # Divide numbers by 100 using a string replace
+      pathString = pathString.replace(/(\d\d)\.?(\D)/g, '.$1$2')
     engineElement.setAttribute('d', pathString)
     this.updateElementStyle(engineElement, attrs)
     @g.appendChild(engineElement)

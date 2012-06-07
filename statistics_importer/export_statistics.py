@@ -50,6 +50,11 @@ if __name__ == '__main__':
     read_cursor.execute('SELECT DISTINCT id FROM regions ORDER BY id')
     all_region_ids = [ row[0] for row in read_cursor ]
 
+    # When a region has children which will display a given indicator at a
+    # certain zoom level, the parent should not.
+    # Rephrased: the maximum zoom at which an indicator should be displayed
+    # is (minimum zoom of any child with that indicator value) - 1.
+    # Speed-up: we know that all sibling regions have the same zoom level.
     print >> sys.stderr, 'Loading zoom levels per region/indicator...'
     read_cursor.execute('''
         SELECT rp.parent_region_id, ci.indicator_id, MIN(rmzl.min_zoom_level) AS min_zoom_level
@@ -70,11 +75,6 @@ if __name__ == '__main__':
     for i in xrange(0, len(all_region_ids), spread):
         region_ids = all_region_ids[i:i+spread]
 
-        # When a region has children which will display a given indicator at a
-        # certain zoom level, the parent should not.
-        # Rephrased: the maximum zoom at which an indicator should be displayed
-        # is (minimum zoom of any child with that indicator value) - 1.
-        # Speed-up: we know that all sibling regions have the same zoom level.
         q = """
             SELECT
                 i.region_id, i.indicator_id, i.value_integer,

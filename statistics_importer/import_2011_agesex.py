@@ -1,7 +1,5 @@
 #!/usr/bin/env python2.7
 
-# This is a TEST. We'll replace it with "import_2011_agesex.py".
-
 import re
 from zipfile import ZipFile as _ZipFile
 

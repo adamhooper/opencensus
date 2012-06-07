@@ -84,6 +84,8 @@ class RecordDb:
         c.execute("SELECT id FROM indicators WHERE key = 'sexm'")
         sexm_id = int(c.fetchone()[0])
 
+        c.execute('DELETE FROM indicator_region_values WHERE indicator_id IN (%d, %d)' % (agemedian_id, sexm_id))
+
         c.execute("""
             PREPARE insert_statistics (INT, FLOAT, FLOAT) AS
             INSERT INTO indicator_region_values (region_id, indicator_id, value_float)
